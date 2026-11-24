@@ -2,7 +2,7 @@
 // ==UserScript==
 // @name DPChallenge Mobile — Editorial Gallery
 // @namespace dpc-mobile
-// @version 4.26
+// @version 4.27
 // @updateURL https://raw.githubusercontent.com/Konador/dpc-mobile-restyle/main/dpc-mobile.user.js
 // @downloadURL https://raw.githubusercontent.com/Konador/dpc-mobile-restyle/main/dpc-mobile.user.js
 // @match *://*.dpchallenge.com/challenge_vote_image.php*
@@ -973,7 +973,7 @@ html.dpc-viewing body {
     style.textContent += "#dpc-app .dpc-entry-grid .dpc-home-meta{font-weight:400;line-height:1.45}#dpc-app .dpc-entry-grid .dpc-home-detail{display:flex;flex-direction:column;align-items:flex-start;gap:5px;margin-top:auto}#dpc-app .dpc-entry-grid .dpc-entry-rules{font-weight:500}#dpc-app .dpc-entry-grid .dpc-entry-deadline{font-weight:500}#dpc-app .dpc-entry-grid .dpc-entry-count{font-weight:400}";
     style.textContent += "#dpc-app .dpc-results-footer{background:transparent;border-top-color:var(--line);padding:8px 2px 0;margin-top:10px;min-height:36px;font-size:12px;font-weight:400}html.dpc-light #dpc-app .dpc-results-footer{background:transparent;border-top-color:var(--line)}#dpc-app .dpc-results-footer span{font-size:16px}";
     style.textContent += "#dpc-app .dpc-home-vote-card{padding:13px 12px;text-align:left;min-height:160px}#dpc-app .dpc-home-vote-card h3{font-size:23px;line-height:1.08;margin:0 0 8px}#dpc-app .dpc-home-vote-card .dpc-home-meta{font-size:13px;line-height:1.45;font-weight:400;max-width:72%;margin:0 0 10px}#dpc-app .dpc-home-vote-card .dpc-home-detail{font-size:11px;gap:5px 8px;justify-content:flex-start}#dpc-app .dpc-home-vote-card .dpc-entry-rules{font-size:9px;text-transform:uppercase;letter-spacing:.055em}#dpc-app .dpc-home-vote-card .dpc-entry-deadline{font-size:12px;color:var(--accent);font-weight:500}#dpc-app .dpc-home-vote-card .dpc-home-vote-status{font-size:13px;margin:8px 0}#dpc-app .dpc-home-vote-card .dpc-home-action{font-size:11px;padding:7px 10px;margin-top:8px;align-self:flex-start}#dpc-app .dpc-home-vote-card:before{opacity:1;background-image:linear-gradient(90deg,#111115fa 0%,#111115e8 35%,#111115a0 65%,#11111530 100%),var(--vote-image,none)}html.dpc-light #dpc-app .dpc-home-vote-card:before{background-image:linear-gradient(90deg,#f5f6f8fa 0%,#f5f6f8e8 35%,#f5f6f8a0 65%,#f5f6f830 100%),var(--vote-image,none)}";
-    style.textContent += "#dpc-app .dpc-home section{margin-bottom:38px}#dpc-app .dpc-home section>h2{position:relative;padding:2px 0 12px 12px;margin:0 0 14px;border-bottom:1px solid var(--line);font-size:30px;letter-spacing:-.035em}#dpc-app .dpc-home section>h2:before{content:'';position:absolute;left:0;top:5px;width:3px;height:25px;border-radius:2px;background:var(--accent)}#dpc-app .dpc-home section>h2 em{color:inherit;font-style:italic}";
+    style.textContent += "#dpc-app .dpc-home section{margin-bottom:38px}#dpc-app .dpc-home section>h2{position:relative;padding:2px 0 12px 12px;margin:0 0 14px;border-bottom:1px solid var(--line);font-size:30px;letter-spacing:-.035em}#dpc-app .dpc-home section>h2:before{content:'';position:absolute;left:0;top:8px;width:3px;height:26px;border-radius:0;background:var(--accent)}#dpc-app .dpc-home section>h2 em{color:inherit;font-style:italic}";
     document.head.append(style);
 
     const header = `
