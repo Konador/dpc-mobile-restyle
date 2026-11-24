@@ -2,7 +2,7 @@
 // ==UserScript==
 // @name DPChallenge Mobile — Editorial Gallery
 // @namespace dpc-mobile
-// @version 4.14
+// @version 4.15
 // @updateURL https://raw.githubusercontent.com/Konador/dpc-mobile-restyle/main/dpc-mobile.user.js
 // @downloadURL https://raw.githubusercontent.com/Konador/dpc-mobile-restyle/main/dpc-mobile.user.js
 // @match *://*.dpchallenge.com/challenge_vote_image.php*
@@ -965,7 +965,8 @@ html.dpc-viewing body {
     style.textContent += "#dpc-app .dpc-results-footer{display:flex;align-items:center;justify-content:space-between;border-top:1px solid var(--line);margin-top:14px;padding:14px 2px 0;min-height:44px;box-sizing:border-box;color:var(--accent);font-size:13px;font-weight:600;text-decoration:none}#dpc-app .dpc-results-footer span{font-size:20px;font-weight:400}";
     style.textContent += "\n#dpc-app .dpc-home .dpc-results-feature{background:#25262e;border-color:#ffffff20;margin-bottom:24px}\nhtml.dpc-light #dpc-app .dpc-home .dpc-results-feature{background:#fff;border-color:#cdd3df}\n#dpc-app .dpc-results-footer{border-top-color:#ffffff26;background:#ffffff06;padding:12px 10px;margin-top:14px;border-radius:0 0 4px 4px}\nhtml.dpc-light #dpc-app .dpc-results-footer{border-top-color:#cdd3df;background:#526eaf09}\n#dpc-app .dpc-results-rail{gap:12px}\n#dpc-app .dpc-results-slide{background:#242424}\n";
     style.textContent += "#dpc-app .dpc-editorial-credit{position:relative;min-height:103px}#dpc-app .dpc-editorial-credit .dpc-home-feature-author{width:max-content;max-width:100%;white-space:nowrap;font-size:18px}#dpc-app .dpc-editorial-credit.tucked .dpc-home-feature-author{position:absolute;margin:0}#dpc-app .dpc-editorial-credit .dpc-title-line{width:max-content;max-width:100%}";
-    style.textContent += "#dpc-app .dpc-home-feature-title.dpc-title{height:108px;min-height:108px;overflow:visible}#dpc-app .dpc-editorial-credit{min-height:133px}#dpc-app .dpc-editorial-credit .dpc-title-line{overflow:visible}#dpc-app .dpc-editorial-credit .dpc-title-part{overflow:visible}";
+    style.textContent += "#dpc-app .dpc-home-feature-title.dpc-title{height:78px;min-height:78px;overflow:visible}#dpc-app .dpc-editorial-credit{min-height:103px}#dpc-app .dpc-editorial-credit .dpc-title-line{overflow:visible}#dpc-app .dpc-editorial-credit .dpc-title-part{overflow:visible}";
+    style.textContent += "#dpc-app .dpc-home-hero,#dpc-app .dpc-results-slide{background:#151515}";
     document.head.append(style);
 
     const header = `
