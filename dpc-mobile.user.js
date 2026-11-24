@@ -2,7 +2,7 @@
 // ==UserScript==
 // @name DPChallenge Mobile — Editorial Gallery
 // @namespace dpc-mobile
-// @version 4.13
+// @version 4.14
 // @updateURL https://raw.githubusercontent.com/Konador/dpc-mobile-restyle/main/dpc-mobile.user.js
 // @downloadURL https://raw.githubusercontent.com/Konador/dpc-mobile-restyle/main/dpc-mobile.user.js
 // @match *://*.dpchallenge.com/challenge_vote_image.php*
@@ -1230,6 +1230,22 @@ html.dpc-viewing body {
 
 
     function buildHome() {
+        const photoCacheKey='dpc-home-full-images-v1';
+        let photoCache={};
+        try{photoCache=JSON.parse(localStorage.getItem(photoCacheKey)||'{}')||{};}catch{}
+        function cachedPhoto(rec){
+            const hit=photoCache[safe(rec.a)];
+            if(hit&&hit.thumb===rec.src&&Date.now()-hit.time<30*86400000&&/^https?:\/\//i.test(hit.full)){
+                rec.full=hit.full;rec.ratio=hit.ratio;rec.area=hit.area;
+            }
+        }
+        function savePhoto(rec){
+            if(!rec.full)return;
+            photoCache[safe(rec.a)]={thumb:rec.src,full:rec.full,ratio:rec.ratio,area:rec.area,time:Date.now()};
+            photoCache=Object.fromEntries(Object.entries(photoCache).sort((a,b)=>b[1].time-a[1].time).slice(0,200));
+            try{localStorage.setItem(photoCacheKey,JSON.stringify(photoCache));}catch{}
+        }
+
         const clean = n => (n?.textContent || '').replace(/\s+/g,' ').trim();
         const originalLinks = [...document.querySelectorAll('a[href]')];
         const safe = a => {try {const u=new URL(a.getAttribute('href'),location.href);return /^https?:$/.test(u.protocol)?u.href:'';}catch{return '';}};
@@ -1368,6 +1384,7 @@ html.dpc-viewing body {
                     }
                     return {a,img,author,title:clean(a)||img.alt||'',src:img.currentSrc||img.src,i};
                 });
+                records.forEach(cachedPhoto);
                 let serial=0,selected=-1,selectionToken=0;
                 const dimensions=()=>{const w=hero.clientWidth;if(!w)return;const ratios=records.map(rec=>rec.ratio||((rec.img.naturalWidth&&rec.img.naturalHeight)?rec.img.naturalHeight/rec.img.naturalWidth:1));hero.style.setProperty('--hero-height',Math.min(innerHeight*.7,w*Math.max(...ratios))+'px');};
                 function ribbon(i){
@@ -1380,6 +1397,15 @@ html.dpc-viewing body {
                 }
                 function preload(rec){
                     if(rec.promise)return rec.promise;
+                    if(rec.full){
+                        const probe=new Image();rec.probe=probe;
+                        rec.promise=new Promise(resolve=>{
+                            probe.onload=()=>resolve();
+                            probe.onerror=()=>{delete photoCache[safe(rec.a)];try{localStorage.setItem(photoCacheKey,JSON.stringify(photoCache));}catch{}delete rec.full;delete rec.area;delete rec.promise;preload(rec).then(resolve);};
+                            probe.src=rec.full;
+                        });
+                        return rec.promise;
+                    }
                     rec.promise=fetch(safe(rec.a),{credentials:'same-origin'}).then(r=>r.ok?r.text():'').then(async html=>{
                         const doc=new DOMParser().parseFromString(html,'text/html');
                         const file=new URL(rec.src,location.href).pathname.split('/').pop();
@@ -1389,7 +1415,7 @@ html.dpc-viewing body {
                         const picks=preferred?[preferred]:same.length?same:candidates.filter(x=>/\/(?:image|images|photo|photos)\//i.test(x.getAttribute('src')||'')&&(+x.getAttribute('width')>=400||+x.getAttribute('height')>=400));
                         await Promise.all(picks.slice(0,4).map(candidate=>new Promise(resolve=>{
                             const url=new URL(candidate.getAttribute('src'),safe(rec.a)).href;const probe=new Image();
-                            probe.onload=()=>{const area=probe.naturalWidth*probe.naturalHeight;if(area>Math.max(rec.area||0,40000)){rec.area=area;rec.full=url;rec.ratio=probe.naturalHeight/probe.naturalWidth;}resolve();};probe.onerror=resolve;probe.src=url;
+                            probe.onload=()=>{const area=probe.naturalWidth*probe.naturalHeight;if(area>Math.max(rec.area||0,40000)){rec.area=area;rec.full=url;rec.ratio=probe.naturalHeight/probe.naturalWidth;savePhoto(rec);}resolve();};probe.onerror=resolve;probe.src=url;
                         })));
                     }).catch(()=>{});
                     return rec.promise;
@@ -1454,7 +1480,7 @@ html.dpc-viewing body {
                     const token=++selectionToken,rec=records[i],direction=selected<0?0:Math.sign(i-selected);
                     if(selected>=0)await preload(rec);
                     if(token!==selectionToken)return;
-                    selected=i;hero.href=safe(rec.a);heroImg.src=rec.full||rec.src;heroImg.alt=rec.title;
+                    selected=i;hero.href=safe(rec.a);heroImg.src=rec.full||rec.src;heroImg.alt=rec.title;heroImg.onerror=()=>{if(selected===i&&heroImg.src!==rec.src){heroImg.src=rec.src;preload(rec).then(()=>{if(selected===i&&rec.full)heroImg.src=rec.full;});}};
                     centre.querySelector('svg')?.remove();const icon=ribbon(i);if(icon)centre.append(icon);refreshAdjacent();
                     featureTitle.href=hero.href;editorialTypeset(featureTitle,rec.title,direction,false);
                     featureAuthor.hidden=!rec.author;if(rec.author){featureAuthor.href=safe(rec.author);featureAuthor.textContent='by '+clean(rec.author);}
