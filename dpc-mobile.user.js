@@ -2,7 +2,7 @@
 // ==UserScript==
 // @name DPChallenge Mobile — Editorial Gallery
 // @namespace dpc-mobile
-// @version 4.11
+// @version 4.12
 // @updateURL https://raw.githubusercontent.com/Konador/dpc-mobile-restyle/main/dpc-mobile.user.js
 // @downloadURL https://raw.githubusercontent.com/Konador/dpc-mobile-restyle/main/dpc-mobile.user.js
 // @match *://*.dpchallenge.com/challenge_vote_image.php*
@@ -1394,12 +1394,13 @@ html.dpc-viewing body {
                     return rec.promise;
                 }
                 function composeCredit(){
-                    featureAuthor.style.removeProperty('left');featureAuthor.style.removeProperty('top');
+                    featureAuthor.style.removeProperty('margin-left');featureAuthor.style.removeProperty('left');featureAuthor.style.removeProperty('top');
                     credits.classList.remove('tucked');
                     const rows=[...featureTitle.querySelectorAll('.dpc-title-line')];
                     rows.forEach(row=>{row.style.removeProperty('align-self');row.style.removeProperty('margin-left');});
                     if(featureAuthor.hidden||!rows.length||!credits.clientWidth)return;
                     const row=rows.at(-1),w=credits.clientWidth,aw=featureAuthor.getBoundingClientRect().width;
+                    if(rows.length>1){const initial=parseFloat(featureTitle.style.fontSize);for(let size=initial+1;size<=56;size++){featureTitle.style.fontSize=size+'px';if(rows.some(r=>r.scrollWidth>w+1)||rows.reduce((h,r)=>h+r.offsetHeight,0)>featureTitle.clientHeight-2){featureTitle.style.fontSize=(size-1)+'px';break;}}}
                     if(!aw||aw>w*.8)return;
                     const base=credits.getBoundingClientRect();
                     const ctx=document.createElement('canvas').getContext('2d');
@@ -1424,8 +1425,11 @@ html.dpc-viewing body {
                     }
                     // Leave the credit beneath the baseline, but let it share the descender band.
                     function choose(m){
-                        const choices=[0,w-aw];
-                        return choices.find(x=>m.blocked.every(([l,r])=>x+aw+3<=l||x>=r+3));
+                        const rr=row.getBoundingClientRect();
+                        const center=(rr.left+rr.right)/2-base.left;
+                        const target=Math.max(0,Math.min(w-aw,center-aw*.35));
+                        const choices=[target,0,w-aw,...m.blocked.flatMap(([l,r])=>[l-aw-4,r+4])].filter(x=>x>=0&&x+aw<=w);
+                        return choices.filter(x=>m.blocked.every(([l,r])=>x+aw+3<=l||x>=r+3)).sort((a,b)=>Math.abs(a-target)-Math.abs(b-target))[0];
                     }
                     let m=measure(),x=choose(m);
                     if(x===undefined&&rows.length===1){
@@ -1439,7 +1443,7 @@ html.dpc-viewing body {
                         }
                         if(x===undefined){featureTitle.style.fontSize=original+'px';row.style.removeProperty('align-self');}
                     }
-                    if(x===undefined)return;
+                    if(x===undefined){featureAuthor.style.marginLeft=Math.max(0,Math.min(w-aw,(row.getBoundingClientRect().left+row.getBoundingClientRect().right)/2-base.left-aw*.35))+'px';return;}
                     const top=Math.max(0,m.baseline+3);
                     if(top+featureAuthor.offsetHeight>credits.clientHeight)return;
                     featureAuthor.style.left=x+'px';featureAuthor.style.top=top+'px';credits.classList.add('tucked');
