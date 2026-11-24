@@ -2,11 +2,13 @@
 // ==UserScript==
 // @name DPChallenge Mobile — Editorial Gallery
 // @namespace dpc-mobile
-// @version 3.6
+// @version 4.0
 // @updateURL https://raw.githubusercontent.com/Konador/dpc-mobile-restyle/main/dpc-mobile.user.js
 // @downloadURL https://raw.githubusercontent.com/Konador/dpc-mobile-restyle/main/dpc-mobile.user.js
 // @match *://*.dpchallenge.com/challenge_vote_image.php*
 // @match *://*.dpchallenge.com/challenge_vote_list.php*
+// @match *://*.dpchallenge.com/
+// @match *://*.dpchallenge.com/index.php*
 // @grant none
 // @run-at document-start
 // @noframes
@@ -58,6 +60,7 @@ function boot() {
 }
 
 const root = document.documentElement;
+const isHome = location.pathname === '/' || location.pathname === '/index.php';
 const isList = location.pathname.includes('challenge_vote_list.php');
 
 function viewport() {
@@ -951,6 +954,7 @@ html.dpc-viewing body {
     style.textContent += "\n/* V3.2 — Stable title layout */\n#dpc-app .dpc-title {\n    width:100%;\n    min-width:0;\n    align-self:stretch;\n}\n#dpc-app .dpc-title-line {\n    flex-shrink:0;\n    max-width:100%;\n    overflow-wrap:anywhere;\n}\n#dpc-app .dpc-title-part {\n    max-width:100%;\n    overflow-wrap:anywhere;\n}\n";
     style.textContent += "\n/* V3.3 — Reserve space around editorial titles */\n#dpc-app .dpc-kicker,\n#dpc-app .dpc-challenge {\n    flex-shrink:0;\n}\n#dpc-app .dpc-challenge {\n    min-height:12px;\n}\n#dpc-app .dpc-title {\n    margin-block:5px!important;\n    line-height:1.02!important;\n}\n";
     style.textContent += "\n/* V3.4 — Simplified challenge typography */\n#dpc-app .dpc-info {\n    height:132px;\n}\n#dpc-app .dpc-kicker {\n    gap:12px;\n    flex-shrink:0;\n}\n#dpc-app .dpc-edition {\n    min-width:0;\n    overflow:hidden;\n    text-overflow:ellipsis;\n    white-space:nowrap;\n}\n#dpc-app .dpc-number {\n    flex-shrink:0;\n}\n#dpc-app .dpc-challenge,\n#dpc-app .dpc-list-edition {\n    display:none!important;\n}\n#dpc-app .dpc-title {\n    margin-block:6px!important;\n}\n";
+    style.textContent += "\n.dpc-home{max-width:900px;margin:auto;padding:20px 18px}\n.dpc-home-welcome{color:var(--muted);font-size:12px;margin-bottom:22px}\n.dpc-home section{margin-bottom:34px}\n#dpc-app .dpc-home h2{font:500 32px/1.1 var(--serif);letter-spacing:-.04em;margin:0 0 16px;padding-bottom:12px;border-bottom:1px solid var(--accent);color:inherit}\n.dpc-home h2 em{color:var(--accent)}\n.dpc-home-card{padding:15px 0;border-bottom:1px solid var(--line)}\n#dpc-app .dpc-home-card h3{font:500 24px/1.15 var(--serif);margin:0 0 8px;color:inherit}\n.dpc-home-meta{font-size:11px;color:var(--muted);line-height:1.6;white-space:pre-line}\n.dpc-home-progress{height:3px;background:var(--line);margin:12px 0}\n.dpc-home-progress i{display:block;height:100%;background:var(--accent)}\n#dpc-app .dpc-home-action{display:inline-block;padding:9px 14px;border:1px solid var(--accent);border-radius:5px;margin-top:10px;font-size:12px;color:var(--accent)}\n#dpc-app .dpc-home-more,#dpc-app .dpc-home-menu-button{background:none;color:var(--accent);border:1px solid var(--line);border-radius:5px;padding:9px 12px}\n.dpc-home-more{margin-top:14px}\n.dpc-home-menu{padding:16px 18px;border-bottom:1px solid var(--line)}\n.dpc-home-menu a{display:block;padding:10px 0;border-bottom:1px solid var(--line)}\n.dpc-home-menu form{margin:12px 0}\n.dpc-home-winners{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px}\n.dpc-home-winners a{min-width:0;font-size:10px;overflow-wrap:anywhere}\n.dpc-home-winners a:first-child{grid-column:1/-1;font-size:14px}\n.dpc-home-winners img{display:block;width:100%;height:auto;aspect-ratio:1;object-fit:contain;background:#242424;padding:5px;border:0}\n.dpc-home-winners a:first-child img{aspect-ratio:4/3}\n.dpc-home-winners a:nth-child(1) img{border-bottom:3px solid #668cda}\n.dpc-home-winners a:nth-child(2) img{border-bottom:3px solid #d45a65}\n.dpc-home-winners a:nth-child(3) img{border-bottom:3px solid #e4c45c}\n.dpc-home-thread{display:block;padding:12px 0;border-bottom:1px solid var(--line)}\n.dpc-home-thread small{display:block;color:var(--muted);margin-top:5px}\n";
     document.head.append(style);
 
     const header = `
@@ -1088,6 +1092,117 @@ html.dpc-viewing body {
     /* ==========================================
        CHALLENGE OVERVIEW
        ========================================== */
+
+
+    function buildHome() {
+        const clean = n => (n?.textContent || '').replace(/\s+/g,' ').trim();
+        const originalLinks = [...document.querySelectorAll('a[href]')];
+        const safe = a => {try {const u=new URL(a.getAttribute('href'),location.href);return /^https?:$/.test(u.protocol)?u.href:'';}catch{return '';}};
+        const heading = re => [...document.querySelectorAll('td,th,b,strong,h1,h2,h3,h4,div,span')].find(n=>re.test(clean(n)) && ![...n.children].some(c=>re.test(clean(c))));
+        const voteHead=heading(/^Challenges Needing Your Votes$/i);
+        const entryHead=heading(/^Challenges Open for Submission$/i);
+        const forumHead=heading(/^Recent Forum Activity$/i);
+        const newsHead=heading(/^Site News$/i);
+        const region = (h,predicate) => {
+            if(!h)return null;
+            for(let p=h.parentElement;p&&p!==document.body;p=p.parentElement){
+                if([...p.querySelectorAll('a[href]')].some(predicate))return p;
+            }
+            return null;
+        };
+        const challengeLink=a=>/challenge(?:_vote_list|_vote_image|_submit|_results)?\.php/i.test(safe(a))&&/CHALLENGE_ID=/i.test(safe(a));
+        const make=(tag,cls,txt)=>{const n=document.createElement(tag);if(cls)n.className=cls;if(txt)n.textContent=txt;return n;};
+        const link=(a,cls,txt)=>{const n=make('a',cls,txt||clean(a));n.href=safe(a);return n;};
+        function challenges(h,voting){
+            const area=region(h,challengeLink);if(!area)return [];
+            const items=new Map();
+            for(const a of area.querySelectorAll('a[href]')){
+                if(!challengeLink(a))continue;
+                const u=new URL(safe(a)),id=u.searchParams.get('CHALLENGE_ID')||u.searchParams.get('challenge_id');
+                const name=clean(a);
+                if(!id||!name||/^(vote|enter|submit|results|more|view|details|review|\[more\])$/i.test(name))continue;
+                if(items.has(id))continue;
+                let block=a.closest('tr')||a.parentElement;
+                for(let p=block;p&&p!==area;p=p.parentElement){
+                    const t=clean(p);
+                    if(t.length>1200)break;
+                    block=p;
+                    if(/(?:rated|entries|left|remaining|deadline)/i.test(t))break;
+                }
+                const raw=clean(block);
+                const progress=raw.match(/(\d+)\s*(?:\/|of)\s*(\d+)\s*(?:images\s*)?rated/i)||raw.match(/rated\s+(\d+)\s*(?:\/|of)\s*(\d+)/i);
+                const action=[...block.querySelectorAll('a[href]')].find(x=>voting?/challenge_vote_(?:list|image)\.php/i.test(safe(x)):/challenge_submit\.php/i.test(safe(x)))||a;
+                items.set(id,{name,raw,progress,action,a});
+            }
+            return [...items.values()].sort((a,b)=>voting?Number(!!a.progress&&+a.progress[1]>=+a.progress[2])-Number(!!b.progress&&+b.progress[1]>=+b.progress[2]):0);
+        }
+        const votes=challenges(voteHead,true),entries=challenges(entryHead,false);
+        if(!votes.length&&!entries.length){console.warn('DPC homepage: challenge markup not recognised');return;}
+        app.innerHTML=header.replace('● VOTING','').replace('</header>','</header>')+'<nav class="dpc-home-menu" hidden></nav><div class="dpc-home"></div>'+footer;
+        const menu=$('.dpc-home-menu'),body=$('.dpc-home');
+        const menuButton=make('button','dpc-home-menu-button','☰');
+        menuButton.type='button';menuButton.setAttribute('aria-label','Navigation');menuButton.setAttribute('aria-expanded','false');
+        $('.dpc-header-right').append(menuButton);
+        menuButton.onclick=()=>{menu.hidden=!menu.hidden;menuButton.setAttribute('aria-expanded',String(!menu.hidden));};
+        const seen=new Set();
+        function menuLink(a){const url=safe(a),name=clean(a);if(!url||!name||seen.has(url))return;seen.add(url);menu.append(link(a));}
+        originalLinks.filter(a=>/^(My Home|Challenges|Community|League|Photos|Equipment|Learn|Help|Inbox|Log out|Log in|Register|Private Messaging|Image Search)$/i.test(clean(a))).forEach(menuLink);
+        const news=region(newsHead,a=>!!clean(a)&&!!safe(a));if(news) [...news.querySelectorAll('a[href]')].forEach(menuLink);
+        const inbox=originalLinks.find(a=>/inbox|private messag/i.test(clean(a)));if(inbox)menuLink(inbox);
+        const searchForm=[...document.forms].find(f=>/image.search/i.test(f.action)||/image search/i.test(clean(f)));
+        if(searchForm)menu.append(searchForm.cloneNode(true));
+        const welcome=(document.body.textContent||'').match(/Welcome back[^\r\n]{0,80}/i);
+        if(welcome)body.append(make('div','dpc-home-welcome',welcome[0].split(/\(\s*log out/i)[0].trim()));
+        function section(first,last){const sec=make('section');const h=make('h2','',first+' ');h.append(make('em','',last));sec.append(h);body.append(sec);return sec;}
+        function cards(items,sec,voting,limit){
+            const hidden=[];
+            items.forEach((item,i)=>{
+                const card=make('article','dpc-home-card');
+                const title=make('h3');title.append(link(item.a,'',item.name));card.append(title);
+                const meta=item.raw.replace(item.name,'').trim();
+                if(meta)card.append(make('div','dpc-home-meta',meta));
+                if(item.progress){const bar=make('div','dpc-home-progress'),fill=make('i');fill.style.width=Math.min(100,100*+item.progress[1]/Math.max(1,+item.progress[2]))+'%';bar.append(fill);card.append(bar);}
+                card.append(link(item.action,'dpc-home-action',voting?(item.progress&&+item.progress[1]>=+item.progress[2]?'Review votes':'Continue voting'):'View challenge'));
+                sec.append(card);if(i>=limit){card.hidden=true;hidden.push(card);}
+            });
+            if(hidden.length){const b=make('button','dpc-home-more','View all '+items.length);b.onclick=()=>{hidden.forEach(c=>c.hidden=false);b.remove();};sec.append(b);}
+        }
+        if(votes.length)cards(votes,section('Voting','now'),true,Infinity);
+        if(entries.length)cards(entries,section('Open for','entries'),false,3);
+        const winnerLinks=originalLinks.filter(a=>/\/image\.php\?/i.test(safe(a))&&a.querySelector('img'));
+        const groups=new Map();
+        for(const a of winnerLinks){
+            let p=a.parentElement;
+            while(p&&p!==document.body){
+                const count=[...p.querySelectorAll('a[href]')].filter(x=>winnerLinks.includes(x)).length;
+                if(count>=5){if(count===5){if(!groups.has(p))groups.set(p,[...p.querySelectorAll('a[href]')].filter(x=>winnerLinks.includes(x)));}break;}
+                p=p.parentElement;
+            }
+        }
+        if(groups.size){
+            const sec=section('Recent','winners');
+            for(const [group,photos] of groups){
+                const card=make('article','dpc-home-card');
+                const titleLink=[...group.querySelectorAll('a[href]')].find(challengeLink)||[...group.parentElement.querySelectorAll('a[href]')].find(challengeLink);
+                if(titleLink){const h=make('h3');h.append(link(titleLink));card.append(h);}
+                const grid=make('div','dpc-home-winners');
+                photos.forEach(a=>{const img=a.querySelector('img'),n=link(a,'',' ');n.textContent='';const copy=make('img');copy.src=img.currentSrc||img.src;copy.alt=img.alt||'';copy.loading='lazy';n.append(copy);const caption=clean(a)||img.alt;if(caption)n.append(make('div','',caption));grid.append(n);});
+                card.append(grid);sec.append(card);
+            }
+        }
+        const forum=region(forumHead,a=>/forum.*(?:THREAD_ID|thread)/i.test(safe(a)));
+        if(forum){
+            const sec=section('Community','talk'),hidden=[],seenThreads=new Set();
+            for(const a of forum.querySelectorAll('a[href]')){
+                const url=safe(a);if(!/forum.*(?:THREAD_ID|thread)/i.test(url)||!clean(a)||seenThreads.has(url))continue;
+                seenThreads.add(url);const n=link(a,'dpc-home-thread');const row=a.closest('tr');if(row)n.append(make('small','',clean(row).replace(clean(a),'').trim()));sec.append(n);
+                if(seenThreads.size>8){n.hidden=true;hidden.push(n);}
+            }
+            if(hidden.length){const b=make('button','dpc-home-more','Load more');b.onclick=()=>{hidden.forEach(n=>n.hidden=false);b.remove();};sec.append(b);}
+        }
+        $('#dpc-original').onclick=()=>original();
+        mount();
+    }
 
     function buildList() {
         const cells = [...document.querySelectorAll(
@@ -1512,6 +1627,7 @@ html.dpc-viewing body {
 
     }
 
+    if (isHome) { buildHome(); return; }
     if (isList) {
         buildList();
         return;
