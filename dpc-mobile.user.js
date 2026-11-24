@@ -2,7 +2,7 @@
 // ==UserScript==
 // @name DPChallenge Mobile — Editorial Gallery
 // @namespace dpc-mobile
-// @version 4.19
+// @version 4.20
 // @updateURL https://raw.githubusercontent.com/Konador/dpc-mobile-restyle/main/dpc-mobile.user.js
 // @downloadURL https://raw.githubusercontent.com/Konador/dpc-mobile-restyle/main/dpc-mobile.user.js
 // @match *://*.dpchallenge.com/challenge_vote_image.php*
@@ -969,6 +969,7 @@ html.dpc-viewing body {
     style.textContent += "#dpc-app .dpc-home-hero,#dpc-app .dpc-results-slide{background:#151515}";
     style.textContent += "#dpc-app .dpc-editorial-credit .dpc-home-feature-author{display:flex;align-items:center;gap:7px}#dpc-app .dpc-caption-ribbon{position:static;flex:none;width:19px;height:26px;filter:none}#dpc-app .dpc-home-strip .dpc-overlay-ribbon{width:19px;height:26px;top:4px;left:4px}";
     style.textContent += "#dpc-app .dpc-entry-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin:12px 0}#dpc-app .dpc-entry-grid .dpc-home-card{min-width:0;display:flex;flex-direction:column;padding:10px;margin:0;border:1px solid var(--line);border-radius:6px;background:rgba(128,128,128,.06)}#dpc-app .dpc-entry-grid .dpc-home-card[hidden]{display:none!important}#dpc-app .dpc-entry-grid h3{font-size:19px;line-height:1.12;margin:0 0 6px;overflow-wrap:anywhere}#dpc-app .dpc-entry-grid .dpc-home-meta{font-size:12px;line-height:1.35;margin:0 0 6px}#dpc-app .dpc-entry-grid .dpc-home-detail{font-size:10px;line-height:1.3;gap:3px 8px;margin:0 0 8px}#dpc-app .dpc-entry-grid .dpc-home-action{font-size:11px;padding:7px 8px;margin-top:auto;align-self:flex-start}#dpc-app .dpc-home-vote-card:before{opacity:1;background-image:linear-gradient(90deg,#111115f5 0%,#111115eb 48%,#111115c4 100%),var(--vote-image,none)}html.dpc-light #dpc-app .dpc-home-vote-card:before{background-image:linear-gradient(90deg,#f5f6f8fa 0%,#f5f6f8ef 48%,#f5f6f8d0 100%),var(--vote-image,none)}@media(max-width:320px){#dpc-app .dpc-entry-grid{grid-template-columns:1fr}}";
+    style.textContent += "#dpc-app .dpc-entry-grid{gap:10px}#dpc-app .dpc-entry-grid .dpc-home-card{position:relative;padding:13px 12px;min-height:142px;background:rgba(128,128,128,.095);color:inherit;text-decoration:none;gap:0}#dpc-app .dpc-entry-grid h3{font-size:23px;line-height:1.08;color:var(--accent);margin:0 0 8px;overflow-wrap:break-word}#dpc-app .dpc-entry-grid .dpc-home-meta{font-size:13px;line-height:1.4;color:inherit;opacity:.86;margin:0 0 12px}#dpc-app .dpc-entry-grid .dpc-home-detail{display:grid;grid-template-columns:1fr auto;gap:5px 6px;align-items:center;margin:auto 0 0;padding-top:9px;border-top:1px solid var(--line);font-size:11px;line-height:1.3}#dpc-app .dpc-entry-grid .dpc-entry-rules{grid-column:1/-1;text-transform:uppercase;letter-spacing:.055em;font-size:9px}#dpc-app .dpc-entry-grid .dpc-entry-deadline{grid-column:1/-1;color:var(--accent);font-size:12px;font-weight:600}#dpc-app .dpc-entry-grid .dpc-entry-count{grid-column:1/-1;font-size:11px}#dpc-app .dpc-entry-grid a:focus-visible{outline:2px solid var(--accent);outline-offset:2px}#dpc-app .dpc-entry-grid a:active{background:rgba(128,128,128,.17)}";
     document.head.append(style);
 
     const header = `
@@ -1312,8 +1313,9 @@ html.dpc-viewing body {
             const hidden=[];
             const grid=voting?sec:make('div','dpc-entry-grid');if(!voting)sec.append(grid);
             items.forEach((item,i)=>{
-                const card=make('article','dpc-home-card');
-                const title=make('h3');title.append(link(item.a,'',item.name));card.append(title);
+                const card=make(voting?'article':'a','dpc-home-card');
+                if(!voting)card.href=safe(item.action)||safe(item.a);
+                const title=make('h3');if(voting)title.append(link(item.a,'',item.name));else title.textContent=item.name;card.append(title);
                 const meta=item.raw.replace(item.name,'').replace(/\s*\.\.\s*\[more\]\s*/gi,' ').replace(/^\s*[·•]\s*/,'').trim();
                 const rules=meta.match(/\b(?:Standard|Minimal|Extended|Advanced|Expert|Basic|No) Editing\b/i);
                 const deadline=meta.match(/(?:\d+\s+(?:days?|hours?|minutes?)(?:\s+and\s+|\s+)?)+left/i);
@@ -1326,9 +1328,9 @@ html.dpc-viewing body {
                 if(!voting)description=description.replace(/\bEnter this challenge\b/gi,'').replace(/(?:^|[·•])\s*received\b/gi,'').replace(/^[\s·•]+|[\s·•]+$/g,'').trim();
                 if(description&&!/^N\s*\/\s*A\.?$/i.test(description))card.append(make('div','dpc-home-meta',description));
                 const details=make('div','dpc-home-detail');
-                if(rules)details.append(make('span','',rules[0]));
-                if(deadline)details.append(make('span','',deadline[0]));
-                if(!voting&&count)details.append(make('span','',count[0]));
+                if(rules)details.append(make('span','dpc-entry-rules',rules[0]));
+                if(deadline)details.append(make('span','dpc-entry-deadline',deadline[0]));
+                if(!voting&&count)details.append(make('span','dpc-entry-count',count[0]));
                 if(details.childNodes.length)card.append(details);
                 if(item.progress)card.append(make('div','dpc-home-vote-status',item.progress[1]+' of '+item.progress[2]+' rated'));
                 if(item.progress){const bar=make('div','dpc-home-progress'),fill=make('i');fill.style.width=Math.min(100,100*+item.progress[1]/Math.max(1,+item.progress[2]))+'%';bar.append(fill);card.append(bar);}
@@ -1340,14 +1342,14 @@ html.dpc-viewing body {
                         if(images.length){const image=images[Math.floor(Math.random()*images.length)];const entry=image.closest('a[href]')||image.closest('.dpc-vote-thumbnail-cell')?.querySelector('a[href*="challenge_vote_image.php"]');const set=src=>{const url=new URL(src,safe(item.action));if(/^https?:$/.test(url.protocol))card.style.setProperty('--vote-image','url('+JSON.stringify(url.href)+')');};if(image.matches('.dpc-vote-primary-image'))set(image.getAttribute('src'));else if(entry){const url=new URL(entry.getAttribute('href'),safe(item.action));fetch(url,{credentials:'same-origin'}).then(r=>r.ok?r.text():'').then(html=>{const photo=new DOMParser().parseFromString(html,'text/html').querySelector('.dpc-vote-primary-image');if(photo)set(new URL(photo.getAttribute('src'),url).href);}).catch(()=>{});}}
                     }).catch(()=>{});
                 }
-                card.append(link(item.action,'dpc-home-action',voting?(item.progress&&+item.progress[1]>=+item.progress[2]?'Review votes':'Continue voting'):'View challenge'));
+                if(voting)card.append(link(item.action,'dpc-home-action',item.progress&&+item.progress[1]>=+item.progress[2]?'Review votes':'Continue voting'));
                 grid.append(card);if(i>=limit){card.hidden=true;hidden.push(card);}
             });
             if(hidden.length){const b=make('button','dpc-home-more','View all '+items.length);b.onclick=()=>{hidden.forEach(c=>c.hidden=false);b.remove();};sec.append(b);}
         }
         if(votes.length)cards(votes,section('Voting','now'),true,Infinity);
         else if(voteHead){const sec=section('Voting','now');const area=region(voteHead,a=>!!safe(a));if(area){const copy=area.cloneNode(true);sec.append(copy);}}
-        if(entries.length)cards(entries,section('Open for','entries'),false,4);
+        if(entries.length)cards(entries,section('Open for','entries'),false,Infinity);
         else if(entryHead){const sec=section('Open for','entries');const area=region(entryHead,a=>!!safe(a));if(area)sec.append(area.cloneNode(true));}
         const winnerLinks=originalLinks.filter(a=>/\/image\.php\?/i.test(safe(a))&&a.querySelector('img'));
         const groups=new Map();
