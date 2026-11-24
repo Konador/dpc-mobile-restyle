@@ -2,7 +2,7 @@
 // ==UserScript==
 // @name DPChallenge Mobile — Editorial Gallery
 // @namespace dpc-mobile
-// @version 4.4
+// @version 4.5
 // @updateURL https://raw.githubusercontent.com/Konador/dpc-mobile-restyle/main/dpc-mobile.user.js
 // @downloadURL https://raw.githubusercontent.com/Konador/dpc-mobile-restyle/main/dpc-mobile.user.js
 // @match *://*.dpchallenge.com/challenge_vote_image.php*
@@ -958,6 +958,7 @@ html.dpc-viewing body {
     style.textContent += "\n#dpc-app .dpc-home h2{font:500 25px/1.2 var(--serif);letter-spacing:-.02em;border-bottom:1px solid var(--line)}\n#dpc-app .dpc-home h2 em{color:inherit;font-style:normal}\nhtml.dpc-light #dpc-app .dpc-home :is(h2,h3){font-optical-sizing:none;font-variation-settings:\"opsz\" 6;-webkit-text-stroke:.35px currentColor}\nhtml.dpc-mobile:not(.dpc-light) #dpc-app .dpc-home :is(h2,h3){font-optical-sizing:none;font-variation-settings:\"opsz\" 36;-webkit-text-stroke:.175px currentColor}\n#dpc-app .dpc-home-winners .dpc-winning-photo{border:0}\n#dpc-app .dpc-home-winners .dpc-ribbon{display:inline-block;width:14px;height:18px;vertical-align:middle;margin-right:5px;padding:0;background:none;aspect-ratio:auto;object-fit:contain;border:0}\n.dpc-home-winners svg{vertical-align:middle;margin-right:5px}\n";
     style.textContent += "\n.dpc-home-winners .dpc-winner-tile{min-width:0}\n.dpc-home-winners .dpc-winner-tile:first-child{grid-column:1/-1}\n#dpc-app .dpc-home-winners .dpc-winner-tile>a{display:block;grid-column:auto;font-size:10px}\n#dpc-app .dpc-home-winners .dpc-winner-tile:first-child>a{font-size:14px}\n#dpc-app .dpc-home-winners .dpc-winner-tile:not(:first-child) .dpc-winning-photo{aspect-ratio:1}\n#dpc-app .dpc-home-winners .dpc-winner-tile .dpc-winner-author{color:var(--muted);font-weight:400;margin-top:4px;font-size:11px;overflow-wrap:anywhere}\n#dpc-app .dpc-home-winners .dpc-winner-tile:first-child .dpc-winner-author{font-size:13px}\n";
     style.textContent += "\n#dpc-app .dpc-home .dpc-results-feature{padding:20px 0 30px;margin-bottom:16px}\n#dpc-app .dpc-home .dpc-results-feature h3{font-size:30px;color:inherit;margin:5px 0 16px}\n.dpc-results-kicker{font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:var(--accent)}\n#dpc-app .dpc-home-winners .dpc-winner-tile:first-child .dpc-winning-photo{aspect-ratio:auto;max-height:70vh;object-fit:contain;padding:0}\n#dpc-app .dpc-home-winners .dpc-winner-tile:first-child>a{font:500 26px/1.2 var(--serif);color:inherit}\n#dpc-app .dpc-home-winners .dpc-winner-tile:first-child>a>div{margin-top:12px}\n#dpc-app .dpc-home-winners .dpc-winner-tile:first-child .dpc-winner-author{margin-bottom:12px}\n#dpc-app .dpc-home-winners .dpc-winner-tile:not(:first-child) .dpc-winning-photo{padding:0;object-fit:contain}\n.dpc-home-vote-card{position:relative;isolation:isolate;overflow:hidden;padding:18px!important;margin:10px 0;border:1px solid var(--line);border-radius:8px}\n.dpc-home-vote-card:before{content:\"\";position:absolute;inset:0;z-index:-1;background-image:linear-gradient(90deg,#111115 5%,#111115e8 40%,#11111570),var(--vote-image,none);background-size:cover;background-position:center,right center;opacity:.85}\nhtml.dpc-light .dpc-home-vote-card:before{background-image:linear-gradient(90deg,#f5f6f8 5%,#f5f6f8ed 40%,#f5f6f880),var(--vote-image,none)}\n";
+    style.textContent += "\n#dpc-app .dpc-home-gallery{display:grid;gap:14px}\n#dpc-app .dpc-home-hero{position:relative;display:block;background:#242424}\n#dpc-app .dpc-home-hero img{display:block;width:100%;height:auto;max-height:70vh;object-fit:contain}\n#dpc-app .dpc-home-strip{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:6px}\n#dpc-app .dpc-home-strip button{position:relative;min-width:0;padding:2px;border:1px solid transparent;background:transparent;border-radius:3px;cursor:pointer}\n#dpc-app .dpc-home-strip button[aria-pressed=\"true\"]{border-color:var(--accent)}\n#dpc-app .dpc-home-strip img{display:block;width:100%;aspect-ratio:1;object-fit:contain;background:#242424}\n#dpc-app .dpc-overlay-ribbon{position:absolute;top:8px;left:8px;width:32px;height:38px;filter:drop-shadow(0 2px 3px #0009);pointer-events:none}\n#dpc-app .dpc-home-strip .dpc-overlay-ribbon{width:17px;height:21px;top:4px;left:4px}\n#dpc-app .dpc-home-feature-title{font:500 26px/1.15 var(--serif);color:inherit;display:block}\n#dpc-app .dpc-home-feature-author{display:block;color:var(--muted);font-size:13px;margin-top:5px}\n#dpc-app .dpc-home-vote-card .dpc-home-meta{font-size:13px;line-height:1.45;color:inherit}\n.dpc-home-detail{display:flex;flex-wrap:wrap;gap:6px 12px;font-size:11px;color:var(--muted);margin:10px 0}\n.dpc-home-vote-status{font-size:12px;font-weight:600;color:var(--accent);margin-top:12px}\n.dpc-home-vote-card:before{background-image:linear-gradient(90deg,#111115f5 0%,#111115e8 48%,#111115a8 100%),var(--vote-image,none)}\nhtml.dpc-light .dpc-home-vote-card:before{background-image:linear-gradient(90deg,#f5f6f8fa 0%,#f5f6f8ed 48%,#f5f6f8b8 100%),var(--vote-image,none)}\n";
     document.head.append(style);
 
     const header = `
@@ -1162,15 +1163,29 @@ html.dpc-viewing body {
             items.forEach((item,i)=>{
                 const card=make('article','dpc-home-card');
                 const title=make('h3');title.append(link(item.a,'',item.name));card.append(title);
-                const meta=item.raw.replace(item.name,'').trim();
-                if(meta)card.append(make('div','dpc-home-meta',meta));
+                const meta=item.raw.replace(item.name,'').replace(/\s*\.\.\s*\[more\]\s*/gi,' ').replace(/^\s*[·•]\s*/,'').trim();
+                const rules=meta.match(/\b(?:Standard|Minimal|Extended|Advanced|Expert|Basic|No) Editing\b/i);
+                const deadline=meta.match(/(?:\d+\s+(?:days?|hours?|minutes?)(?:\s+and\s+|\s+)?)+left/i);
+                const count=meta.match(/\b\d+\s+entries\b/i);
+                let description=meta.replace(/you rated.*$/i,'').replace(/Thank you for voting!?/gi,'');
+                if(rules)description=description.replace(rules[0],'');
+                if(deadline)description=description.replace(deadline[0],'');
+                if(!voting&&count)description=description.replace(count[0],'');
+                description=description.replace(/^[\s·•]+|[\s·•]+$/g,'');
+                if(description)card.append(make('div','dpc-home-meta',description));
+                const details=make('div','dpc-home-detail');
+                if(rules)details.append(make('span','',rules[0]));
+                if(deadline)details.append(make('span','',deadline[0]));
+                if(!voting&&count)details.append(make('span','',count[0]));
+                if(details.childNodes.length)card.append(details);
+                if(item.progress)card.append(make('div','dpc-home-vote-status',item.progress[1]+' of '+item.progress[2]+' rated'));
                 if(item.progress){const bar=make('div','dpc-home-progress'),fill=make('i');fill.style.width=Math.min(100,100*+item.progress[1]/Math.max(1,+item.progress[2]))+'%';bar.append(fill);card.append(bar);}
                 if(voting){
                     card.classList.add('dpc-home-vote-card');
                     fetch(safe(item.action),{credentials:'same-origin'}).then(r=>r.ok?r.text():'').then(html=>{
                         const doc=new DOMParser().parseFromString(html,'text/html');
                         const images=[...doc.querySelectorAll('.dpc-vote-thumbnail-image img,.dpc-vote-primary-image')];
-                        if(images.length){const image=images[Math.floor(Math.random()*images.length)];const url=new URL(image.getAttribute('src'),safe(item.action));if(/^https?:$/.test(url.protocol))card.style.setProperty('--vote-image','url('+JSON.stringify(url.href)+')');}
+                        if(images.length){const image=images[Math.floor(Math.random()*images.length)];const entry=image.closest('a[href]')||image.closest('.dpc-vote-thumbnail-cell')?.querySelector('a[href*="challenge_vote_image.php"]');const set=src=>{const url=new URL(src,safe(item.action));if(/^https?:$/.test(url.protocol))card.style.setProperty('--vote-image','url('+JSON.stringify(url.href)+')');};if(image.matches('.dpc-vote-primary-image'))set(image.getAttribute('src'));else if(entry){const url=new URL(entry.getAttribute('href'),safe(item.action));fetch(url,{credentials:'same-origin'}).then(r=>r.ok?r.text():'').then(html=>{const photo=new DOMParser().parseFromString(html,'text/html').querySelector('.dpc-vote-primary-image');if(photo)set(new URL(photo.getAttribute('src'),url).href);}).catch(()=>{});}}
                     }).catch(()=>{});
                 }
                 card.append(link(item.action,'dpc-home-action',voting?(item.progress&&+item.progress[1]>=+item.progress[2]?'Review votes':'Continue voting'):'View challenge'));
@@ -1210,39 +1225,45 @@ html.dpc-viewing body {
                 const name=label?clean(label).split(/\s+-\s+(?:Member|Open|Invitational|Speed|Winning)/i)[0]:titleLink?clean(titleLink):'';
                 if(titleLink&&name)h.append(link(titleLink,'',name));else h.textContent=name;
                 if(name)card.append(h);
-                const grid=make('div','dpc-home-winners');
-                photos.forEach((a,i)=>{
-                    const img=a.querySelector('img'),n=link(a,'',' ');n.textContent='';
-                    const copy=make('img','dpc-winning-photo');copy.src=img.currentSrc||img.src;copy.alt=img.alt||'';copy.loading='lazy';n.append(copy);
-                    const caption=make('div');
-                    if(i<3){
-                        const icon=document.createElementNS('http://www.w3.org/2000/svg','svg');
-                        icon.setAttribute('viewBox','0 0 40 52');icon.setAttribute('width',i===0?'26':'16');icon.setAttribute('height',i===0?'34':'21');icon.setAttribute('aria-label',['First place','Second place','Third place'][i]);
-                        const id='dpc-ribbon-'+groups.size+'-'+[...groups.keys()].indexOf(group)+'-'+i;
-                        icon.innerHTML='<defs><mask id="'+id+'"><circle cx="20" cy="20" r="18.5" fill="white"/><path d="M20 12 L26.928 16 L26.928 24 L20 28 L13.072 24 L13.072 16 Z" fill="black"/>'+Array.from({length:6},(_,j)=>'<path d="M20 12 L41 24.124" stroke="black" stroke-width="1.7" transform="rotate('+(j*60)+' 20 20)"/>').join('')+'</mask></defs><path d="M9 32 5 51 14 46 20 38 26 46 35 51 31 32Z" fill="currentColor"/><circle cx="20" cy="20" r="18.5" fill="currentColor" mask="url(#'+id+')"/>';
-                        icon.style.color=['#668cda','#d45a65','#e4c45c'][i];caption.append(icon);
-                    }
-                    caption.append(document.createTextNode(clean(a)||img.alt||''));n.append(caption);
-                    const tile=make('div','dpc-winner-tile');tile.append(n);
-                    let author=null;
+                const grid=make('div','dpc-home-gallery');
+                const hero=make('a','dpc-home-hero'),heroImg=make('img');hero.append(heroImg);
+                const credits=make('div'),featureTitle=make('a','dpc-home-feature-title'),featureAuthor=make('a','dpc-home-feature-author');credits.append(featureTitle,featureAuthor);
+                const strip=make('div','dpc-home-strip');grid.append(hero,credits,strip);
+                const records=photos.map((a,i)=>{
+                    const img=a.querySelector('img');let author=null;
                     for(let p=a.parentElement;p&&p!==group;p=p.parentElement){
                         if([...p.querySelectorAll('a[href]')].filter(x=>winnerLinks.includes(x)).length>1)break;
-                        author=[...p.querySelectorAll('a[href]')].find(x=>/profile\.php|user\.php|USER_ID=/i.test(safe(x))&&clean(x));
-                        if(author)break;
+                        author=[...p.querySelectorAll('a[href]')].find(x=>/profile\.php|user\.php|USER_ID=/i.test(safe(x))&&clean(x));if(author)break;
                     }
-                    if(author)tile.append(link(author,'dpc-winner-author',clean(author)));
-                    grid.append(tile);
-                    if(i===0)fetch(safe(a),{credentials:'same-origin'}).then(r=>r.ok?r.text():'').then(html=>{
+                    return {a,img,author,title:clean(a)||img.alt||'',src:img.currentSrc||img.src,i};
+                });
+                let serial=0,selected=-1;
+                function ribbon(i){
+                    if(i>2)return null;
+                    const icon=document.createElementNS('http://www.w3.org/2000/svg','svg');
+                    icon.setAttribute('class','dpc-overlay-ribbon');icon.setAttribute('viewBox','0 0 40 47');icon.setAttribute('aria-label',['First place','Second place','Third place'][i]);
+                    const id='dpc-ribbon-'+[...groups.keys()].indexOf(group)+'-'+(++serial);
+                    icon.innerHTML='<defs><mask id="'+id+'"><circle cx="20" cy="20" r="18.5" fill="white"/><path d="M20 12 L26.928 16 L26.928 24 L20 28 L13.072 24 L13.072 16 Z" fill="black"/>'+Array.from({length:6},(_,j)=>'<path d="M20 12 L41 24.124" stroke="black" stroke-width="1.7" transform="rotate('+(j*60)+' 20 20)"/>').join('')+'</mask></defs><path d="M10 32 8 46 15 42 20 45 25 42 32 46 30 32Z" fill="currentColor"/><circle cx="20" cy="20" r="18.5" fill="currentColor" mask="url(#'+id+')"/>';
+                    icon.style.color=['#668cda','#d45a65','#e4c45c'][i];return icon;
+                }
+                function select(i){
+                    selected=i;const rec=records[i];hero.href=safe(rec.a);heroImg.src=rec.full||rec.src;heroImg.alt=rec.title;
+                    hero.querySelector('svg')?.remove();const icon=ribbon(i);if(icon)hero.append(icon);
+                    featureTitle.href=hero.href;featureTitle.textContent=rec.title;
+                    featureAuthor.hidden=!rec.author;if(rec.author){featureAuthor.href=safe(rec.author);featureAuthor.textContent=clean(rec.author);}
+                    [...strip.children].forEach((b,j)=>b.setAttribute('aria-pressed',String(j===i)));
+                    if(!rec.requested){rec.requested=true;fetch(safe(rec.a),{credentials:'same-origin'}).then(r=>r.ok?r.text():'').then(html=>{
                         const doc=new DOMParser().parseFromString(html,'text/html');
-                        const thumb=new URL(img.src,location.href);
-                        const file=thumb.pathname.split('/').pop();
+                        const file=new URL(rec.src,location.href).pathname.split('/').pop();
                         const candidates=[...doc.images].filter(x=>{const src=x.getAttribute('src')||'';return src&&!/thumb|ribbon|logo|avatar|banner|spacer/i.test(src);});
-                        const same=candidates.filter(x=>{try{return new URL(x.getAttribute('src'),safe(a)).pathname.split('/').pop()===file;}catch{return false;}});
+                        const same=candidates.filter(x=>{try{return new URL(x.getAttribute('src'),safe(rec.a)).pathname.split('/').pop()===file;}catch{return false;}});
                         const preferred=doc.querySelector('.dpc-vote-primary-image, img#image, img#main_image');
                         const picks=preferred?[preferred]:same.length?same:candidates.filter(x=>/\/(?:image|images|photo|photos)\//i.test(x.getAttribute('src')||'')&&(+x.getAttribute('width')>=400||+x.getAttribute('height')>=400));
-                        for(const candidate of picks.slice(0,4)){const url=new URL(candidate.getAttribute('src'),safe(a)).href;const probe=new Image();probe.onload=()=>{if(probe.naturalWidth*probe.naturalHeight>Math.max(copy.naturalWidth*copy.naturalHeight,40000))copy.src=url;};probe.src=url;}
-                    }).catch(()=>{});
-                });
+                        for(const candidate of picks.slice(0,4)){const url=new URL(candidate.getAttribute('src'),safe(rec.a)).href;const probe=new Image();probe.onload=()=>{const area=probe.naturalWidth*probe.naturalHeight;if(area>Math.max(rec.area||0,40000)){rec.area=area;rec.full=url;if(selected===i)heroImg.src=url;}};probe.src=url;}
+                    }).catch(()=>{});}
+                }
+                records.forEach((rec,i)=>{const button=make('button');button.type='button';button.setAttribute('aria-label',rec.title+(rec.author?' by '+clean(rec.author):''));const img=make('img');img.src=rec.src;img.alt=rec.title;img.loading='lazy';button.append(img);const icon=ribbon(i);if(icon)button.append(icon);button.onclick=()=>select(i);strip.append(button);});
+                select(0);
                 card.append(grid);sec.append(card);
             }
         }
