@@ -2,7 +2,7 @@
 // ==UserScript==
 // @name DPChallenge Mobile — Editorial Gallery
 // @namespace dpc-mobile
-// @version 4.48
+// @version 4.49
 // @updateURL https://raw.githubusercontent.com/Konador/dpc-mobile-restyle/main/dpc-mobile.user.js
 // @downloadURL https://raw.githubusercontent.com/Konador/dpc-mobile-restyle/main/dpc-mobile.user.js
 // @match *://*.dpchallenge.com/challenge_vote_image.php*
@@ -995,6 +995,7 @@ html.dpc-viewing body {
     style.textContent += "#dpc-app .dpc-native-menu-group>summary.dpc-split-summary{position:relative;padding:0;gap:0;min-height:44px}#dpc-app .dpc-split-summary>a.dpc-parent-link{font:inherit;letter-spacing:inherit;color:inherit;flex:1;min-width:0;padding:8px 0;border:0;display:flex;align-items:center;justify-content:space-between;gap:8px;align-self:stretch}#dpc-app .dpc-split-summary>.dpc-expand-hit{width:48px;min-height:44px;flex:none;align-self:stretch}#dpc-app .dpc-split-summary:after{position:absolute;right:15px;top:50%;margin:0;pointer-events:none;transform:translateY(-50%) rotate(-45deg)}#dpc-app .dpc-native-menu-group[open]>summary.dpc-split-summary:after{transform:translateY(-50%) rotate(45deg)}#dpc-app .dpc-split-summary .dpc-restyle-mark{margin-right:2px}";
     style.textContent += "#dpc-app .dpc-native-menu-children>details>summary,#dpc-app .dpc-native-menu-children>a{min-height:34px;padding:7px 0;font:400 14px/20px system-ui,sans-serif;box-sizing:border-box}#dpc-app .dpc-native-menu-children>details>summary.dpc-split-summary{padding:0;min-height:34px}#dpc-app .dpc-native-menu-children .dpc-split-summary>.dpc-expand-hit{min-height:0;height:auto;align-self:stretch}#dpc-app .dpc-native-menu-children .dpc-split-summary>a.dpc-parent-link{padding:7px 0;min-height:34px}";
     style.textContent += "#dpc-app .dpc-native-menu-group>summary{position:relative;align-items:center}#dpc-app .dpc-native-menu-group>summary:after{position:absolute;right:15px;top:50%;margin:0;transform:translate(0,-50%) rotate(-45deg);transform-origin:center}#dpc-app .dpc-native-menu-group[open]>summary:after{transform:translate(0,-50%) rotate(45deg)}#dpc-app .dpc-split-summary>a.dpc-parent-link{align-items:center}#dpc-app .dpc-split-summary .dpc-restyle-mark{align-self:center;transform:translateY(0);margin-top:0;margin-bottom:0}#dpc-app .dpc-restyle-mark i{top:-1px}";
+    style.textContent += "#dpc-app .dpc-home-thread{display:flex;flex-direction:column;gap:4px;padding:12px 0;border-bottom:1px solid var(--line);font:400 14px/1.4 system-ui,sans-serif;color:inherit;text-decoration:none}#dpc-app .dpc-home-thread[hidden]{display:none!important}#dpc-app .dpc-thread-category{font:500 11px/1.35 system-ui,sans-serif;color:var(--accent)}#dpc-app .dpc-thread-title{font:500 16px/1.35 system-ui,sans-serif;color:inherit;overflow-wrap:anywhere}#dpc-app .dpc-thread-details{display:flex;justify-content:space-between;align-items:baseline;gap:10px;color:var(--muted);font:400 11px/1.4 system-ui,sans-serif}#dpc-app .dpc-thread-time{flex:none;text-align:right}#dpc-app .dpc-home-thread small{font:400 11px/1.4 system-ui,sans-serif;margin:0}";
     document.head.append(style);
 
     const header = `
@@ -1673,7 +1674,20 @@ html.dpc-viewing body {
             const sec=section('Community','talk'),hidden=[],seenThreads=new Set();
             for(const a of forum.querySelectorAll('a[href]')){
                 const url=safe(a);if(!/forum.*(?:THREAD_ID|thread)/i.test(url)||!clean(a)||seenThreads.has(url))continue;
-                seenThreads.add(url);const n=link(a,'dpc-home-thread');const row=a.closest('tr');if(row)n.append(make('small','',clean(row).replace(clean(a),'').trim()));sec.append(n);
+                seenThreads.add(url);
+                const n=link(a,'dpc-home-thread');n.textContent='';
+                const row=a.closest('tr'),cell=a.closest('td');
+                const cells=row?[...row.cells]:[],idx=cells.indexOf(cell);
+                const meta=idx>=0?cells.slice(idx+1).map(clean):[];
+                const title=make('span','dpc-thread-title',clean(a));
+                if(meta.length>=3){
+                    n.append(make('span','dpc-thread-category',meta[1]),title);
+                    const details=make('span','dpc-thread-details');
+                    details.append(make('span','dpc-thread-author',meta[0]),make('span','dpc-thread-time',meta.slice(2).join(' ')));n.append(details);
+                }else{
+                    n.append(title);if(row)n.append(make('small','',clean(row).replace(clean(a),'').trim()));
+                }
+                sec.append(n);
                 if(seenThreads.size>8){n.hidden=true;hidden.push(n);}
             }
             if(hidden.length){const b=make('button','dpc-home-more','Load more');b.onclick=()=>{hidden.forEach(n=>n.hidden=false);b.remove();};sec.append(b);}
