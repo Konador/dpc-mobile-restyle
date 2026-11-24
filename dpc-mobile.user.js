@@ -2,7 +2,7 @@
 // ==UserScript==
 // @name DPChallenge Mobile — Editorial Gallery
 // @namespace dpc-mobile
-// @version 4.33
+// @version 4.34
 // @updateURL https://raw.githubusercontent.com/Konador/dpc-mobile-restyle/main/dpc-mobile.user.js
 // @downloadURL https://raw.githubusercontent.com/Konador/dpc-mobile-restyle/main/dpc-mobile.user.js
 // @match *://*.dpchallenge.com/challenge_vote_image.php*
@@ -984,6 +984,7 @@ html.dpc-viewing body {
     style.textContent += "#dpc-app .dpc-entry-grid h3,#dpc-app .dpc-home-vote-card h3,#dpc-app .dpc-home-vote-card h3 a{color:inherit}#dpc-app .dpc-home-vote-card .dpc-home-vote-status{color:inherit;font-weight:500}";
     style.textContent += "#dpc-app .dpc-entry-grid h3,#dpc-app .dpc-home-vote-card h3,#dpc-app .dpc-home-vote-card h3 a{color:var(--accent)}#dpc-app .dpc-home-vote-card .dpc-home-detail{display:grid;grid-template-columns:96px minmax(0,1fr);column-gap:8px;align-items:baseline}#dpc-app .dpc-home-vote-card .dpc-entry-deadline{grid-column:2}#dpc-app .dpc-home-vote-card .dpc-entry-rules{grid-column:1}#dpc-app .dpc-home-vote-card .dpc-home-vote-status{font-size:13px;font-weight:500;color:var(--muted)}#dpc-app .dpc-home-vote-card .dpc-home-meta{font-size:13px!important;line-height:1.4!important}#dpc-app .dpc-home-vote-card:before{background-image:linear-gradient(90deg,#111115fa 0%,#111115ed 40%,#111115b0 70%,#11111545 100%),var(--vote-image,none)}html.dpc-light #dpc-app .dpc-home-vote-card:before{background-image:linear-gradient(90deg,#f5f6f8fa 0%,#f5f6f8ed 40%,#f5f6f8b0 70%,#f5f6f845 100%),var(--vote-image,none)}";
     style.textContent += "html.dpc-comment-keyboard #dpc-app{padding:0!important}html.dpc-comment-keyboard #dpc-app .dpc-header,html.dpc-comment-keyboard #dpc-app .dpc-info,html.dpc-comment-keyboard #dpc-app .dpc-tabs,html.dpc-comment-keyboard #dpc-app .dpc-controls>:not(#comment-panel),html.dpc-comment-keyboard #dpc-app .dpc-footer,html.dpc-comment-keyboard #dpc-app .dpc-stage-button{display:none!important}html.dpc-comment-keyboard #dpc-app .dpc-stage{height:var(--dpc-keyboard-photo,180px)!important;min-height:0!important}html.dpc-comment-keyboard #dpc-app .dpc-controls{padding:0 12px!important;margin:0!important}html.dpc-comment-keyboard #comment-panel{padding:8px 0!important;margin:0!important}html.dpc-comment-keyboard #dpc-comment-input{height:80px!important;min-height:56px!important;margin:4px 0!important}html.dpc-comment-keyboard #dpc-app .dpc-slide{padding:5px!important}";
+    style.textContent += "#dpc-app #dpc-submit-comment{display:block;width:100%;min-height:36px;margin:8px 0 0;border:1px solid var(--accent);border-radius:6px;background:var(--accent);color:#111115;font-size:13px;font-weight:600}html.dpc-light #dpc-app #dpc-submit-comment{color:white}html.dpc-comment-keyboard #dpc-app #dpc-submit-comment{margin-top:5px;min-height:34px}";
     document.head.append(style);
 
     const header = `
@@ -2265,8 +2266,9 @@ html.dpc-viewing body {
         <textarea id="dpc-comment-input"
                   placeholder="Share your thoughts…"></textarea>
         <div class="dpc-comment-hint">
-            Saved when you move to another photograph
+            Submit or move to another photograph
         </div>
+        <button type="button" id="dpc-submit-comment">Submit comment</button>
     </div>
 
     <div class="dpc-navigation">
@@ -2315,6 +2317,7 @@ html.dpc-viewing body {
         $('#dpc-prev').disabled=v||!current.prev;
         $('#dpc-next').disabled=v||!current.next;
         input.disabled=v||!current.comment;
+        $('#dpc-submit-comment').disabled=v||!current.comment||!dirty||!(current.next||current.prev);
         $('#dpc-favourite').disabled=v;
         $('#dpc-report').disabled=v;
         $('.dpc-overview').disabled=v;
@@ -2595,10 +2598,11 @@ html.dpc-viewing body {
 
     input.oninput=()=>{
         dirty=true;
+        $('#dpc-submit-comment').disabled=busy||!current.comment||!(current.next||current.prev);
         sync();
 
         $('.dpc-comment-hint').textContent=
-            'Unsaved · swipe or press Next to save';
+            'Unsaved comment';
     };
 
     function commit(p,direction=0) {
@@ -2899,6 +2903,7 @@ html.dpc-viewing body {
         commit(p,d);
     }
 
+    $('#dpc-submit-comment').onclick=()=>{if(!busy&&dirty){input.blur();navigate(current.next?1:-1);}};
     $('#dpc-prev').onclick=()=>navigate(-1);
     $('#dpc-next').onclick=()=>navigate(1);
 
@@ -3358,7 +3363,7 @@ html.dpc-viewing body {
         const h=vv?.height||innerHeight;
         if(!focused&&!keyboardActive)keyboardBaseline=Math.max(h,innerHeight);
         const open=focused&&keyboardBaseline-h>100;
-        if(open){root.style.setProperty('--dpc-keyboard-photo',Math.max(64,Math.floor(h-150))+'px');}
+        if(open){root.style.setProperty('--dpc-keyboard-photo',Math.max(64,Math.floor(h-195))+'px');}
         if(open!==keyboardActive){keyboardActive=open;root.classList.toggle('dpc-comment-keyboard',open);if(open){scrollTo(0,0);requestAnimationFrame(()=>scrollTo(0,0));}else if(focused){commentInput.scrollIntoView({block:'nearest'});}}
     }
     commentInput.addEventListener('focus',()=>{keyboardBaseline=Math.max(vv?.height||0,innerHeight);syncCommentKeyboard();});
