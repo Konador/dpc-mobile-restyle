@@ -2,7 +2,7 @@
 // ==UserScript==
 // @name DPChallenge Mobile — Editorial Gallery
 // @namespace dpc-mobile
-// @version 4.38
+// @version 4.39
 // @updateURL https://raw.githubusercontent.com/Konador/dpc-mobile-restyle/main/dpc-mobile.user.js
 // @downloadURL https://raw.githubusercontent.com/Konador/dpc-mobile-restyle/main/dpc-mobile.user.js
 // @match *://*.dpchallenge.com/challenge_vote_image.php*
@@ -1620,7 +1620,7 @@ html.dpc-viewing body {
 
             const selected = cell.querySelector('a.vs');
             const comment = cell.querySelector(
-                'img[src*="comment_"]'
+                'a[href*="challenge_vote_list_comment.php"] img[src$="/comment.gif"]'
             );
 
             const rating = Number(selected?.textContent.trim()) || 0;
@@ -1798,7 +1798,7 @@ html.dpc-viewing body {
 
                         const href = new URL(link.getAttribute('href'),response.url).href;
                         const selected = cell.querySelector('a.vs');
-                        const comment = cell.querySelector('img[src*="comment_"]');
+                        const comment = cell.querySelector('a[href*="challenge_vote_list_comment.php"] img[src$="/comment.gif"]');
 
                         entryMap.set(href,{
                             href,
