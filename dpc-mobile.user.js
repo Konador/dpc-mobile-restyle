@@ -2,7 +2,7 @@
 // ==UserScript==
 // @name DPChallenge Mobile — Editorial Gallery
 // @namespace dpc-mobile
-// @version 4.2
+// @version 4.3
 // @updateURL https://raw.githubusercontent.com/Konador/dpc-mobile-restyle/main/dpc-mobile.user.js
 // @downloadURL https://raw.githubusercontent.com/Konador/dpc-mobile-restyle/main/dpc-mobile.user.js
 // @match *://*.dpchallenge.com/challenge_vote_image.php*
@@ -956,6 +956,7 @@ html.dpc-viewing body {
     style.textContent += "\n/* V3.4 — Simplified challenge typography */\n#dpc-app .dpc-info {\n    height:132px;\n}\n#dpc-app .dpc-kicker {\n    gap:12px;\n    flex-shrink:0;\n}\n#dpc-app .dpc-edition {\n    min-width:0;\n    overflow:hidden;\n    text-overflow:ellipsis;\n    white-space:nowrap;\n}\n#dpc-app .dpc-number {\n    flex-shrink:0;\n}\n#dpc-app .dpc-challenge,\n#dpc-app .dpc-list-edition {\n    display:none!important;\n}\n#dpc-app .dpc-title {\n    margin-block:6px!important;\n}\n";
     style.textContent += "\n.dpc-home{max-width:900px;margin:auto;padding:20px 18px}\n.dpc-home-welcome{color:var(--muted);font-size:12px;margin-bottom:22px}\n.dpc-home section{margin-bottom:34px}\n#dpc-app .dpc-home h2{font:500 32px/1.1 var(--serif);letter-spacing:-.04em;margin:0 0 16px;padding-bottom:12px;border-bottom:1px solid var(--accent);color:inherit}\n.dpc-home h2 em{color:var(--accent)}\n.dpc-home-card{padding:15px 0;border-bottom:1px solid var(--line)}\n#dpc-app .dpc-home-card h3{font:500 24px/1.15 var(--serif);margin:0 0 8px;color:inherit}\n.dpc-home-meta{font-size:11px;color:var(--muted);line-height:1.6;white-space:pre-line}\n.dpc-home-progress{height:3px;background:var(--line);margin:12px 0}\n.dpc-home-progress i{display:block;height:100%;background:var(--accent)}\n#dpc-app .dpc-home-action{display:inline-block;padding:9px 14px;border:1px solid var(--accent);border-radius:5px;margin-top:10px;font-size:12px;color:var(--accent)}\n#dpc-app .dpc-home-more,#dpc-app .dpc-home-menu-button{background:none;color:var(--accent);border:1px solid var(--line);border-radius:5px;padding:9px 12px}\n.dpc-home-more{margin-top:14px}\n.dpc-home-menu{padding:16px 18px;border-bottom:1px solid var(--line)}\n.dpc-home-menu a{display:block;padding:10px 0;border-bottom:1px solid var(--line)}\n.dpc-home-menu form{margin:12px 0}\n.dpc-home-winners{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px}\n.dpc-home-winners a{min-width:0;font-size:10px;overflow-wrap:anywhere}\n.dpc-home-winners a:first-child{grid-column:1/-1;font-size:14px}\n.dpc-home-winners img{display:block;width:100%;height:auto;aspect-ratio:1;object-fit:contain;background:#242424;padding:5px;border:0}\n.dpc-home-winners a:first-child img{aspect-ratio:4/3}\n.dpc-home-winners a:nth-child(1) img{border-bottom:3px solid #668cda}\n.dpc-home-winners a:nth-child(2) img{border-bottom:3px solid #d45a65}\n.dpc-home-winners a:nth-child(3) img{border-bottom:3px solid #e4c45c}\n.dpc-home-thread{display:block;padding:12px 0;border-bottom:1px solid var(--line)}\n.dpc-home-thread small{display:block;color:var(--muted);margin-top:5px}\n";
     style.textContent += "\n#dpc-app .dpc-home h2{font:500 25px/1.2 var(--serif);letter-spacing:-.02em;border-bottom:1px solid var(--line)}\n#dpc-app .dpc-home h2 em{color:inherit;font-style:normal}\nhtml.dpc-light #dpc-app .dpc-home :is(h2,h3){font-optical-sizing:none;font-variation-settings:\"opsz\" 6;-webkit-text-stroke:.35px currentColor}\nhtml.dpc-mobile:not(.dpc-light) #dpc-app .dpc-home :is(h2,h3){font-optical-sizing:none;font-variation-settings:\"opsz\" 36;-webkit-text-stroke:.175px currentColor}\n#dpc-app .dpc-home-winners .dpc-winning-photo{border:0}\n#dpc-app .dpc-home-winners .dpc-ribbon{display:inline-block;width:14px;height:18px;vertical-align:middle;margin-right:5px;padding:0;background:none;aspect-ratio:auto;object-fit:contain;border:0}\n.dpc-home-winners svg{vertical-align:middle;margin-right:5px}\n";
+    style.textContent += "\n.dpc-home-winners .dpc-winner-tile{min-width:0}\n.dpc-home-winners .dpc-winner-tile:first-child{grid-column:1/-1}\n#dpc-app .dpc-home-winners .dpc-winner-tile>a{display:block;grid-column:auto;font-size:10px}\n#dpc-app .dpc-home-winners .dpc-winner-tile:first-child>a{font-size:14px}\n#dpc-app .dpc-home-winners .dpc-winner-tile:not(:first-child) .dpc-winning-photo{aspect-ratio:1}\n#dpc-app .dpc-home-winners .dpc-winner-tile .dpc-winner-author{color:var(--muted);font-weight:400;margin-top:4px;font-size:11px;overflow-wrap:anywhere}\n#dpc-app .dpc-home-winners .dpc-winner-tile:first-child .dpc-winner-author{font-size:13px}\n";
     document.head.append(style);
 
     const header = `
@@ -1199,7 +1200,16 @@ html.dpc-viewing body {
                         if(ribbon){const icon=make('img','dpc-ribbon');icon.src=ribbon.src;icon.alt=['First place','Second place','Third place'][i];caption.append(icon);}
                         else{const icon=document.createElementNS('http://www.w3.org/2000/svg','svg');icon.setAttribute('viewBox','0 0 20 26');icon.setAttribute('width','14');icon.setAttribute('height','18');icon.setAttribute('aria-label',['First place','Second place','Third place'][i]);icon.innerHTML='<path fill="currentColor" d="M5 13 2 25 8 22 10 16 12 22 18 25 15 13Z"/><circle cx="10" cy="9" r="8" fill="currentColor"/><circle cx="10" cy="9" r="4.5" fill="#242424"/>';icon.style.color=['#668cda','#d45a65','#e4c45c'][i];caption.append(icon);}
                     }
-                    caption.append(document.createTextNode(clean(a)||img.alt||''));n.append(caption);grid.append(n);
+                    caption.append(document.createTextNode(clean(a)||img.alt||''));n.append(caption);
+                    const tile=make('div','dpc-winner-tile');tile.append(n);
+                    let author=null;
+                    for(let p=a.parentElement;p&&p!==group;p=p.parentElement){
+                        if([...p.querySelectorAll('a[href]')].filter(x=>winnerLinks.includes(x)).length>1)break;
+                        author=[...p.querySelectorAll('a[href]')].find(x=>/profile\.php|user\.php|USER_ID=/i.test(safe(x))&&clean(x));
+                        if(author)break;
+                    }
+                    if(author)tile.append(link(author,'dpc-winner-author',clean(author)));
+                    grid.append(tile);
                     if(i===0)fetch(safe(a),{credentials:'same-origin'}).then(r=>r.ok?r.text():'').then(html=>{
                         const doc=new DOMParser().parseFromString(html,'text/html');
                         const candidates=[...doc.images].filter(x=>! /thumb|ribbon|logo|avatar|banner/i.test(x.getAttribute('src')||'')&&(+x.getAttribute('width')>=400||+x.getAttribute('height')>=400));
