@@ -2,7 +2,7 @@
 // ==UserScript==
 // @name DPChallenge Mobile — Editorial Gallery
 // @namespace dpc-mobile
-// @version 4.9
+// @version 4.10
 // @updateURL https://raw.githubusercontent.com/Konador/dpc-mobile-restyle/main/dpc-mobile.user.js
 // @downloadURL https://raw.githubusercontent.com/Konador/dpc-mobile-restyle/main/dpc-mobile.user.js
 // @match *://*.dpchallenge.com/challenge_vote_image.php*
@@ -961,8 +961,9 @@ html.dpc-viewing body {
     style.textContent += "\n#dpc-app .dpc-home-gallery{display:grid;gap:14px}\n#dpc-app .dpc-home-hero{position:relative;display:block;background:#242424}\n#dpc-app .dpc-home-hero img{display:block;width:100%;height:auto;max-height:70vh;object-fit:contain}\n#dpc-app .dpc-home-strip{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:6px}\n#dpc-app .dpc-home-strip button{position:relative;min-width:0;padding:2px;border:1px solid transparent;background:transparent;border-radius:3px;cursor:pointer}\n#dpc-app .dpc-home-strip button[aria-pressed=\"true\"]{border-color:var(--accent)}\n#dpc-app .dpc-home-strip img{display:block;width:100%;aspect-ratio:1;object-fit:contain;background:#242424}\n#dpc-app .dpc-overlay-ribbon{position:absolute;top:8px;left:8px;width:32px;height:38px;filter:drop-shadow(0 2px 3px #0009);pointer-events:none}\n#dpc-app .dpc-home-strip .dpc-overlay-ribbon{width:17px;height:21px;top:4px;left:4px}\n#dpc-app .dpc-home-feature-title{font:500 26px/1.15 var(--serif);color:inherit;display:block}\n#dpc-app .dpc-home-feature-author{display:block;color:var(--muted);font-size:13px;margin-top:5px}\n#dpc-app .dpc-home-vote-card .dpc-home-meta{font-size:13px;line-height:1.45;color:inherit}\n.dpc-home-detail{display:flex;flex-wrap:wrap;gap:6px 12px;font-size:11px;color:var(--muted);margin:10px 0}\n.dpc-home-vote-status{font-size:12px;font-weight:600;color:var(--accent);margin-top:12px}\n.dpc-home-vote-card:before{background-image:linear-gradient(90deg,#111115f5 0%,#111115e8 48%,#111115a8 100%),var(--vote-image,none)}\nhtml.dpc-light .dpc-home-vote-card:before{background-image:linear-gradient(90deg,#f5f6f8fa 0%,#f5f6f8ed 48%,#f5f6f8b8 100%),var(--vote-image,none)}\n";
     style.textContent += "\n#dpc-app .dpc-home-hero{height:var(--hero-height, min(100vw,65vh));overflow:hidden;touch-action:pan-y}\n#dpc-app .dpc-home-hero img{width:100%;height:100%;max-height:none;object-fit:contain;user-select:none;-webkit-user-drag:none}\n#dpc-app .dpc-home-feature-title.dpc-title{height:88px;min-height:88px;display:flex;flex-direction:column;justify-content:center;margin:0!important;overflow:hidden}\n#dpc-app .dpc-home-feature-author{font:italic 500 20px/1.25 var(--serif);color:var(--accent);letter-spacing:.01em;margin:0;min-height:25px}\n#dpc-app .dpc-home-gallery{gap:10px}\n";
     style.textContent += '#dpc-app .dpc-overlay-ribbon{height:32px} #dpc-app .dpc-home-strip .dpc-overlay-ribbon{height:17px}';
-    style.textContent += "\n#dpc-app .dpc-home{padding-top:12px}\n#dpc-app .dpc-home section>h2{margin-bottom:12px;padding-bottom:8px}\n#dpc-app .dpc-home .dpc-results-feature{padding:16px 12px 18px;margin:0 -6px 20px;background:#19191e;border:1px solid #ffffff0c;border-radius:6px}\nhtml.dpc-light #dpc-app .dpc-home .dpc-results-feature{background:#fff;border-color:#0000000d}\n#dpc-app .dpc-home .dpc-results-feature h3{margin:0 0 12px;font-size:27px}\n#dpc-app .dpc-home-gallery{gap:8px}\n#dpc-app .dpc-home-feature-title.dpc-title{height:78px;min-height:78px}\n#dpc-app .dpc-results-rail{display:flex;width:100%;height:100%;transform:translate3d(-100%,0,0);will-change:transform}\n#dpc-app .dpc-results-slide{position:relative;flex:0 0 100%;height:100%;min-width:0;background:#242424}\n#dpc-app .dpc-results-slide img{width:100%;height:100%;object-fit:contain}\n#dpc-app .dpc-home-hero{touch-action:pan-y;user-select:none}\n";
+    style.textContent += "\n#dpc-app .dpc-home{padding-top:12px}\n#dpc-app .dpc-home section>h2{margin-bottom:12px;padding-bottom:8px}\n#dpc-app .dpc-home .dpc-results-feature{padding:16px 12px 18px;margin:0 -6px 20px;background:#19191e;border:1px solid #ffffff0c;border-radius:6px}\nhtml.dpc-light #dpc-app .dpc-home .dpc-results-feature{background:#fff;border-color:#0000000d}\n#dpc-app .dpc-home .dpc-results-feature h3{margin:0 0 12px;font-size:27px}\n#dpc-app .dpc-home-gallery{gap:8px}\n#dpc-app .dpc-home-feature-title.dpc-title{height:78px;min-height:78px}\n#dpc-app .dpc-results-rail{display:flex;width:100%;height:100%;transform:translate3d(calc(-100% - 12px),0,0);will-change:transform}\n#dpc-app .dpc-results-slide{position:relative;flex:0 0 100%;height:100%;min-width:0;background:#242424}\n#dpc-app .dpc-results-slide img{width:100%;height:100%;object-fit:contain}\n#dpc-app .dpc-home-hero{touch-action:pan-y;user-select:none}\n";
     style.textContent += "#dpc-app .dpc-results-footer{display:flex;align-items:center;justify-content:space-between;border-top:1px solid var(--line);margin-top:14px;padding:14px 2px 0;min-height:44px;box-sizing:border-box;color:var(--accent);font-size:13px;font-weight:600;text-decoration:none}#dpc-app .dpc-results-footer span{font-size:20px;font-weight:400}";
+    style.textContent += "\n#dpc-app .dpc-home .dpc-results-feature{background:#25262e;border-color:#ffffff20;margin-bottom:24px}\nhtml.dpc-light #dpc-app .dpc-home .dpc-results-feature{background:#fff;border-color:#cdd3df}\n#dpc-app .dpc-results-footer{border-top-color:#ffffff26;background:#ffffff06;padding:12px 10px;margin-top:14px;border-radius:0 0 4px 4px}\nhtml.dpc-light #dpc-app .dpc-results-footer{border-top-color:#cdd3df;background:#526eaf09}\n#dpc-app .dpc-results-rail{gap:12px}\n#dpc-app .dpc-results-slide{background:#242424}\n";
     document.head.append(style);
 
     const header = `
@@ -1413,7 +1414,7 @@ html.dpc-viewing body {
                     });
                 }
                 let touch=null,suppressClick=0,settling=false;
-                function offset(x,animate=false){rail.style.transition=animate&&!reducedMotion.matches?'transform 220ms cubic-bezier(.2,.75,.25,1)':'none';rail.style.transform='translate3d(calc(-100% + '+x+'px),0,0)';}
+                function offset(x,animate=false){rail.style.transition=animate&&!reducedMotion.matches?'transform 220ms cubic-bezier(.2,.75,.25,1)':'none';rail.style.transform='translate3d(calc(-100% - 12px + '+x+'px),0,0)';}
                 hero.addEventListener('pointerdown',e=>{if(e.isPrimary&&!settling&&e.button===0)touch={x:e.clientX,y:e.clientY,t:performance.now(),dx:0,drag:false,id:e.pointerId};});
                 hero.addEventListener('pointermove',e=>{
                     if(!touch||e.pointerId!==touch.id)return;
@@ -1426,7 +1427,7 @@ html.dpc-viewing body {
                     suppressClick=Date.now()+600;
                     const w=hero.clientWidth,dir=t.dx<0?1:-1,next=selected+dir;
                     const commit=!cancel&&next>=0&&next<records.length&&(Math.abs(t.dx)>w*.22||(Math.abs(t.dx)>35&&performance.now()-t.t<300));
-                    settling=true;offset(commit?-dir*w:0,true);
+                    settling=true;offset(commit?-dir*(w+12):0,true);
                     await new Promise(resolve=>setTimeout(resolve,reducedMotion.matches?0:230));
                     if(commit)await select(next);
                     offset(0);settling=false;
