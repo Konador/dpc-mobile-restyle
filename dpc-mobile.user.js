@@ -2,7 +2,7 @@
 // ==UserScript==
 // @name DPChallenge Mobile — Editorial Gallery
 // @namespace dpc-mobile
-// @version 4.0
+// @version 4.1
 // @updateURL https://raw.githubusercontent.com/Konador/dpc-mobile-restyle/main/dpc-mobile.user.js
 // @downloadURL https://raw.githubusercontent.com/Konador/dpc-mobile-restyle/main/dpc-mobile.user.js
 // @match *://*.dpchallenge.com/challenge_vote_image.php*
@@ -1099,18 +1099,18 @@ html.dpc-viewing body {
         const originalLinks = [...document.querySelectorAll('a[href]')];
         const safe = a => {try {const u=new URL(a.getAttribute('href'),location.href);return /^https?:$/.test(u.protocol)?u.href:'';}catch{return '';}};
         const heading = re => [...document.querySelectorAll('td,th,b,strong,h1,h2,h3,h4,div,span')].find(n=>re.test(clean(n)) && ![...n.children].some(c=>re.test(clean(c))));
-        const voteHead=heading(/^Challenges Needing Your Votes$/i);
-        const entryHead=heading(/^Challenges Open for Submission$/i);
-        const forumHead=heading(/^Recent Forum Activity$/i);
-        const newsHead=heading(/^Site News$/i);
+        const voteHead=heading(/^Challenges Needing Your Votes\s*:?$/i);
+        const entryHead=heading(/^Challenges Open for Submissions?\s*:?$/i);
+        const forumHead=heading(/^Recent Forum Activity\s*:?$/i);
+        const newsHead=heading(/^Site News\s*:?$/i);
         const region = (h,predicate) => {
             if(!h)return null;
-            for(let p=h.parentElement;p&&p!==document.body;p=p.parentElement){
+            for(let p=h;p&&p!==document.body;p=p.parentElement){
                 if([...p.querySelectorAll('a[href]')].some(predicate))return p;
             }
             return null;
         };
-        const challengeLink=a=>/challenge(?:_vote_list|_vote_image|_submit|_results)?\.php/i.test(safe(a))&&/CHALLENGE_ID=/i.test(safe(a));
+        const challengeLink=a=>/challenge[^/?]*\.php/i.test(safe(a))&&/challenge_id=/i.test(safe(a));
         const make=(tag,cls,txt)=>{const n=document.createElement(tag);if(cls)n.className=cls;if(txt)n.textContent=txt;return n;};
         const link=(a,cls,txt)=>{const n=make('a',cls,txt||clean(a));n.href=safe(a);return n;};
         function challenges(h,voting){
@@ -1137,7 +1137,7 @@ html.dpc-viewing body {
             return [...items.values()].sort((a,b)=>voting?Number(!!a.progress&&+a.progress[1]>=+a.progress[2])-Number(!!b.progress&&+b.progress[1]>=+b.progress[2]):0);
         }
         const votes=challenges(voteHead,true),entries=challenges(entryHead,false);
-        if(!votes.length&&!entries.length){console.warn('DPC homepage: challenge markup not recognised');return;}
+        if(!votes.length&&!entries.length)console.warn('DPC homepage: challenge markup not recognised');
         app.innerHTML=header.replace('● VOTING','').replace('</header>','</header>')+'<nav class="dpc-home-menu" hidden></nav><div class="dpc-home"></div>'+footer;
         const menu=$('.dpc-home-menu'),body=$('.dpc-home');
         const menuButton=make('button','dpc-home-menu-button','☰');
@@ -1168,7 +1168,9 @@ html.dpc-viewing body {
             if(hidden.length){const b=make('button','dpc-home-more','View all '+items.length);b.onclick=()=>{hidden.forEach(c=>c.hidden=false);b.remove();};sec.append(b);}
         }
         if(votes.length)cards(votes,section('Voting','now'),true,Infinity);
+        else if(voteHead){const sec=section('Voting','now');const area=region(voteHead,a=>!!safe(a));if(area){const copy=area.cloneNode(true);sec.append(copy);}}
         if(entries.length)cards(entries,section('Open for','entries'),false,3);
+        else if(entryHead){const sec=section('Open for','entries');const area=region(entryHead,a=>!!safe(a));if(area)sec.append(area.cloneNode(true));}
         const winnerLinks=originalLinks.filter(a=>/\/image\.php\?/i.test(safe(a))&&a.querySelector('img'));
         const groups=new Map();
         for(const a of winnerLinks){
@@ -3106,7 +3108,7 @@ html.dpc-viewing body {
 }
 
 /* V3.1 — Reliable photograph metadata */
-if (isList) {
+if (isList || isHome) {
     if (document.readyState === 'loading') {
         document.addEventListener('DOMContentLoaded',boot,{once:true});
     } else {
