@@ -2,7 +2,7 @@
 // ==UserScript==
 // @name DPChallenge Mobile — Editorial Gallery
 // @namespace dpc-mobile
-// @version 4.31
+// @version 4.32
 // @updateURL https://raw.githubusercontent.com/Konador/dpc-mobile-restyle/main/dpc-mobile.user.js
 // @downloadURL https://raw.githubusercontent.com/Konador/dpc-mobile-restyle/main/dpc-mobile.user.js
 // @match *://*.dpchallenge.com/challenge_vote_image.php*
@@ -39,9 +39,15 @@ bootStyle.textContent =
     (bootLight ? '#f5f6f8' : '#111115') +
     '!important;color-scheme:' +
     (bootLight ? 'light' : 'dark') +
-    ';} body{visibility:hidden!important;}';
+    ';} html:not(.dpc-mobile) body{opacity:0!important;visibility:hidden!important;}';
 
-bootRoot.append(bootStyle);
+if (bootRoot) bootRoot.append(bootStyle);
+else {
+    const earlyBootObserver=new MutationObserver(()=>{
+        if(document.documentElement){document.documentElement.append(bootStyle);earlyBootObserver.disconnect();}
+    });
+    earlyBootObserver.observe(document,{childList:true});
+}
 
 function revealPage() {
     bootStyle.remove();
@@ -59,7 +65,7 @@ function boot() {
     }
 }
 
-const root = document.documentElement;
+let root = document.documentElement;
 const isHome = location.pathname === '/' || location.pathname === '/index.php';
 const isList = location.pathname.includes('challenge_vote_list.php');
 
@@ -83,6 +89,7 @@ observer.observe(document, {
 });
 
 function start() {
+    root = document.documentElement;
     viewport();
     observer.disconnect();
 
