@@ -2,7 +2,7 @@
 // ==UserScript==
 // @name DPChallenge Mobile — Editorial Gallery
 // @namespace dpc-mobile
-// @version 4.42
+// @version 4.43
 // @updateURL https://raw.githubusercontent.com/Konador/dpc-mobile-restyle/main/dpc-mobile.user.js
 // @downloadURL https://raw.githubusercontent.com/Konador/dpc-mobile-restyle/main/dpc-mobile.user.js
 // @match *://*.dpchallenge.com/challenge_vote_image.php*
@@ -990,14 +990,15 @@ html.dpc-viewing body {
     style.textContent += "#dpc-app .dpc-thumb-comment{position:static;display:inline-flex;align-items:center;gap:4px;background:none;padding:0;margin-top:5px;color:var(--accent);font:10px/1.3 system-ui,sans-serif;letter-spacing:.01em}#dpc-app .dpc-thumb-comment svg{width:13px;height:13px;flex-shrink:0}html.dpc-light #dpc-app .dpc-thumb-comment{color:var(--accent)}";
     style.textContent += "#dpc-app .dpc-native-menu-group>summary{cursor:pointer;padding:12px 0;border-bottom:1px solid var(--line);font-weight:600;color:var(--accent)}#dpc-app .dpc-native-menu-children{padding-left:16px}#dpc-app .dpc-native-menu-children a{font-size:13px}#dpc-app .dpc-home-menu[hidden]{display:none!important}";
     style.textContent += "#dpc-app .dpc-home-menu a.dpc-restyled-link{display:flex;align-items:center;justify-content:space-between;gap:10px}#dpc-app .dpc-restyle-mark{display:inline-flex;align-items:center;gap:2px;color:var(--muted);opacity:.65;flex:none;height:13px}#dpc-app .dpc-restyle-mark svg{width:13px;height:13px;flex:none}#dpc-app .dpc-restyle-mark i{font:italic 500 17px/1 var(--serif);font-optical-sizing:none;font-variation-settings:'opsz' 12,'wght' 500;letter-spacing:-.6px;-webkit-text-stroke:0;position:relative;top:-2px;padding-right:1px}";
+    style.textContent += "#dpc-app .dpc-brand .dpc-brand-word{color:inherit;margin:0;white-space:nowrap}#dpc-app .dpc-brand-word em{font-family:var(--serif);font-weight:500;font-size:.85em;font-style:italic;color:var(--muted);letter-spacing:-.8px;margin-left:1px}html.dpc-comment-keyboard #dpc-app .dpc-home-menu{display:none!important}";
     document.head.append(style);
 
     const header = `
 <header class="dpc-header">
     <a class="dpc-brand" href="/">
-        <svg viewBox="0 0 40 40" aria-hidden="true"><mask id="dpc-shutter-mask"><circle cx="20" cy="20" r="18.5" fill="white"/><path d="M20 12 L26.928 16 L26.928 24 L20 28 L13.072 24 L13.072 16 Z" fill="black"/><path d="M20 12 L41 24.124" stroke="black" stroke-width="1.7" transform="rotate(0 20 20)"/><path d="M20 12 L41 24.124" stroke="black" stroke-width="1.7" transform="rotate(60 20 20)"/><path d="M20 12 L41 24.124" stroke="black" stroke-width="1.7" transform="rotate(120 20 20)"/><path d="M20 12 L41 24.124" stroke="black" stroke-width="1.7" transform="rotate(180 20 20)"/><path d="M20 12 L41 24.124" stroke="black" stroke-width="1.7" transform="rotate(240 20 20)"/><path d="M20 12 L41 24.124" stroke="black" stroke-width="1.7" transform="rotate(300 20 20)"/></mask><circle cx="20" cy="20" r="18.5" fill="currentColor" mask="url(#dpc-shutter-mask)"/></svg>DPChallenge
+        <svg viewBox="0 0 40 40" aria-hidden="true"><mask id="dpc-shutter-mask"><circle cx="20" cy="20" r="18.5" fill="white"/><path d="M20 12 L26.928 16 L26.928 24 L20 28 L13.072 24 L13.072 16 Z" fill="black"/><path d="M20 12 L41 24.124" stroke="black" stroke-width="1.7" transform="rotate(0 20 20)"/><path d="M20 12 L41 24.124" stroke="black" stroke-width="1.7" transform="rotate(60 20 20)"/><path d="M20 12 L41 24.124" stroke="black" stroke-width="1.7" transform="rotate(120 20 20)"/><path d="M20 12 L41 24.124" stroke="black" stroke-width="1.7" transform="rotate(180 20 20)"/><path d="M20 12 L41 24.124" stroke="black" stroke-width="1.7" transform="rotate(240 20 20)"/><path d="M20 12 L41 24.124" stroke="black" stroke-width="1.7" transform="rotate(300 20 20)"/></mask><circle cx="20" cy="20" r="18.5" fill="currentColor" mask="url(#dpc-shutter-mask)"/></svg><span class="dpc-brand-word">DPC<em>restyle</em></span>
     </a>
-    <div class="dpc-header-right"><span class="dpc-eyebrow">● VOTING</span><button type="button" class="dpc-theme-toggle" aria-label="Switch theme"></button></div>
+    <div class="dpc-header-right"><button type="button" class="dpc-theme-toggle" aria-label="Switch theme"></button></div>
 </header>`;
 
     const footer = `
@@ -1092,7 +1093,96 @@ html.dpc-viewing body {
         }
     }
 
+    function buildSharedMenu() {
+        const clean = n => (n?.textContent || '').replace(/\s+/g,' ').trim();
+        const originalLinks = [...document.querySelectorAll('a[href]')];
+        const safe = a => {try {const u=new URL(a.getAttribute('href'),location.href);return /^https?:$/.test(u.protocol)?u.href:'';}catch{return '';}};
+        const heading = re => [...document.querySelectorAll('body *')].find(n=>re.test(clean(n)) && ![...n.children].some(c=>re.test(clean(c))));
+        const voteHead=heading(/Challenges Needing Your Votes/i);
+        const entryHead=heading(/Challenges Open for Submissions?/i);
+        const forumHead=heading(/Recent Forum Activity/i);
+        const newsHead=heading(/^Site News\s*:?$/i);
+        const region = (h,predicate) => {
+            if(!h)return null;
+            for(let p=h;p&&p!==document.body;p=p.parentElement){
+                if([...p.querySelectorAll('a[href]')].some(predicate))return p;
+            }
+            return null;
+        };
+        const make=(tag,cls,txt)=>{const n=document.createElement(tag);if(cls)n.className=cls;if(txt)n.textContent=txt;return n;};
+        const link=(a,cls,txt)=>{const n=make('a',cls,txt||clean(a));n.href=safe(a);return n;};
+        const menu=make('nav','dpc-home-menu');menu.hidden=true;$('.dpc-header').after(menu);
+        const menuButton=make('button','dpc-home-menu-button','☰');
+        menuButton.type='button';menuButton.setAttribute('aria-label','Navigation');menuButton.setAttribute('aria-expanded','false');
+        $('.dpc-header-right').append(menuButton);
+        menuButton.onclick=()=>{menu.hidden=!menu.hidden;menuButton.setAttribute('aria-expanded',String(!menu.hidden));};
+        const seen=new Set();
+        function menuLink(a){const url=safe(a),name=clean(a);if(!url||!name||seen.has(url))return;seen.add(url);menu.append(link(a));}
+        // Read the native menu definitions, or its already-built menu tree.
+        function nativeMenu(prefix,count,depth=0){
+            if(depth>8)return [];
+            const items=[];
+            for(let i=1;i<=Math.min(Number(count)||0,200);i++){
+                const key=prefix+i,arr=window[key];
+                if(!Array.isArray(arr))continue;
+                items.push({arr,children:nativeMenu(key+'_',arr[3],depth+1)});
+            }
+            return items;
+        }
+        function nativeTree(container,depth=0){
+            if(!container||depth>8)return [];
+            const items=[];
+            for(let m=container.FrstMbr;m&&items.length<200;m=m.PrvMbr){
+                if(Array.isArray(m.Arr))items.unshift({arr:m.Arr,children:nativeTree(m.CCn,depth+1)});
+            }
+            return items;
+        }
+        function renderNative(items,parent){
+            for(const item of items){
+                const label=document.createElement('template');
+                label.innerHTML=String(item.arr[0]||'');
+                const name=clean(label.content);
+                if(!name)continue;
+                let url='';
+                try{if(item.arr[1]){const u=new URL((window.BaseHref||'')+item.arr[1],location.href);if(/^https?:$/.test(u.protocol))url=u.href;}}catch{}
+                const a=url?make('a','',name):null;
+                if(a){a.href=url;seen.add(url);}
+                if(item.children.length){
+                    const group=make('details','dpc-native-menu-group'),summary=make('summary','',name);
+                    group.append(summary);
+                    const sub=make('div','dpc-native-menu-children');
+                    if(a){a.textContent='Overview — '+name;sub.append(a);}
+                    renderNative(item.children,sub);group.append(sub);parent.append(group);
+                }else if(a)parent.append(a);
+            }
+        }
+        const nativeItems=nativeMenu('Menu',window.NoOffFirstLineMenus);
+        const tree=nativeItems.length?nativeItems:nativeTree(window.FrstCntnr);
+        if(tree.length)renderNative(tree,menu);
+        else originalLinks.filter(a=>/^(My Home|Challenges|Community|League|Photos|Equipment|Learn|Help)$/i.test(clean(a))).forEach(menuLink);
+        originalLinks.filter(a=>/^(Inbox|Log out|Log in|Register|Private Messaging|Image Search)$/i.test(clean(a))).forEach(menuLink);
+        const news=region(newsHead,a=>!!clean(a)&&!!safe(a));if(news) [...news.querySelectorAll('a[href]')].forEach(menuLink);
+        const inbox=originalLinks.find(a=>/inbox|private messag/i.test(clean(a)));if(inbox)menuLink(inbox);
+        const searchForm=[...document.forms].find(f=>/image.search/i.test(f.action)||/image search/i.test(clean(f)));
+        if(searchForm)menu.append(searchForm.cloneNode(true));
+        const welcome=(document.body.textContent||'').match(/Welcome back[^\r\n]{0,80}/i);
+        if(welcome)menu.prepend(make('div','dpc-home-welcome',welcome[0].split(/\(\s*log out/i)[0].trim()));
+        // Mark only destinations actually covered by the userscript's @match paths.
+        const supportedPaths=["/challenge_vote_image.php","/challenge_vote_list.php","/","/index.php"];
+        let markerId=0;
+        for(const a of menu.querySelectorAll('a[href]')){
+            let u;try{u=new URL(a.href,location.href);}catch{continue;}
+            if(!/^https?:$/.test(u.protocol)||!/(^|\.)dpchallenge\.com$/i.test(u.hostname)||!supportedPaths.includes(u.pathname))continue;
+            const badge=make('span','dpc-restyle-mark');
+            badge.title='Restyled for mobile';badge.setAttribute('aria-label','Restyled for mobile');
+            const id='dpc-re-shutter-'+(++markerId);
+            badge.innerHTML='<svg viewBox="0 0 40 40" aria-hidden="true"><mask id="'+id+'"><circle cx="20" cy="20" r="18.5" fill="white"/><path d="M20 12 L26.928 16 L26.928 24 L20 28 L13.072 24 L13.072 16 Z" fill="black"/>'+[0,60,120,180,240,300].map(angle=>'<path d="M20 12 L41 24.124" stroke="black" stroke-width="2.4" transform="rotate('+angle+' 20 20)"/>').join('')+'</mask><circle cx="20" cy="20" r="18.5" fill="currentColor" mask="url(#'+id+')"/></svg><i aria-hidden="true">re</i>';
+            const name=make('span','dpc-restyle-link-label');while(a.firstChild)name.append(a.firstChild);a.append(name,badge);a.classList.add('dpc-restyled-link');
+        }
+    }
+
     function mount() {
+        buildSharedMenu();
         document.body.append(app);
         root.classList.add('dpc-mobile');
 
@@ -1313,75 +1403,8 @@ html.dpc-viewing body {
         }
         const votes=challenges(voteHead,true),entries=challenges(entryHead,false);
         if(!votes.length&&!entries.length)console.warn('DPC homepage: challenge markup not recognised');
-        app.innerHTML=header.replace('● VOTING','').replace('</header>','</header>')+'<nav class="dpc-home-menu" hidden></nav><div class="dpc-home"></div>'+footer;
-        const menu=$('.dpc-home-menu'),body=$('.dpc-home');
-        const menuButton=make('button','dpc-home-menu-button','☰');
-        menuButton.type='button';menuButton.setAttribute('aria-label','Navigation');menuButton.setAttribute('aria-expanded','false');
-        $('.dpc-header-right').append(menuButton);
-        menuButton.onclick=()=>{menu.hidden=!menu.hidden;menuButton.setAttribute('aria-expanded',String(!menu.hidden));};
-        const seen=new Set();
-        function menuLink(a){const url=safe(a),name=clean(a);if(!url||!name||seen.has(url))return;seen.add(url);menu.append(link(a));}
-        // Read the native menu definitions, or its already-built menu tree.
-        function nativeMenu(prefix,count,depth=0){
-            if(depth>8)return [];
-            const items=[];
-            for(let i=1;i<=Math.min(Number(count)||0,200);i++){
-                const key=prefix+i,arr=window[key];
-                if(!Array.isArray(arr))continue;
-                items.push({arr,children:nativeMenu(key+'_',arr[3],depth+1)});
-            }
-            return items;
-        }
-        function nativeTree(container,depth=0){
-            if(!container||depth>8)return [];
-            const items=[];
-            for(let m=container.FrstMbr;m&&items.length<200;m=m.PrvMbr){
-                if(Array.isArray(m.Arr))items.unshift({arr:m.Arr,children:nativeTree(m.CCn,depth+1)});
-            }
-            return items;
-        }
-        function renderNative(items,parent){
-            for(const item of items){
-                const label=document.createElement('template');
-                label.innerHTML=String(item.arr[0]||'');
-                const name=clean(label.content);
-                if(!name)continue;
-                let url='';
-                try{if(item.arr[1]){const u=new URL((window.BaseHref||'')+item.arr[1],location.href);if(/^https?:$/.test(u.protocol))url=u.href;}}catch{}
-                const a=url?make('a','',name):null;
-                if(a){a.href=url;seen.add(url);}
-                if(item.children.length){
-                    const group=make('details','dpc-native-menu-group'),summary=make('summary','',name);
-                    group.append(summary);
-                    const sub=make('div','dpc-native-menu-children');
-                    if(a){a.textContent='Overview — '+name;sub.append(a);}
-                    renderNative(item.children,sub);group.append(sub);parent.append(group);
-                }else if(a)parent.append(a);
-            }
-        }
-        const nativeItems=nativeMenu('Menu',window.NoOffFirstLineMenus);
-        const tree=nativeItems.length?nativeItems:nativeTree(window.FrstCntnr);
-        if(tree.length)renderNative(tree,menu);
-        else originalLinks.filter(a=>/^(My Home|Challenges|Community|League|Photos|Equipment|Learn|Help)$/i.test(clean(a))).forEach(menuLink);
-        originalLinks.filter(a=>/^(Inbox|Log out|Log in|Register|Private Messaging|Image Search)$/i.test(clean(a))).forEach(menuLink);
-        const news=region(newsHead,a=>!!clean(a)&&!!safe(a));if(news) [...news.querySelectorAll('a[href]')].forEach(menuLink);
-        const inbox=originalLinks.find(a=>/inbox|private messag/i.test(clean(a)));if(inbox)menuLink(inbox);
-        const searchForm=[...document.forms].find(f=>/image.search/i.test(f.action)||/image search/i.test(clean(f)));
-        if(searchForm)menu.append(searchForm.cloneNode(true));
-        const welcome=(document.body.textContent||'').match(/Welcome back[^\r\n]{0,80}/i);
-        if(welcome)menu.prepend(make('div','dpc-home-welcome',welcome[0].split(/\(\s*log out/i)[0].trim()));
-        // Mark only destinations actually covered by the userscript's @match paths.
-        const supportedPaths=["/challenge_vote_image.php","/challenge_vote_list.php","/","/index.php"];
-        let markerId=0;
-        for(const a of menu.querySelectorAll('a[href]')){
-            let u;try{u=new URL(a.href,location.href);}catch{continue;}
-            if(!/^https?:$/.test(u.protocol)||!/(^|\.)dpchallenge\.com$/i.test(u.hostname)||!supportedPaths.includes(u.pathname))continue;
-            const badge=make('span','dpc-restyle-mark');
-            badge.title='Restyled for mobile';badge.setAttribute('aria-label','Restyled for mobile');
-            const id='dpc-re-shutter-'+(++markerId);
-            badge.innerHTML='<svg viewBox="0 0 40 40" aria-hidden="true"><mask id="'+id+'"><circle cx="20" cy="20" r="18.5" fill="white"/><path d="M20 12 L26.928 16 L26.928 24 L20 28 L13.072 24 L13.072 16 Z" fill="black"/>'+[0,60,120,180,240,300].map(angle=>'<path d="M20 12 L41 24.124" stroke="black" stroke-width="2.4" transform="rotate('+angle+' 20 20)"/>').join('')+'</mask><circle cx="20" cy="20" r="18.5" fill="currentColor" mask="url(#'+id+')"/></svg><i aria-hidden="true">re</i>';
-            const name=make('span','dpc-restyle-link-label');while(a.firstChild)name.append(a.firstChild);a.append(name,badge);a.classList.add('dpc-restyled-link');
-        }
+        app.innerHTML=header+'<div class="dpc-home"></div>'+footer;
+        const body=$('.dpc-home');
         function section(first,last){const sec=make('section');const h=make('h2','',first+' ');h.append(make('em','',last));sec.append(h);body.append(sec);return sec;}
         function cards(items,sec,voting,limit){
             const hidden=[];
