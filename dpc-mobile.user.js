@@ -2,7 +2,7 @@
 // ==UserScript==
 // @name DPChallenge Mobile — Editorial Gallery
 // @namespace dpc-mobile
-// @version 4.3
+// @version 4.4
 // @updateURL https://raw.githubusercontent.com/Konador/dpc-mobile-restyle/main/dpc-mobile.user.js
 // @downloadURL https://raw.githubusercontent.com/Konador/dpc-mobile-restyle/main/dpc-mobile.user.js
 // @match *://*.dpchallenge.com/challenge_vote_image.php*
@@ -957,6 +957,7 @@ html.dpc-viewing body {
     style.textContent += "\n.dpc-home{max-width:900px;margin:auto;padding:20px 18px}\n.dpc-home-welcome{color:var(--muted);font-size:12px;margin-bottom:22px}\n.dpc-home section{margin-bottom:34px}\n#dpc-app .dpc-home h2{font:500 32px/1.1 var(--serif);letter-spacing:-.04em;margin:0 0 16px;padding-bottom:12px;border-bottom:1px solid var(--accent);color:inherit}\n.dpc-home h2 em{color:var(--accent)}\n.dpc-home-card{padding:15px 0;border-bottom:1px solid var(--line)}\n#dpc-app .dpc-home-card h3{font:500 24px/1.15 var(--serif);margin:0 0 8px;color:inherit}\n.dpc-home-meta{font-size:11px;color:var(--muted);line-height:1.6;white-space:pre-line}\n.dpc-home-progress{height:3px;background:var(--line);margin:12px 0}\n.dpc-home-progress i{display:block;height:100%;background:var(--accent)}\n#dpc-app .dpc-home-action{display:inline-block;padding:9px 14px;border:1px solid var(--accent);border-radius:5px;margin-top:10px;font-size:12px;color:var(--accent)}\n#dpc-app .dpc-home-more,#dpc-app .dpc-home-menu-button{background:none;color:var(--accent);border:1px solid var(--line);border-radius:5px;padding:9px 12px}\n.dpc-home-more{margin-top:14px}\n.dpc-home-menu{padding:16px 18px;border-bottom:1px solid var(--line)}\n.dpc-home-menu a{display:block;padding:10px 0;border-bottom:1px solid var(--line)}\n.dpc-home-menu form{margin:12px 0}\n.dpc-home-winners{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px}\n.dpc-home-winners a{min-width:0;font-size:10px;overflow-wrap:anywhere}\n.dpc-home-winners a:first-child{grid-column:1/-1;font-size:14px}\n.dpc-home-winners img{display:block;width:100%;height:auto;aspect-ratio:1;object-fit:contain;background:#242424;padding:5px;border:0}\n.dpc-home-winners a:first-child img{aspect-ratio:4/3}\n.dpc-home-winners a:nth-child(1) img{border-bottom:3px solid #668cda}\n.dpc-home-winners a:nth-child(2) img{border-bottom:3px solid #d45a65}\n.dpc-home-winners a:nth-child(3) img{border-bottom:3px solid #e4c45c}\n.dpc-home-thread{display:block;padding:12px 0;border-bottom:1px solid var(--line)}\n.dpc-home-thread small{display:block;color:var(--muted);margin-top:5px}\n";
     style.textContent += "\n#dpc-app .dpc-home h2{font:500 25px/1.2 var(--serif);letter-spacing:-.02em;border-bottom:1px solid var(--line)}\n#dpc-app .dpc-home h2 em{color:inherit;font-style:normal}\nhtml.dpc-light #dpc-app .dpc-home :is(h2,h3){font-optical-sizing:none;font-variation-settings:\"opsz\" 6;-webkit-text-stroke:.35px currentColor}\nhtml.dpc-mobile:not(.dpc-light) #dpc-app .dpc-home :is(h2,h3){font-optical-sizing:none;font-variation-settings:\"opsz\" 36;-webkit-text-stroke:.175px currentColor}\n#dpc-app .dpc-home-winners .dpc-winning-photo{border:0}\n#dpc-app .dpc-home-winners .dpc-ribbon{display:inline-block;width:14px;height:18px;vertical-align:middle;margin-right:5px;padding:0;background:none;aspect-ratio:auto;object-fit:contain;border:0}\n.dpc-home-winners svg{vertical-align:middle;margin-right:5px}\n";
     style.textContent += "\n.dpc-home-winners .dpc-winner-tile{min-width:0}\n.dpc-home-winners .dpc-winner-tile:first-child{grid-column:1/-1}\n#dpc-app .dpc-home-winners .dpc-winner-tile>a{display:block;grid-column:auto;font-size:10px}\n#dpc-app .dpc-home-winners .dpc-winner-tile:first-child>a{font-size:14px}\n#dpc-app .dpc-home-winners .dpc-winner-tile:not(:first-child) .dpc-winning-photo{aspect-ratio:1}\n#dpc-app .dpc-home-winners .dpc-winner-tile .dpc-winner-author{color:var(--muted);font-weight:400;margin-top:4px;font-size:11px;overflow-wrap:anywhere}\n#dpc-app .dpc-home-winners .dpc-winner-tile:first-child .dpc-winner-author{font-size:13px}\n";
+    style.textContent += "\n#dpc-app .dpc-home .dpc-results-feature{padding:20px 0 30px;margin-bottom:16px}\n#dpc-app .dpc-home .dpc-results-feature h3{font-size:30px;color:inherit;margin:5px 0 16px}\n.dpc-results-kicker{font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:var(--accent)}\n#dpc-app .dpc-home-winners .dpc-winner-tile:first-child .dpc-winning-photo{aspect-ratio:auto;max-height:70vh;object-fit:contain;padding:0}\n#dpc-app .dpc-home-winners .dpc-winner-tile:first-child>a{font:500 26px/1.2 var(--serif);color:inherit}\n#dpc-app .dpc-home-winners .dpc-winner-tile:first-child>a>div{margin-top:12px}\n#dpc-app .dpc-home-winners .dpc-winner-tile:first-child .dpc-winner-author{margin-bottom:12px}\n#dpc-app .dpc-home-winners .dpc-winner-tile:not(:first-child) .dpc-winning-photo{padding:0;object-fit:contain}\n.dpc-home-vote-card{position:relative;isolation:isolate;overflow:hidden;padding:18px!important;margin:10px 0;border:1px solid var(--line);border-radius:8px}\n.dpc-home-vote-card:before{content:\"\";position:absolute;inset:0;z-index:-1;background-image:linear-gradient(90deg,#111115 5%,#111115e8 40%,#11111570),var(--vote-image,none);background-size:cover;background-position:center,right center;opacity:.85}\nhtml.dpc-light .dpc-home-vote-card:before{background-image:linear-gradient(90deg,#f5f6f8 5%,#f5f6f8ed 40%,#f5f6f880),var(--vote-image,none)}\n";
     document.head.append(style);
 
     const header = `
@@ -1164,6 +1165,14 @@ html.dpc-viewing body {
                 const meta=item.raw.replace(item.name,'').trim();
                 if(meta)card.append(make('div','dpc-home-meta',meta));
                 if(item.progress){const bar=make('div','dpc-home-progress'),fill=make('i');fill.style.width=Math.min(100,100*+item.progress[1]/Math.max(1,+item.progress[2]))+'%';bar.append(fill);card.append(bar);}
+                if(voting){
+                    card.classList.add('dpc-home-vote-card');
+                    fetch(safe(item.action),{credentials:'same-origin'}).then(r=>r.ok?r.text():'').then(html=>{
+                        const doc=new DOMParser().parseFromString(html,'text/html');
+                        const images=[...doc.querySelectorAll('.dpc-vote-thumbnail-image img,.dpc-vote-primary-image')];
+                        if(images.length){const image=images[Math.floor(Math.random()*images.length)];const url=new URL(image.getAttribute('src'),safe(item.action));if(/^https?:$/.test(url.protocol))card.style.setProperty('--vote-image','url('+JSON.stringify(url.href)+')');}
+                    }).catch(()=>{});
+                }
                 card.append(link(item.action,'dpc-home-action',voting?(item.progress&&+item.progress[1]>=+item.progress[2]?'Review votes':'Continue voting'):'View challenge'));
                 sec.append(card);if(i>=limit){card.hidden=true;hidden.push(card);}
             });
@@ -1184,21 +1193,34 @@ html.dpc-viewing body {
             }
         }
         if(groups.size){
-            const sec=section('Recent','winners');
+            const sec=section('Recent','results');body.prepend(sec);
             for(const [group,photos] of groups){
-                const card=make('article','dpc-home-card');
+                const card=make('article','dpc-home-card dpc-results-feature');
                 const titleLink=[...group.querySelectorAll('a[href]')].find(challengeLink)||[...group.parentElement.querySelectorAll('a[href]')].find(challengeLink);
-                if(titleLink){const h=make('h3');h.append(link(titleLink));card.append(h);}
+                let label=null;
+                for(let p=group;p&&p!==document.body;p=p.parentElement){
+                    const nodes=[...p.querySelectorAll('td,th,div,b,strong,span')];
+                    label=nodes.find(x=>/Winning Entries/i.test(clean(x))&&clean(x).length<220&&! [...x.children].some(c=>/Winning Entries/i.test(clean(c))));
+                    if(label)break;
+                    let prev=p.previousElementSibling;
+                    if(prev&&/Winning Entries/i.test(clean(prev))&&clean(prev).length<220){label=prev;break;}
+                }
+                card.append(make('div','dpc-results-kicker','Challenge results'));
+                const h=make('h3');
+                const name=label?clean(label).split(/\s+-\s+(?:Member|Open|Invitational|Speed|Winning)/i)[0]:titleLink?clean(titleLink):'';
+                if(titleLink&&name)h.append(link(titleLink,'',name));else h.textContent=name;
+                if(name)card.append(h);
                 const grid=make('div','dpc-home-winners');
                 photos.forEach((a,i)=>{
                     const img=a.querySelector('img'),n=link(a,'',' ');n.textContent='';
                     const copy=make('img','dpc-winning-photo');copy.src=img.currentSrc||img.src;copy.alt=img.alt||'';copy.loading='lazy';n.append(copy);
                     const caption=make('div');
                     if(i<3){
-                        const cell=a.closest('td');
-                        const ribbon=cell&&[...cell.querySelectorAll('img')].find(x=>x!==img&&/ribbon|place|award|medal/i.test(x.src+' '+x.alt));
-                        if(ribbon){const icon=make('img','dpc-ribbon');icon.src=ribbon.src;icon.alt=['First place','Second place','Third place'][i];caption.append(icon);}
-                        else{const icon=document.createElementNS('http://www.w3.org/2000/svg','svg');icon.setAttribute('viewBox','0 0 20 26');icon.setAttribute('width','14');icon.setAttribute('height','18');icon.setAttribute('aria-label',['First place','Second place','Third place'][i]);icon.innerHTML='<path fill="currentColor" d="M5 13 2 25 8 22 10 16 12 22 18 25 15 13Z"/><circle cx="10" cy="9" r="8" fill="currentColor"/><circle cx="10" cy="9" r="4.5" fill="#242424"/>';icon.style.color=['#668cda','#d45a65','#e4c45c'][i];caption.append(icon);}
+                        const icon=document.createElementNS('http://www.w3.org/2000/svg','svg');
+                        icon.setAttribute('viewBox','0 0 40 52');icon.setAttribute('width',i===0?'26':'16');icon.setAttribute('height',i===0?'34':'21');icon.setAttribute('aria-label',['First place','Second place','Third place'][i]);
+                        const id='dpc-ribbon-'+groups.size+'-'+[...groups.keys()].indexOf(group)+'-'+i;
+                        icon.innerHTML='<defs><mask id="'+id+'"><circle cx="20" cy="20" r="18.5" fill="white"/><path d="M20 12 L26.928 16 L26.928 24 L20 28 L13.072 24 L13.072 16 Z" fill="black"/>'+Array.from({length:6},(_,j)=>'<path d="M20 12 L41 24.124" stroke="black" stroke-width="1.7" transform="rotate('+(j*60)+' 20 20)"/>').join('')+'</mask></defs><path d="M9 32 5 51 14 46 20 38 26 46 35 51 31 32Z" fill="currentColor"/><circle cx="20" cy="20" r="18.5" fill="currentColor" mask="url(#'+id+')"/>';
+                        icon.style.color=['#668cda','#d45a65','#e4c45c'][i];caption.append(icon);
                     }
                     caption.append(document.createTextNode(clean(a)||img.alt||''));n.append(caption);
                     const tile=make('div','dpc-winner-tile');tile.append(n);
@@ -1212,9 +1234,13 @@ html.dpc-viewing body {
                     grid.append(tile);
                     if(i===0)fetch(safe(a),{credentials:'same-origin'}).then(r=>r.ok?r.text():'').then(html=>{
                         const doc=new DOMParser().parseFromString(html,'text/html');
-                        const candidates=[...doc.images].filter(x=>! /thumb|ribbon|logo|avatar|banner/i.test(x.getAttribute('src')||'')&&(+x.getAttribute('width')>=400||+x.getAttribute('height')>=400));
-                        candidates.sort((x,y)=>(+y.getAttribute('width')||0)*(+y.getAttribute('height')||0)-(+x.getAttribute('width')||0)*(+x.getAttribute('height')||0));
-                        if(candidates.length){const url=new URL(candidates[0].getAttribute('src'),safe(a)).href;const probe=new Image();probe.onload=()=>{if(probe.naturalWidth*probe.naturalHeight>copy.naturalWidth*copy.naturalHeight)copy.src=url;};probe.src=url;}
+                        const thumb=new URL(img.src,location.href);
+                        const file=thumb.pathname.split('/').pop();
+                        const candidates=[...doc.images].filter(x=>{const src=x.getAttribute('src')||'';return src&&!/thumb|ribbon|logo|avatar|banner|spacer/i.test(src);});
+                        const same=candidates.filter(x=>{try{return new URL(x.getAttribute('src'),safe(a)).pathname.split('/').pop()===file;}catch{return false;}});
+                        const preferred=doc.querySelector('.dpc-vote-primary-image, img#image, img#main_image');
+                        const picks=preferred?[preferred]:same.length?same:candidates.filter(x=>/\/(?:image|images|photo|photos)\//i.test(x.getAttribute('src')||'')&&(+x.getAttribute('width')>=400||+x.getAttribute('height')>=400));
+                        for(const candidate of picks.slice(0,4)){const url=new URL(candidate.getAttribute('src'),safe(a)).href;const probe=new Image();probe.onload=()=>{if(probe.naturalWidth*probe.naturalHeight>Math.max(copy.naturalWidth*copy.naturalHeight,40000))copy.src=url;};probe.src=url;}
                     }).catch(()=>{});
                 });
                 card.append(grid);sec.append(card);
