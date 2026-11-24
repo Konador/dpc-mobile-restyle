@@ -2,7 +2,7 @@
 // ==UserScript==
 // @name DPChallenge Mobile — Editorial Gallery
 // @namespace dpc-mobile
-// @version 4.34
+// @version 4.35
 // @updateURL https://raw.githubusercontent.com/Konador/dpc-mobile-restyle/main/dpc-mobile.user.js
 // @downloadURL https://raw.githubusercontent.com/Konador/dpc-mobile-restyle/main/dpc-mobile.user.js
 // @match *://*.dpchallenge.com/challenge_vote_image.php*
@@ -985,6 +985,7 @@ html.dpc-viewing body {
     style.textContent += "#dpc-app .dpc-entry-grid h3,#dpc-app .dpc-home-vote-card h3,#dpc-app .dpc-home-vote-card h3 a{color:var(--accent)}#dpc-app .dpc-home-vote-card .dpc-home-detail{display:grid;grid-template-columns:96px minmax(0,1fr);column-gap:8px;align-items:baseline}#dpc-app .dpc-home-vote-card .dpc-entry-deadline{grid-column:2}#dpc-app .dpc-home-vote-card .dpc-entry-rules{grid-column:1}#dpc-app .dpc-home-vote-card .dpc-home-vote-status{font-size:13px;font-weight:500;color:var(--muted)}#dpc-app .dpc-home-vote-card .dpc-home-meta{font-size:13px!important;line-height:1.4!important}#dpc-app .dpc-home-vote-card:before{background-image:linear-gradient(90deg,#111115fa 0%,#111115ed 40%,#111115b0 70%,#11111545 100%),var(--vote-image,none)}html.dpc-light #dpc-app .dpc-home-vote-card:before{background-image:linear-gradient(90deg,#f5f6f8fa 0%,#f5f6f8ed 40%,#f5f6f8b0 70%,#f5f6f845 100%),var(--vote-image,none)}";
     style.textContent += "html.dpc-comment-keyboard #dpc-app{padding:0!important}html.dpc-comment-keyboard #dpc-app .dpc-header,html.dpc-comment-keyboard #dpc-app .dpc-info,html.dpc-comment-keyboard #dpc-app .dpc-tabs,html.dpc-comment-keyboard #dpc-app .dpc-controls>:not(#comment-panel),html.dpc-comment-keyboard #dpc-app .dpc-footer,html.dpc-comment-keyboard #dpc-app .dpc-stage-button{display:none!important}html.dpc-comment-keyboard #dpc-app .dpc-stage{height:var(--dpc-keyboard-photo,180px)!important;min-height:0!important}html.dpc-comment-keyboard #dpc-app .dpc-controls{padding:0 12px!important;margin:0!important}html.dpc-comment-keyboard #comment-panel{padding:8px 0!important;margin:0!important}html.dpc-comment-keyboard #dpc-comment-input{height:80px!important;min-height:56px!important;margin:4px 0!important}html.dpc-comment-keyboard #dpc-app .dpc-slide{padding:5px!important}";
     style.textContent += "#dpc-app #dpc-submit-comment{display:block;width:100%;min-height:36px;margin:8px 0 0;border:1px solid var(--accent);border-radius:6px;background:var(--accent);color:#111115;font-size:13px;font-weight:600}html.dpc-light #dpc-app #dpc-submit-comment{color:white}html.dpc-comment-keyboard #dpc-app #dpc-submit-comment{margin-top:5px;min-height:34px}";
+    style.textContent += "#dpc-app #comment-panel{height:auto!important;min-height:138px;padding-bottom:12px}#dpc-app #dpc-submit-comment{min-height:36px;margin:8px 0 0;background:transparent;color:var(--accent);border:1px solid var(--accent);font-weight:500}#dpc-app #dpc-submit-comment:disabled{opacity:.45;background:transparent;color:var(--muted);border-color:var(--line)}html.dpc-light #dpc-app #dpc-submit-comment{color:var(--accent)}#dpc-app .dpc-comment-hint:empty{display:none}html.dpc-comment-keyboard #dpc-app #comment-panel{min-height:0!important;padding-bottom:8px!important}#dpc-app #dpc-comment-input:focus{outline:none;box-shadow:none;border-color:var(--accent)}";
     document.head.append(style);
 
     const header = `
@@ -2266,7 +2267,7 @@ html.dpc-viewing body {
         <textarea id="dpc-comment-input"
                   placeholder="Share your thoughts…"></textarea>
         <div class="dpc-comment-hint">
-            Submit or move to another photograph
+            
         </div>
         <button type="button" id="dpc-submit-comment">Submit comment</button>
     </div>
@@ -2275,7 +2276,7 @@ html.dpc-viewing body {
         <button class="dpc-nav-button" id="dpc-prev">
             <span>←</span> Previous
         </button>
-        <span class="dpc-nav-hint">Swipe to browse</span>
+        <span class="dpc-nav-hint"></span>
         <button class="dpc-nav-button" id="dpc-next">
             Next <span>→</span>
         </button>
@@ -2570,7 +2571,7 @@ html.dpc-viewing body {
         dirty=false;
 
         $('.dpc-comment-hint').textContent=current.comment
-            ? 'Saved when you move to another photograph'
+            ? ''
             : 'Comments unavailable';
 
         showStats(current);
