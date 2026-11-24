@@ -12,7 +12,7 @@ An unofficial userscript bringing a modern, mobile-first photography magazine ex
 
 ## Installation
 
-The standalone userscript is awaiting its initial upload to this repository. Once available, install Tampermonkey in a compatible browser, open the raw .user.js file and follow the installation prompt. Alternatively, paste the complete script into a new userscript.
+Install Tampermonkey in a compatible browser, then [install the userscript directly from GitHub](https://raw.githubusercontent.com/Konador/dpc-mobile-restyle/main/dpc-mobile.user.js). Follow the installation prompt. With automatic updates enabled, Tampermonkey can check GitHub for newer versions.
 
 ## Roadmap
 
