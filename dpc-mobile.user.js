@@ -2,7 +2,7 @@
 // ==UserScript==
 // @name DPChallenge Mobile — Editorial Gallery
 // @namespace dpc-mobile
-// @version 4.40
+// @version 4.41
 // @updateURL https://raw.githubusercontent.com/Konador/dpc-mobile-restyle/main/dpc-mobile.user.js
 // @downloadURL https://raw.githubusercontent.com/Konador/dpc-mobile-restyle/main/dpc-mobile.user.js
 // @match *://*.dpchallenge.com/challenge_vote_image.php*
@@ -95,7 +95,7 @@ function start() {
 
     const style = document.createElement('style');
     style.textContent = `
-@import url('https://fonts.googleapis.com/css2?family=Bodoni+Moda:ital,opsz,wght@0,6..96,500;1,6..96,500&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Bodoni+Moda:ital,opsz,wght@0,6..96,500;1,6..96,500;1,6..96,700&display=swap');
 
 html.dpc-mobile,
 html.dpc-mobile body {
@@ -989,6 +989,7 @@ html.dpc-viewing body {
     style.textContent += "#dpc-app #dpc-submit-comment{background:var(--accent);color:#111115;border:1px solid var(--accent);font-weight:600}html.dpc-light #dpc-app #dpc-submit-comment{color:#fff}#dpc-app #dpc-submit-comment:disabled,html.dpc-light #dpc-app #dpc-submit-comment:disabled{opacity:1;background:#24242c;color:#777580;border:1px solid #393842;cursor:default}html.dpc-light #dpc-app #dpc-submit-comment:disabled{background:#e4e5e9;color:#85858d;border-color:#d1d2d8}";
     style.textContent += "#dpc-app .dpc-thumb-comment{position:static;display:inline-flex;align-items:center;gap:4px;background:none;padding:0;margin-top:5px;color:var(--accent);font:10px/1.3 system-ui,sans-serif;letter-spacing:.01em}#dpc-app .dpc-thumb-comment svg{width:13px;height:13px;flex-shrink:0}html.dpc-light #dpc-app .dpc-thumb-comment{color:var(--accent)}";
     style.textContent += "#dpc-app .dpc-native-menu-group>summary{cursor:pointer;padding:12px 0;border-bottom:1px solid var(--line);font-weight:600;color:var(--accent)}#dpc-app .dpc-native-menu-children{padding-left:16px}#dpc-app .dpc-native-menu-children a{font-size:13px}#dpc-app .dpc-home-menu[hidden]{display:none!important}";
+    style.textContent += "#dpc-app .dpc-home-menu a.dpc-restyled-link{display:flex;align-items:center;justify-content:space-between;gap:10px}#dpc-app .dpc-restyle-mark{display:inline-flex;align-items:center;gap:2px;color:var(--accent);flex:none;height:18px}#dpc-app .dpc-restyle-mark svg{width:18px;height:18px;flex:none}#dpc-app .dpc-restyle-mark i{font:italic 700 23px/.8 var(--serif);font-optical-sizing:none;font-variation-settings:'opsz' 6,'wght' 700;letter-spacing:-1px;-webkit-text-stroke:.2px currentColor;padding-right:1px}";
     document.head.append(style);
 
     const header = `
@@ -1369,6 +1370,18 @@ html.dpc-viewing body {
         if(searchForm)menu.append(searchForm.cloneNode(true));
         const welcome=(document.body.textContent||'').match(/Welcome back[^\r\n]{0,80}/i);
         if(welcome)menu.prepend(make('div','dpc-home-welcome',welcome[0].split(/\(\s*log out/i)[0].trim()));
+        // Mark only destinations actually covered by the userscript's @match paths.
+        const supportedPaths=["/challenge_vote_image.php","/challenge_vote_list.php","/","/index.php"];
+        let markerId=0;
+        for(const a of menu.querySelectorAll('a[href]')){
+            let u;try{u=new URL(a.href,location.href);}catch{continue;}
+            if(!/^https?:$/.test(u.protocol)||!/(^|\.)dpchallenge\.com$/i.test(u.hostname)||!supportedPaths.includes(u.pathname))continue;
+            const badge=make('span','dpc-restyle-mark');
+            badge.title='Restyled for mobile';badge.setAttribute('aria-label','Restyled for mobile');
+            const id='dpc-re-shutter-'+(++markerId);
+            badge.innerHTML='<svg viewBox="0 0 40 40" aria-hidden="true"><mask id="'+id+'"><circle cx="20" cy="20" r="18.5" fill="white"/><path d="M20 12 L26.928 16 L26.928 24 L20 28 L13.072 24 L13.072 16 Z" fill="black"/>'+[0,60,120,180,240,300].map(angle=>'<path d="M20 12 L41 24.124" stroke="black" stroke-width="2.4" transform="rotate('+angle+' 20 20)"/>').join('')+'</mask><circle cx="20" cy="20" r="18.5" fill="currentColor" mask="url(#'+id+')"/></svg><i aria-hidden="true">re</i>';
+            const name=make('span','dpc-restyle-link-label');while(a.firstChild)name.append(a.firstChild);a.append(name,badge);a.classList.add('dpc-restyled-link');
+        }
         function section(first,last){const sec=make('section');const h=make('h2','',first+' ');h.append(make('em','',last));sec.append(h);body.append(sec);return sec;}
         function cards(items,sec,voting,limit){
             const hidden=[];
