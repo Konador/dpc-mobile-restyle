@@ -2,7 +2,7 @@
 // ==UserScript==
 // @name DPChallenge Mobile — Editorial Gallery
 // @namespace dpc-mobile
-// @version 4.23
+// @version 4.24
 // @updateURL https://raw.githubusercontent.com/Konador/dpc-mobile-restyle/main/dpc-mobile.user.js
 // @downloadURL https://raw.githubusercontent.com/Konador/dpc-mobile-restyle/main/dpc-mobile.user.js
 // @match *://*.dpchallenge.com/challenge_vote_image.php*
@@ -971,6 +971,7 @@ html.dpc-viewing body {
     style.textContent += "#dpc-app .dpc-entry-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin:12px 0}#dpc-app .dpc-entry-grid .dpc-home-card{min-width:0;display:flex;flex-direction:column;padding:10px;margin:0;border:1px solid var(--line);border-radius:6px;background:rgba(128,128,128,.06)}#dpc-app .dpc-entry-grid .dpc-home-card[hidden]{display:none!important}#dpc-app .dpc-entry-grid h3{font-size:19px;line-height:1.12;margin:0 0 6px;overflow-wrap:anywhere}#dpc-app .dpc-entry-grid .dpc-home-meta{font-size:12px;line-height:1.35;margin:0 0 6px}#dpc-app .dpc-entry-grid .dpc-home-detail{font-size:10px;line-height:1.3;gap:3px 8px;margin:0 0 8px}#dpc-app .dpc-entry-grid .dpc-home-action{font-size:11px;padding:7px 8px;margin-top:auto;align-self:flex-start}#dpc-app .dpc-home-vote-card:before{opacity:1;background-image:linear-gradient(90deg,#111115f5 0%,#111115eb 48%,#111115c4 100%),var(--vote-image,none)}html.dpc-light #dpc-app .dpc-home-vote-card:before{background-image:linear-gradient(90deg,#f5f6f8fa 0%,#f5f6f8ef 48%,#f5f6f8d0 100%),var(--vote-image,none)}@media(max-width:320px){#dpc-app .dpc-entry-grid{grid-template-columns:1fr}}";
     style.textContent += "#dpc-app .dpc-entry-grid{gap:10px}#dpc-app .dpc-entry-grid .dpc-home-card{position:relative;padding:13px 12px;min-height:142px;background:rgba(128,128,128,.095);color:inherit;text-decoration:none;gap:0}#dpc-app .dpc-entry-grid h3{font-size:23px;line-height:1.08;color:var(--accent);margin:0 0 8px;overflow-wrap:break-word}#dpc-app .dpc-entry-grid .dpc-home-meta{font-size:13px;line-height:1.4;color:inherit;opacity:.86;margin:0 0 12px}#dpc-app .dpc-entry-grid .dpc-home-detail{display:grid;grid-template-columns:1fr auto;gap:5px 6px;align-items:center;margin:auto 0 0;padding-top:9px;border-top:1px solid var(--line);font-size:11px;line-height:1.3}#dpc-app .dpc-entry-grid .dpc-entry-rules{grid-column:1/-1;text-transform:uppercase;letter-spacing:.055em;font-size:9px}#dpc-app .dpc-entry-grid .dpc-entry-deadline{grid-column:1/-1;color:var(--accent);font-size:12px;font-weight:600}#dpc-app .dpc-entry-grid .dpc-entry-count{grid-column:1/-1;font-size:11px}#dpc-app .dpc-entry-grid a:focus-visible{outline:2px solid var(--accent);outline-offset:2px}#dpc-app .dpc-entry-grid a:active{background:rgba(128,128,128,.17)}";
     style.textContent += "#dpc-app .dpc-entry-grid .dpc-home-meta{font-weight:400;line-height:1.45}#dpc-app .dpc-entry-grid .dpc-home-detail{display:flex;flex-direction:column;align-items:flex-start;gap:5px;margin-top:auto}#dpc-app .dpc-entry-grid .dpc-entry-rules{font-weight:500}#dpc-app .dpc-entry-grid .dpc-entry-deadline{font-weight:500}#dpc-app .dpc-entry-grid .dpc-entry-count{font-weight:400}";
+    style.textContent += "#dpc-app .dpc-results-footer{background:transparent;border-top-color:var(--line);padding:8px 2px 0;margin-top:10px;min-height:36px;font-size:12px;font-weight:400}html.dpc-light #dpc-app .dpc-results-footer{background:transparent;border-top-color:var(--line)}#dpc-app .dpc-results-footer span{font-size:16px}";
     document.head.append(style);
 
     const header = `
@@ -1395,7 +1396,7 @@ html.dpc-viewing body {
                 });
                 records.forEach(cachedPhoto);
                 let serial=0,selected=-1,selectionToken=0;
-                const dimensions=()=>{const w=hero.clientWidth;if(!w)return;const ratios=records.map(rec=>rec.ratio||((rec.img.naturalWidth&&rec.img.naturalHeight)?rec.img.naturalHeight/rec.img.naturalWidth:1));hero.style.setProperty('--hero-height',Math.min(innerHeight*.6,w*Math.min(4/3,Math.max(...ratios)))+'px');};
+                const dimensions=()=>{const w=hero.clientWidth;if(!w)return;const ratios=records.map(rec=>rec.ratio||((rec.img.naturalWidth&&rec.img.naturalHeight)?rec.img.naturalHeight/rec.img.naturalWidth:1));hero.style.setProperty('--hero-height',Math.min(innerHeight*.6,w*Math.min(1,Math.max(...ratios)))+'px');};
                 function ribbon(i){
                     if(i>2)return null;
                     const icon=document.createElementNS('http://www.w3.org/2000/svg','svg');
