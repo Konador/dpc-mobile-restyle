@@ -2,7 +2,7 @@
 // ==UserScript==
 // @name DPChallenge Mobile — Editorial Gallery
 // @namespace dpc-mobile
-// @version 4.16
+// @version 4.17
 // @updateURL https://raw.githubusercontent.com/Konador/dpc-mobile-restyle/main/dpc-mobile.user.js
 // @downloadURL https://raw.githubusercontent.com/Konador/dpc-mobile-restyle/main/dpc-mobile.user.js
 // @match *://*.dpchallenge.com/challenge_vote_image.php*
@@ -1528,7 +1528,7 @@ html.dpc-viewing body {
                 document.fonts?.ready.then(init);
                 records.forEach(rec=>{if(!rec.img.complete)rec.img.addEventListener('load',dimensions,{once:true});});
                 const io=new IntersectionObserver(entries=>{if(entries.some(e=>e.isIntersecting)){io.disconnect();Promise.all(records.map(preload)).then(()=>{dimensions();refreshAdjacent();});}},{rootMargin:'700px'});io.observe(card);
-                records.forEach((rec,i)=>{const button=make('button');button.type='button';button.setAttribute('aria-label',rec.title+(rec.author?' by '+clean(rec.author):''));const img=make('img');img.src=rec.src;img.alt=rec.title;img.loading='lazy';button.append(img);const icon=ribbon(i);if(icon)button.append(icon);button.onclick=()=>select(i);strip.append(button);});
+                records.forEach((rec,i)=>{const button=make('button');button.type='button';button.setAttribute('aria-label',rec.title+(rec.author?' by '+clean(rec.author):''));const img=make('img');img.src=rec.src;img.alt=rec.title;img.loading='lazy';button.append(img);button.onclick=()=>select(i);strip.append(button);});
                 select(0);
                 card.append(grid);
                 const resultLink=[...(label?.querySelectorAll('a[href]')||[]),...(label?.closest('tr')?.querySelectorAll('a[href]')||[]),...group.querySelectorAll('a[href]')].find(a=>challengeLink(a)&&/results/i.test(safe(a)))||[...(label?.querySelectorAll('a[href]')||[]),...(label?.closest('tr')?.querySelectorAll('a[href]')||[])].find(challengeLink)||titleLink;
