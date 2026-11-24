@@ -2,7 +2,7 @@
 // ==UserScript==
 // @name DPChallenge Mobile — Editorial Gallery
 // @namespace dpc-mobile
-// @version 4.41
+// @version 4.42
 // @updateURL https://raw.githubusercontent.com/Konador/dpc-mobile-restyle/main/dpc-mobile.user.js
 // @downloadURL https://raw.githubusercontent.com/Konador/dpc-mobile-restyle/main/dpc-mobile.user.js
 // @match *://*.dpchallenge.com/challenge_vote_image.php*
@@ -989,7 +989,7 @@ html.dpc-viewing body {
     style.textContent += "#dpc-app #dpc-submit-comment{background:var(--accent);color:#111115;border:1px solid var(--accent);font-weight:600}html.dpc-light #dpc-app #dpc-submit-comment{color:#fff}#dpc-app #dpc-submit-comment:disabled,html.dpc-light #dpc-app #dpc-submit-comment:disabled{opacity:1;background:#24242c;color:#777580;border:1px solid #393842;cursor:default}html.dpc-light #dpc-app #dpc-submit-comment:disabled{background:#e4e5e9;color:#85858d;border-color:#d1d2d8}";
     style.textContent += "#dpc-app .dpc-thumb-comment{position:static;display:inline-flex;align-items:center;gap:4px;background:none;padding:0;margin-top:5px;color:var(--accent);font:10px/1.3 system-ui,sans-serif;letter-spacing:.01em}#dpc-app .dpc-thumb-comment svg{width:13px;height:13px;flex-shrink:0}html.dpc-light #dpc-app .dpc-thumb-comment{color:var(--accent)}";
     style.textContent += "#dpc-app .dpc-native-menu-group>summary{cursor:pointer;padding:12px 0;border-bottom:1px solid var(--line);font-weight:600;color:var(--accent)}#dpc-app .dpc-native-menu-children{padding-left:16px}#dpc-app .dpc-native-menu-children a{font-size:13px}#dpc-app .dpc-home-menu[hidden]{display:none!important}";
-    style.textContent += "#dpc-app .dpc-home-menu a.dpc-restyled-link{display:flex;align-items:center;justify-content:space-between;gap:10px}#dpc-app .dpc-restyle-mark{display:inline-flex;align-items:center;gap:2px;color:var(--accent);flex:none;height:18px}#dpc-app .dpc-restyle-mark svg{width:18px;height:18px;flex:none}#dpc-app .dpc-restyle-mark i{font:italic 700 23px/.8 var(--serif);font-optical-sizing:none;font-variation-settings:'opsz' 6,'wght' 700;letter-spacing:-1px;-webkit-text-stroke:.2px currentColor;padding-right:1px}";
+    style.textContent += "#dpc-app .dpc-home-menu a.dpc-restyled-link{display:flex;align-items:center;justify-content:space-between;gap:10px}#dpc-app .dpc-restyle-mark{display:inline-flex;align-items:center;gap:2px;color:var(--muted);opacity:.65;flex:none;height:13px}#dpc-app .dpc-restyle-mark svg{width:13px;height:13px;flex:none}#dpc-app .dpc-restyle-mark i{font:italic 500 17px/1 var(--serif);font-optical-sizing:none;font-variation-settings:'opsz' 12,'wght' 500;letter-spacing:-.6px;-webkit-text-stroke:0;position:relative;top:-2px;padding-right:1px}";
     document.head.append(style);
 
     const header = `
