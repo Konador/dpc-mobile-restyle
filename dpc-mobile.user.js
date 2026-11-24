@@ -2,7 +2,7 @@
 // ==UserScript==
 // @name DPChallenge Mobile — Editorial Gallery
 // @namespace dpc-mobile
-// @version 4.29
+// @version 4.30
 // @updateURL https://raw.githubusercontent.com/Konador/dpc-mobile-restyle/main/dpc-mobile.user.js
 // @downloadURL https://raw.githubusercontent.com/Konador/dpc-mobile-restyle/main/dpc-mobile.user.js
 // @match *://*.dpchallenge.com/challenge_vote_image.php*
@@ -85,6 +85,15 @@ observer.observe(document, {
 function start() {
     viewport();
     observer.disconnect();
+    // Custom shortcut icon (Firefox may use its own cached site icon).
+    try {
+        const svg="<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"192\" height=\"192\" viewBox=\"-8 -8 56 56\"><rect x=\"-8\" y=\"-8\" width=\"56\" height=\"56\" fill=\"#111115\"/><mask id=\"dpc-shutter-mask\"><circle cx=\"20\" cy=\"20\" r=\"18.5\" fill=\"white\"/><path d=\"M20 12 L26.928 16 L26.928 24 L20 28 L13.072 24 L13.072 16 Z\" fill=\"black\"/><path d=\"M20 12 L41 24.124\" stroke=\"black\" stroke-width=\"1.7\" transform=\"rotate(0 20 20)\"/><path d=\"M20 12 L41 24.124\" stroke=\"black\" stroke-width=\"1.7\" transform=\"rotate(60 20 20)\"/><path d=\"M20 12 L41 24.124\" stroke=\"black\" stroke-width=\"1.7\" transform=\"rotate(120 20 20)\"/><path d=\"M20 12 L41 24.124\" stroke=\"black\" stroke-width=\"1.7\" transform=\"rotate(180 20 20)\"/><path d=\"M20 12 L41 24.124\" stroke=\"black\" stroke-width=\"1.7\" transform=\"rotate(240 20 20)\"/><path d=\"M20 12 L41 24.124\" stroke=\"black\" stroke-width=\"1.7\" transform=\"rotate(300 20 20)\"/></mask><circle cx=\"20\" cy=\"20\" r=\"18.5\" fill=\"#8da5df\" mask=\"url(#dpc-shutter-mask)\"/></svg>";
+        const href='data:image/svg+xml,'+encodeURIComponent(svg);
+        const applyIcon=()=>{document.head.querySelectorAll('link[rel~="icon"],link[rel="apple-touch-icon"],link[rel="apple-touch-icon-precomposed"]').forEach(el=>el.remove());for(const rel of ['icon','apple-touch-icon']){const el=document.createElement('link');el.rel=rel;el.href=href;el.setAttribute('sizes','192x192');el.type='image/svg+xml';document.head.append(el);}};
+        applyIcon();
+        const img=new Image();img.onload=()=>{try{const canvas=document.createElement('canvas');canvas.width=canvas.height=192;canvas.getContext('2d').drawImage(img,0,0,192,192);const png=canvas.toDataURL('image/png');document.head.querySelectorAll('link[rel~="icon"],link[rel="apple-touch-icon"]').forEach(el=>{el.href=png;el.type='image/png';});}catch{}};img.src=href;
+    } catch {}
+
 
     const style = document.createElement('style');
     style.textContent = `
