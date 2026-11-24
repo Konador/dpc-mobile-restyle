@@ -2,7 +2,7 @@
 // ==UserScript==
 // @name DPChallenge Mobile — Editorial Gallery
 // @namespace dpc-mobile
-// @version 4.44
+// @version 4.45
 // @updateURL https://raw.githubusercontent.com/Konador/dpc-mobile-restyle/main/dpc-mobile.user.js
 // @downloadURL https://raw.githubusercontent.com/Konador/dpc-mobile-restyle/main/dpc-mobile.user.js
 // @match *://*.dpchallenge.com/challenge_vote_image.php*
@@ -991,6 +991,7 @@ html.dpc-viewing body {
     style.textContent += "#dpc-app .dpc-native-menu-group>summary{cursor:pointer;padding:12px 0;border-bottom:1px solid var(--line);font-weight:600;color:var(--accent)}#dpc-app .dpc-native-menu-children{padding-left:16px}#dpc-app .dpc-native-menu-children a{font-size:13px}#dpc-app .dpc-home-menu[hidden]{display:none!important}";
     style.textContent += "#dpc-app .dpc-home-menu a.dpc-restyled-link{display:flex;align-items:center;justify-content:space-between;gap:10px}#dpc-app .dpc-restyle-mark{display:inline-flex;align-items:center;gap:2px;color:var(--muted);opacity:.65;flex:none;height:13px}#dpc-app .dpc-restyle-mark svg{width:13px;height:13px;flex:none}#dpc-app .dpc-restyle-mark i{font:italic 500 17px/1 var(--serif);font-optical-sizing:none;font-variation-settings:'opsz' 12,'wght' 500;letter-spacing:-.6px;-webkit-text-stroke:0;position:relative;top:-2px;padding-right:1px}";
     style.textContent += "#dpc-app .dpc-brand .dpc-brand-word{color:inherit;margin:0;white-space:nowrap}#dpc-app .dpc-brand-word em{font-family:var(--serif);font-weight:500;font-size:1em;font-style:italic;color:var(--accent);letter-spacing:-.8px;margin-left:1px}html.dpc-comment-keyboard #dpc-app .dpc-home-menu{display:none!important}";
+    style.textContent += "#dpc-app .dpc-header{position:relative;z-index:1002;background:#111115}html.dpc-light #dpc-app .dpc-header{background:#f5f6f8}html.dpc-menu-open #dpc-app .dpc-header{position:fixed;top:0;left:0;right:0}html.dpc-menu-open #dpc-app{padding-top:54px!important}html.dpc-menu-open,html.dpc-menu-open body{overflow:hidden!important}#dpc-app .dpc-home-menu-button{border:0;padding:0;width:36px;height:36px;display:grid;place-items:center;color:inherit}#dpc-app .dpc-menu-backdrop{position:fixed;inset:0;z-index:1000;background:#0009;opacity:0;visibility:hidden;transition:opacity .28s,visibility .28s}#dpc-app .dpc-home-menu{position:fixed;z-index:1001;top:54px;right:0;bottom:0;width:min(88vw,420px);padding:24px 26px 36px;background:#19191e;box-shadow:-12px 0 40px #0003;border:0;overflow-y:auto;overscroll-behavior:contain;transform:translateX(105%);visibility:hidden;transition:transform .32s cubic-bezier(.22,.75,.25,1),visibility .32s}html.dpc-light #dpc-app .dpc-home-menu{background:#f5f6f8}html.dpc-menu-open #dpc-app .dpc-home-menu{transform:translateX(0);visibility:visible}html.dpc-menu-open #dpc-app .dpc-menu-backdrop{opacity:1;visibility:visible}#dpc-app .dpc-home-menu .dpc-home-welcome{font:12px/1.5 system-ui,sans-serif;color:var(--muted);margin:0 0 22px;padding:0}#dpc-app .dpc-home-menu>details>summary,#dpc-app .dpc-home-menu>a{font:500 25px/1.2 var(--serif);color:inherit;border:0;padding:8px 0;letter-spacing:-.5px}#dpc-app .dpc-native-menu-group>summary{list-style:none;display:flex;align-items:center;justify-content:space-between;gap:12px}#dpc-app .dpc-native-menu-group>summary::-webkit-details-marker{display:none}#dpc-app .dpc-native-menu-group>summary:after{content:'';width:7px;height:7px;border-right:1px solid var(--muted);border-bottom:1px solid var(--muted);transform:rotate(-45deg);margin-right:4px;transition:transform .2s}#dpc-app .dpc-native-menu-group[open]>summary:after{transform:rotate(45deg)}#dpc-app .dpc-native-menu-group[open]>summary{color:var(--accent)}#dpc-app .dpc-native-menu-children{padding:3px 0 10px 13px}#dpc-app .dpc-native-menu-children a,#dpc-app .dpc-native-menu-children summary{font:400 14px/1.4 system-ui,sans-serif;color:inherit;border:0;padding:7px 0}#dpc-app .dpc-home-menu>a:not(.dpc-restyled-link){font:400 13px/1.5 system-ui,sans-serif;color:var(--muted);padding:9px 0}#dpc-app .dpc-home-menu>details+a{margin-top:20px}html.dpc-comment-keyboard #dpc-app .dpc-menu-backdrop{display:none!important}@media(prefers-reduced-motion:reduce){#dpc-app .dpc-home-menu,#dpc-app .dpc-menu-backdrop{transition:none}}";
     document.head.append(style);
 
     const header = `
@@ -1111,11 +1112,22 @@ html.dpc-viewing body {
         };
         const make=(tag,cls,txt)=>{const n=document.createElement(tag);if(cls)n.className=cls;if(txt)n.textContent=txt;return n;};
         const link=(a,cls,txt)=>{const n=make('a',cls,txt||clean(a));n.href=safe(a);return n;};
-        const menu=make('nav','dpc-home-menu');menu.hidden=true;$('.dpc-header').after(menu);
-        const menuButton=make('button','dpc-home-menu-button','☰');
-        menuButton.type='button';menuButton.setAttribute('aria-label','Navigation');menuButton.setAttribute('aria-expanded','false');
+        const menu=make('nav','dpc-home-menu');menu.id='dpc-navigation';menu.setAttribute('aria-label','Site navigation');menu.inert=true;
+        const backdrop=make('div','dpc-menu-backdrop');backdrop.setAttribute('aria-hidden','true');
+        $('.dpc-header').after(backdrop,menu);
+        const menuButton=make('button','dpc-home-menu-button');
+        menuButton.type='button';menuButton.setAttribute('aria-controls',menu.id);
         $('.dpc-header-right').append(menuButton);
-        menuButton.onclick=()=>{menu.hidden=!menu.hidden;menuButton.setAttribute('aria-expanded',String(!menu.hidden));};
+        let open=false;
+        function setMenu(value){
+            open=value;root.classList.toggle('dpc-menu-open',open);menu.inert=!open;
+            menuButton.setAttribute('aria-expanded',String(open));menuButton.setAttribute('aria-label',open?'Close navigation':'Open navigation');
+            menuButton.innerHTML='<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" aria-hidden="true">'+(open?'<path d="M6 6l12 12M18 6L6 18"/>':'<path d="M3 8h18M3 16h18"/>')+'</svg>';
+        }
+        setMenu(false);menuButton.onclick=()=>setMenu(!open);backdrop.onclick=()=>setMenu(false);
+        document.addEventListener('keydown',e=>{if(open&&e.key==='Escape'){setMenu(false);menuButton.focus();}});
+        menu.addEventListener('click',e=>{if(e.target.closest('a[href]'))setMenu(false);});
+        menu.addEventListener('toggle',e=>{if(e.target.tagName==='DETAILS'&&e.target.open&&e.target.parentElement===menu)for(const other of menu.children)if(other!==e.target&&other.tagName==='DETAILS')other.open=false;},true);
         const seen=new Set();
         function menuLink(a){const url=safe(a),name=clean(a);if(!url||!name||seen.has(url))return;seen.add(url);menu.append(link(a));}
         // Read the native menu definitions, or its already-built menu tree.
@@ -1161,7 +1173,7 @@ html.dpc-viewing body {
         if(tree.length)renderNative(tree,menu);
         else originalLinks.filter(a=>/^(My Home|Challenges|Community|League|Photos|Equipment|Learn|Help)$/i.test(clean(a))).forEach(menuLink);
         originalLinks.filter(a=>/^(Inbox|Log out|Log in|Register|Private Messaging|Image Search)$/i.test(clean(a))).forEach(menuLink);
-        const news=region(newsHead,a=>!!clean(a)&&!!safe(a));if(news) [...news.querySelectorAll('a[href]')].forEach(menuLink);
+        const news=region(newsHead,a=>!!clean(a)&&!!safe(a));if(news) [...news.querySelectorAll('a[href]')].filter(a=>!/^(here|android|ios|click here)$/i.test(clean(a))).forEach(menuLink);
         const inbox=originalLinks.find(a=>/inbox|private messag/i.test(clean(a)));if(inbox)menuLink(inbox);
         const searchForm=[...document.forms].find(f=>/image.search/i.test(f.action)||/image search/i.test(clean(f)));
         if(searchForm)menu.append(searchForm.cloneNode(true));
