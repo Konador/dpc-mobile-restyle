@@ -2,7 +2,7 @@
 // ==UserScript==
 // @name DPChallenge Mobile — Editorial Gallery
 // @namespace dpc-mobile
-// @version 4.37
+// @version 4.38
 // @updateURL https://raw.githubusercontent.com/Konador/dpc-mobile-restyle/main/dpc-mobile.user.js
 // @downloadURL https://raw.githubusercontent.com/Konador/dpc-mobile-restyle/main/dpc-mobile.user.js
 // @match *://*.dpchallenge.com/challenge_vote_image.php*
@@ -987,6 +987,7 @@ html.dpc-viewing body {
     style.textContent += "#dpc-app #dpc-submit-comment{display:block;width:100%;min-height:36px;margin:8px 0 0;border:1px solid var(--accent);border-radius:6px;background:var(--accent);color:#111115;font-size:13px;font-weight:600}html.dpc-light #dpc-app #dpc-submit-comment{color:white}html.dpc-comment-keyboard #dpc-app #dpc-submit-comment{margin-top:5px;min-height:34px}";
     style.textContent += "#dpc-app #comment-panel{height:auto!important;min-height:138px;padding-bottom:12px}#dpc-app #dpc-submit-comment{min-height:36px;margin:8px 0 0;background:transparent;color:var(--accent);border:1px solid var(--accent);font-weight:500}#dpc-app #dpc-submit-comment:disabled{opacity:.45;background:transparent;color:var(--muted);border-color:var(--line)}html.dpc-light #dpc-app #dpc-submit-comment{color:var(--accent)}#dpc-app .dpc-comment-hint:empty{display:none}html.dpc-comment-keyboard #dpc-app #comment-panel{min-height:0!important;padding-bottom:8px!important}#dpc-app #dpc-comment-input:focus{outline:none;box-shadow:none;border-color:var(--accent)}";
     style.textContent += "#dpc-app #dpc-submit-comment{background:var(--accent);color:#111115;border:1px solid var(--accent);font-weight:600}html.dpc-light #dpc-app #dpc-submit-comment{color:#fff}#dpc-app #dpc-submit-comment:disabled,html.dpc-light #dpc-app #dpc-submit-comment:disabled{opacity:1;background:#24242c;color:#777580;border:1px solid #393842;cursor:default}html.dpc-light #dpc-app #dpc-submit-comment:disabled{background:#e4e5e9;color:#85858d;border-color:#d1d2d8}";
+    style.textContent += "#dpc-app .dpc-thumb-comment{position:static;display:inline-flex;align-items:center;gap:4px;background:none;padding:0;margin-top:5px;color:var(--accent);font:10px/1.3 system-ui,sans-serif;letter-spacing:.01em}#dpc-app .dpc-thumb-comment svg{width:13px;height:13px;flex-shrink:0}html.dpc-light #dpc-app .dpc-thumb-comment{color:var(--accent)}";
     document.head.append(style);
 
     const header = `
@@ -1877,7 +1878,6 @@ html.dpc-viewing body {
                         card.className='dpc-thumb-card';
                         card.href=entry.href;
                         card.innerHTML='<div class="dpc-thumb-stage"><img loading="lazy" decoding="async">'+
-                            (entry.commented?'<span class="dpc-thumb-comment">'+commentIcon+'</span>':'')+
                             '</div><div class="dpc-thumb-title"></div>';
                         const img=card.querySelector('img');
                         img.src=entry.source;
@@ -1889,6 +1889,13 @@ html.dpc-viewing body {
                             sessionStorage.setItem('dpc-return-list-'+challengeId,listURL(challengeId));
                             sessionStorage.setItem('dpc-list-scroll-'+challengeId,String(scrollY));
                         };
+                    }
+                    card.querySelector('.dpc-thumb-comment')?.remove();
+                    if(entry.commented){
+                        const badge=document.createElement('span');
+                        badge.className='dpc-thumb-comment';
+                        badge.innerHTML=commentIcon+'<span>Commented</span>';
+                        card.append(badge);
                     }
                     sheet.append(card);
                 }
