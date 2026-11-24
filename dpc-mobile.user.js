@@ -2,7 +2,7 @@
 // ==UserScript==
 // @name DPChallenge Mobile — Editorial Gallery
 // @namespace dpc-mobile
-// @version 4.36
+// @version 4.37
 // @updateURL https://raw.githubusercontent.com/Konador/dpc-mobile-restyle/main/dpc-mobile.user.js
 // @downloadURL https://raw.githubusercontent.com/Konador/dpc-mobile-restyle/main/dpc-mobile.user.js
 // @match *://*.dpchallenge.com/challenge_vote_image.php*
@@ -2266,7 +2266,7 @@ html.dpc-viewing body {
             <span class="dpc-comment-score"></span>
         </div>
         <textarea id="dpc-comment-input"
-                  placeholder="Share your thoughts…"></textarea>
+                  autocomplete="off" placeholder="Share your thoughts…"></textarea>
         <div class="dpc-comment-hint">
             
         </div>
@@ -2565,7 +2565,9 @@ html.dpc-viewing body {
             b.setAttribute('aria-pressed',String(selected));
         });
 
-        const c=current.comment?.value||'';
+        const c=current.comment?.defaultValue||'';
+        input.name='dpc-comment-'+current.challengeId+'-'+current.id;
+        input.defaultValue=/^Enter your comment here/i.test(c)?'':c;
 
         input.value=/^Enter your comment here/i.test(c)?'':c;
 
@@ -2585,7 +2587,7 @@ html.dpc-viewing body {
     }
 
     function sync(page=current) {
-        if (dirty&&page.comment) {
+        if (dirty&&page.comment&&page.id===current.id&&page.challengeId===current.challengeId&&page.frame&&new URL(page.win.location.href).searchParams.get('IMAGE_ID')===current.id) {
             page.comment.value=input.value;
 
             page.comment.dispatchEvent(
@@ -2598,10 +2600,10 @@ html.dpc-viewing body {
         }
     }
 
-    input.oninput=()=>{
+    input.oninput=e=>{
+        if(!e.isTrusted||busy)return;
         dirty=true;
         $('#dpc-submit-comment').disabled=busy||!current.comment||!(current.next||current.prev);
-        sync();
 
         $('.dpc-comment-hint').textContent=
             'Unsaved comment';
@@ -2703,7 +2705,8 @@ html.dpc-viewing body {
                     return;
                 }
 
-                sync(p);
+                if(dirty){status('Could not safely save comment. Please try again.');setBusy(false);return;}
+                if(p.comment)p.comment.value=p.comment.defaultValue;
                 link.click();
                 return;
             }
@@ -2721,6 +2724,8 @@ html.dpc-viewing body {
             return;
         }
 
+        if(dirty&&(!actionPage.frame||actionPage.id!==p.id||actionPage.challengeId!==p.challengeId||!actionPage.comment||new URL(actionPage.win.location.href).searchParams.get('IMAGE_ID')!==p.id)){status('Comment not saved: photograph mismatch.');setBusy(false);return;}
+        if(actionPage.comment&&!dirty)actionPage.comment.value=actionPage.comment.defaultValue;
         sync(actionPage);
 
         const frame=actionPage.frame;
