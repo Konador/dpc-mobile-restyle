@@ -2,7 +2,7 @@
 // ==UserScript==
 // @name DPChallenge Mobile — Editorial Gallery
 // @namespace dpc-mobile
-// @version 4.21
+// @version 4.22
 // @updateURL https://raw.githubusercontent.com/Konador/dpc-mobile-restyle/main/dpc-mobile.user.js
 // @downloadURL https://raw.githubusercontent.com/Konador/dpc-mobile-restyle/main/dpc-mobile.user.js
 // @match *://*.dpchallenge.com/challenge_vote_image.php*
@@ -1327,6 +1327,7 @@ html.dpc-viewing body {
                 if(!voting&&count)description=description.replace(count[0],'');
                 description=description.replace(/^[\s·•]+|[\s·•]+$/g,'');
                 if(!voting)description=description.replace(/\bEnter this challenge\b/gi,'').replace(/(?:^|[·•])\s*received\b/gi,'').replace(/^[\s·•]+|[\s·•]+$/g,'').trim();
+                if(!voting&&(!description||/^N\s*\/\s*A\.?$/i.test(description)))description='No description provided.';
                 if(description&&!/^N\s*\/\s*A\.?$/i.test(description))card.append(make('div','dpc-home-meta',description));
                 const details=make('div','dpc-home-detail');
                 if(rules)details.append(make('span','dpc-entry-rules',rules[0]));
