@@ -2,7 +2,7 @@
 // ==UserScript==
 // @name DPChallenge Mobile — Editorial Gallery
 // @namespace dpc-mobile
-// @version 4.8
+// @version 4.9
 // @updateURL https://raw.githubusercontent.com/Konador/dpc-mobile-restyle/main/dpc-mobile.user.js
 // @downloadURL https://raw.githubusercontent.com/Konador/dpc-mobile-restyle/main/dpc-mobile.user.js
 // @match *://*.dpchallenge.com/challenge_vote_image.php*
@@ -962,6 +962,7 @@ html.dpc-viewing body {
     style.textContent += "\n#dpc-app .dpc-home-hero{height:var(--hero-height, min(100vw,65vh));overflow:hidden;touch-action:pan-y}\n#dpc-app .dpc-home-hero img{width:100%;height:100%;max-height:none;object-fit:contain;user-select:none;-webkit-user-drag:none}\n#dpc-app .dpc-home-feature-title.dpc-title{height:88px;min-height:88px;display:flex;flex-direction:column;justify-content:center;margin:0!important;overflow:hidden}\n#dpc-app .dpc-home-feature-author{font:italic 500 20px/1.25 var(--serif);color:var(--accent);letter-spacing:.01em;margin:0;min-height:25px}\n#dpc-app .dpc-home-gallery{gap:10px}\n";
     style.textContent += '#dpc-app .dpc-overlay-ribbon{height:32px} #dpc-app .dpc-home-strip .dpc-overlay-ribbon{height:17px}';
     style.textContent += "\n#dpc-app .dpc-home{padding-top:12px}\n#dpc-app .dpc-home section>h2{margin-bottom:12px;padding-bottom:8px}\n#dpc-app .dpc-home .dpc-results-feature{padding:16px 12px 18px;margin:0 -6px 20px;background:#19191e;border:1px solid #ffffff0c;border-radius:6px}\nhtml.dpc-light #dpc-app .dpc-home .dpc-results-feature{background:#fff;border-color:#0000000d}\n#dpc-app .dpc-home .dpc-results-feature h3{margin:0 0 12px;font-size:27px}\n#dpc-app .dpc-home-gallery{gap:8px}\n#dpc-app .dpc-home-feature-title.dpc-title{height:78px;min-height:78px}\n#dpc-app .dpc-results-rail{display:flex;width:100%;height:100%;transform:translate3d(-100%,0,0);will-change:transform}\n#dpc-app .dpc-results-slide{position:relative;flex:0 0 100%;height:100%;min-width:0;background:#242424}\n#dpc-app .dpc-results-slide img{width:100%;height:100%;object-fit:contain}\n#dpc-app .dpc-home-hero{touch-action:pan-y;user-select:none}\n";
+    style.textContent += "#dpc-app .dpc-results-footer{display:flex;align-items:center;justify-content:space-between;border-top:1px solid var(--line);margin-top:14px;padding:14px 2px 0;min-height:44px;box-sizing:border-box;color:var(--accent);font-size:13px;font-weight:600;text-decoration:none}#dpc-app .dpc-results-footer span{font-size:20px;font-weight:400}";
     document.head.append(style);
 
     const header = `
@@ -1441,7 +1442,13 @@ html.dpc-viewing body {
                 const io=new IntersectionObserver(entries=>{if(entries.some(e=>e.isIntersecting)){io.disconnect();Promise.all(records.map(preload)).then(()=>{dimensions();refreshAdjacent();});}},{rootMargin:'700px'});io.observe(card);
                 records.forEach((rec,i)=>{const button=make('button');button.type='button';button.setAttribute('aria-label',rec.title+(rec.author?' by '+clean(rec.author):''));const img=make('img');img.src=rec.src;img.alt=rec.title;img.loading='lazy';button.append(img);const icon=ribbon(i);if(icon)button.append(icon);button.onclick=()=>select(i);strip.append(button);});
                 select(0);
-                card.append(grid);sec.append(card);
+                card.append(grid);
+                const resultLink=[...(label?.querySelectorAll('a[href]')||[]),...(label?.closest('tr')?.querySelectorAll('a[href]')||[]),...group.querySelectorAll('a[href]')].find(a=>challengeLink(a)&&/results/i.test(safe(a)))||[...(label?.querySelectorAll('a[href]')||[]),...(label?.closest('tr')?.querySelectorAll('a[href]')||[])].find(challengeLink)||titleLink;
+                if(resultLink){
+                    const footerLink=link(resultLink,'dpc-results-footer','View full results');
+                    const arrow=make('span','','→');arrow.setAttribute('aria-hidden','true');footerLink.append(arrow);card.append(footerLink);
+                }
+                sec.append(card);
             }
         }
         const forum=region(forumHead,a=>/forum.*(?:THREAD_ID|thread)/i.test(safe(a)));
