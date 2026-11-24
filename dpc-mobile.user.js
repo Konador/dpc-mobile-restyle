@@ -2,7 +2,7 @@
 // ==UserScript==
 // @name DPChallenge Mobile — Editorial Gallery
 // @namespace dpc-mobile
-// @version 4.32
+// @version 4.33
 // @updateURL https://raw.githubusercontent.com/Konador/dpc-mobile-restyle/main/dpc-mobile.user.js
 // @downloadURL https://raw.githubusercontent.com/Konador/dpc-mobile-restyle/main/dpc-mobile.user.js
 // @match *://*.dpchallenge.com/challenge_vote_image.php*
@@ -983,6 +983,7 @@ html.dpc-viewing body {
     style.textContent += "#dpc-app .dpc-home section{margin-bottom:38px}#dpc-app .dpc-home section>h2{position:relative;padding:2px 0 12px 12px;margin:0 0 14px;border-bottom:1px solid var(--line);font-size:30px;letter-spacing:-.035em}#dpc-app .dpc-home section>h2:before{content:'';position:absolute;left:0;top:6px;width:3px;height:26px;border-radius:0;background:var(--accent)}#dpc-app .dpc-home section>h2 em{color:inherit;font-style:italic}";
     style.textContent += "#dpc-app .dpc-entry-grid h3,#dpc-app .dpc-home-vote-card h3,#dpc-app .dpc-home-vote-card h3 a{color:inherit}#dpc-app .dpc-home-vote-card .dpc-home-vote-status{color:inherit;font-weight:500}";
     style.textContent += "#dpc-app .dpc-entry-grid h3,#dpc-app .dpc-home-vote-card h3,#dpc-app .dpc-home-vote-card h3 a{color:var(--accent)}#dpc-app .dpc-home-vote-card .dpc-home-detail{display:grid;grid-template-columns:96px minmax(0,1fr);column-gap:8px;align-items:baseline}#dpc-app .dpc-home-vote-card .dpc-entry-deadline{grid-column:2}#dpc-app .dpc-home-vote-card .dpc-entry-rules{grid-column:1}#dpc-app .dpc-home-vote-card .dpc-home-vote-status{font-size:13px;font-weight:500;color:var(--muted)}#dpc-app .dpc-home-vote-card .dpc-home-meta{font-size:13px!important;line-height:1.4!important}#dpc-app .dpc-home-vote-card:before{background-image:linear-gradient(90deg,#111115fa 0%,#111115ed 40%,#111115b0 70%,#11111545 100%),var(--vote-image,none)}html.dpc-light #dpc-app .dpc-home-vote-card:before{background-image:linear-gradient(90deg,#f5f6f8fa 0%,#f5f6f8ed 40%,#f5f6f8b0 70%,#f5f6f845 100%),var(--vote-image,none)}";
+    style.textContent += "html.dpc-comment-keyboard #dpc-app{padding:0!important}html.dpc-comment-keyboard #dpc-app .dpc-header,html.dpc-comment-keyboard #dpc-app .dpc-info,html.dpc-comment-keyboard #dpc-app .dpc-tabs,html.dpc-comment-keyboard #dpc-app .dpc-controls>:not(#comment-panel),html.dpc-comment-keyboard #dpc-app .dpc-footer,html.dpc-comment-keyboard #dpc-app .dpc-stage-button{display:none!important}html.dpc-comment-keyboard #dpc-app .dpc-stage{height:var(--dpc-keyboard-photo,180px)!important;min-height:0!important}html.dpc-comment-keyboard #dpc-app .dpc-controls{padding:0 12px!important;margin:0!important}html.dpc-comment-keyboard #comment-panel{padding:8px 0!important;margin:0!important}html.dpc-comment-keyboard #dpc-comment-input{height:80px!important;min-height:56px!important;margin:4px 0!important}html.dpc-comment-keyboard #dpc-app .dpc-slide{padding:5px!important}";
     document.head.append(style);
 
     const header = `
@@ -3346,6 +3347,24 @@ html.dpc-viewing body {
         typeset(0,false);
     });
 
+
+    // Keep the current photograph in view while the mobile keyboard is open.
+    const commentInput=document.getElementById('dpc-comment-input');
+    const vv=window.visualViewport;
+    let keyboardBaseline=vv?.height||innerHeight;
+    let keyboardActive=false;
+    function syncCommentKeyboard(){
+        const focused=document.activeElement===commentInput;
+        const h=vv?.height||innerHeight;
+        if(!focused&&!keyboardActive)keyboardBaseline=Math.max(h,innerHeight);
+        const open=focused&&keyboardBaseline-h>100;
+        if(open){root.style.setProperty('--dpc-keyboard-photo',Math.max(64,Math.floor(h-150))+'px');}
+        if(open!==keyboardActive){keyboardActive=open;root.classList.toggle('dpc-comment-keyboard',open);if(open){scrollTo(0,0);requestAnimationFrame(()=>scrollTo(0,0));}else if(focused){commentInput.scrollIntoView({block:'nearest'});}}
+    }
+    commentInput.addEventListener('focus',()=>{keyboardBaseline=Math.max(vv?.height||0,innerHeight);syncCommentKeyboard();});
+    commentInput.addEventListener('blur',syncCommentKeyboard);
+    vv?.addEventListener('resize',syncCommentKeyboard);
+    window.addEventListener('resize',syncCommentKeyboard);
     position();
     slide(1,current);
     update();
