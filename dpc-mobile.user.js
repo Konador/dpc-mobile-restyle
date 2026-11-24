@@ -2,7 +2,7 @@
 // ==UserScript==
 // @name DPChallenge Mobile — Editorial Gallery
 // @namespace dpc-mobile
-// @version 4.39
+// @version 4.40
 // @updateURL https://raw.githubusercontent.com/Konador/dpc-mobile-restyle/main/dpc-mobile.user.js
 // @downloadURL https://raw.githubusercontent.com/Konador/dpc-mobile-restyle/main/dpc-mobile.user.js
 // @match *://*.dpchallenge.com/challenge_vote_image.php*
@@ -988,6 +988,7 @@ html.dpc-viewing body {
     style.textContent += "#dpc-app #comment-panel{height:auto!important;min-height:138px;padding-bottom:12px}#dpc-app #dpc-submit-comment{min-height:36px;margin:8px 0 0;background:transparent;color:var(--accent);border:1px solid var(--accent);font-weight:500}#dpc-app #dpc-submit-comment:disabled{opacity:.45;background:transparent;color:var(--muted);border-color:var(--line)}html.dpc-light #dpc-app #dpc-submit-comment{color:var(--accent)}#dpc-app .dpc-comment-hint:empty{display:none}html.dpc-comment-keyboard #dpc-app #comment-panel{min-height:0!important;padding-bottom:8px!important}#dpc-app #dpc-comment-input:focus{outline:none;box-shadow:none;border-color:var(--accent)}";
     style.textContent += "#dpc-app #dpc-submit-comment{background:var(--accent);color:#111115;border:1px solid var(--accent);font-weight:600}html.dpc-light #dpc-app #dpc-submit-comment{color:#fff}#dpc-app #dpc-submit-comment:disabled,html.dpc-light #dpc-app #dpc-submit-comment:disabled{opacity:1;background:#24242c;color:#777580;border:1px solid #393842;cursor:default}html.dpc-light #dpc-app #dpc-submit-comment:disabled{background:#e4e5e9;color:#85858d;border-color:#d1d2d8}";
     style.textContent += "#dpc-app .dpc-thumb-comment{position:static;display:inline-flex;align-items:center;gap:4px;background:none;padding:0;margin-top:5px;color:var(--accent);font:10px/1.3 system-ui,sans-serif;letter-spacing:.01em}#dpc-app .dpc-thumb-comment svg{width:13px;height:13px;flex-shrink:0}html.dpc-light #dpc-app .dpc-thumb-comment{color:var(--accent)}";
+    style.textContent += "#dpc-app .dpc-native-menu-group>summary{cursor:pointer;padding:12px 0;border-bottom:1px solid var(--line);font-weight:600;color:var(--accent)}#dpc-app .dpc-native-menu-children{padding-left:16px}#dpc-app .dpc-native-menu-children a{font-size:13px}#dpc-app .dpc-home-menu[hidden]{display:none!important}";
     document.head.append(style);
 
     const header = `
@@ -1319,7 +1320,49 @@ html.dpc-viewing body {
         menuButton.onclick=()=>{menu.hidden=!menu.hidden;menuButton.setAttribute('aria-expanded',String(!menu.hidden));};
         const seen=new Set();
         function menuLink(a){const url=safe(a),name=clean(a);if(!url||!name||seen.has(url))return;seen.add(url);menu.append(link(a));}
-        originalLinks.filter(a=>/^(My Home|Challenges|Community|League|Photos|Equipment|Learn|Help|Inbox|Log out|Log in|Register|Private Messaging|Image Search)$/i.test(clean(a))).forEach(menuLink);
+        // Read the native menu definitions, or its already-built menu tree.
+        function nativeMenu(prefix,count,depth=0){
+            if(depth>8)return [];
+            const items=[];
+            for(let i=1;i<=Math.min(Number(count)||0,200);i++){
+                const key=prefix+i,arr=window[key];
+                if(!Array.isArray(arr))continue;
+                items.push({arr,children:nativeMenu(key+'_',arr[3],depth+1)});
+            }
+            return items;
+        }
+        function nativeTree(container,depth=0){
+            if(!container||depth>8)return [];
+            const items=[];
+            for(let m=container.FrstMbr;m&&items.length<200;m=m.PrvMbr){
+                if(Array.isArray(m.Arr))items.unshift({arr:m.Arr,children:nativeTree(m.CCn,depth+1)});
+            }
+            return items;
+        }
+        function renderNative(items,parent){
+            for(const item of items){
+                const label=document.createElement('template');
+                label.innerHTML=String(item.arr[0]||'');
+                const name=clean(label.content);
+                if(!name)continue;
+                let url='';
+                try{if(item.arr[1]){const u=new URL((window.BaseHref||'')+item.arr[1],location.href);if(/^https?:$/.test(u.protocol))url=u.href;}}catch{}
+                const a=url?make('a','',name):null;
+                if(a){a.href=url;seen.add(url);}
+                if(item.children.length){
+                    const group=make('details','dpc-native-menu-group'),summary=make('summary','',name);
+                    group.append(summary);
+                    const sub=make('div','dpc-native-menu-children');
+                    if(a){a.textContent='Overview — '+name;sub.append(a);}
+                    renderNative(item.children,sub);group.append(sub);parent.append(group);
+                }else if(a)parent.append(a);
+            }
+        }
+        const nativeItems=nativeMenu('Menu',window.NoOffFirstLineMenus);
+        const tree=nativeItems.length?nativeItems:nativeTree(window.FrstCntnr);
+        if(tree.length)renderNative(tree,menu);
+        else originalLinks.filter(a=>/^(My Home|Challenges|Community|League|Photos|Equipment|Learn|Help)$/i.test(clean(a))).forEach(menuLink);
+        originalLinks.filter(a=>/^(Inbox|Log out|Log in|Register|Private Messaging|Image Search)$/i.test(clean(a))).forEach(menuLink);
         const news=region(newsHead,a=>!!clean(a)&&!!safe(a));if(news) [...news.querySelectorAll('a[href]')].forEach(menuLink);
         const inbox=originalLinks.find(a=>/inbox|private messag/i.test(clean(a)));if(inbox)menuLink(inbox);
         const searchForm=[...document.forms].find(f=>/image.search/i.test(f.action)||/image search/i.test(clean(f)));
