@@ -2,7 +2,7 @@
 // ==UserScript==
 // @name DPChallenge Mobile — Editorial Gallery
 // @namespace dpc-mobile
-// @version 4.17
+// @version 4.18
 // @updateURL https://raw.githubusercontent.com/Konador/dpc-mobile-restyle/main/dpc-mobile.user.js
 // @downloadURL https://raw.githubusercontent.com/Konador/dpc-mobile-restyle/main/dpc-mobile.user.js
 // @match *://*.dpchallenge.com/challenge_vote_image.php*
@@ -1423,7 +1423,7 @@ html.dpc-viewing body {
                     return rec.promise;
                 }
                 function composeCredit(){
-                    featureAuthor.style.removeProperty('margin-left');featureAuthor.style.removeProperty('left');featureAuthor.style.removeProperty('top');
+                    featureAuthor.style.removeProperty('margin-top');featureAuthor.style.removeProperty('margin-left');featureAuthor.style.removeProperty('left');featureAuthor.style.removeProperty('top');
                     credits.classList.remove('tucked');
                     const rows=[...featureTitle.querySelectorAll('.dpc-title-line')];
                     rows.forEach(row=>{row.style.removeProperty('align-self');row.style.removeProperty('margin-left');});
@@ -1447,7 +1447,8 @@ html.dpc-viewing body {
                                 const ch=node.textContent[j],metric=ctx.measureText(ch);
                                 if(metric.actualBoundingBoxDescent<2&&!/[fgjpqy]/i.test(ch))continue;
                                 const range=document.createRange();range.setStart(node,j);range.setEnd(node,j+1);
-                                const box=range.getBoundingClientRect();blocked.push([box.left-base.left-9,box.right-base.left+9]);
+                                const box=range.getBoundingClientRect();const pad=/f/i.test(ch)?Math.max(18,parseFloat(cs.fontSize)*.38):9;
+                                blocked.push([box.left-base.left-pad,box.right-base.left+pad]);
                             }
                         }
                         return {baseline:baseline-base.top,blocked};
@@ -1472,8 +1473,8 @@ html.dpc-viewing body {
                         }
                         if(x===undefined){featureTitle.style.fontSize=original+'px';row.style.removeProperty('align-self');}
                     }
-                    if(x===undefined){featureAuthor.style.marginLeft=Math.max(0,Math.min(w-aw,(row.getBoundingClientRect().left+row.getBoundingClientRect().right)/2-base.left-aw*.35))+'px';return;}
-                    const top=Math.max(0,m.baseline+6);
+                    if(x===undefined){featureAuthor.style.marginTop=/f/i.test(row.textContent)?'6px':'';featureAuthor.style.marginLeft=Math.max(0,Math.min(w-aw,(row.getBoundingClientRect().left+row.getBoundingClientRect().right)/2-base.left-aw*.35))+'px';return;}
+                    const top=Math.max(0,m.baseline+(/[f]/i.test(row.textContent)?10:6));
                     if(top+featureAuthor.offsetHeight>credits.clientHeight)return;
                     featureAuthor.style.left=x+'px';featureAuthor.style.top=top+'px';credits.classList.add('tucked');
                 }
