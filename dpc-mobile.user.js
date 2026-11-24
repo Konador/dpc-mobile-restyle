@@ -2,7 +2,7 @@
 // ==UserScript==
 // @name DPChallenge Mobile — Editorial Gallery
 // @namespace dpc-mobile
-// @version 4.35
+// @version 4.36
 // @updateURL https://raw.githubusercontent.com/Konador/dpc-mobile-restyle/main/dpc-mobile.user.js
 // @downloadURL https://raw.githubusercontent.com/Konador/dpc-mobile-restyle/main/dpc-mobile.user.js
 // @match *://*.dpchallenge.com/challenge_vote_image.php*
@@ -986,6 +986,7 @@ html.dpc-viewing body {
     style.textContent += "html.dpc-comment-keyboard #dpc-app{padding:0!important}html.dpc-comment-keyboard #dpc-app .dpc-header,html.dpc-comment-keyboard #dpc-app .dpc-info,html.dpc-comment-keyboard #dpc-app .dpc-tabs,html.dpc-comment-keyboard #dpc-app .dpc-controls>:not(#comment-panel),html.dpc-comment-keyboard #dpc-app .dpc-footer,html.dpc-comment-keyboard #dpc-app .dpc-stage-button{display:none!important}html.dpc-comment-keyboard #dpc-app .dpc-stage{height:var(--dpc-keyboard-photo,180px)!important;min-height:0!important}html.dpc-comment-keyboard #dpc-app .dpc-controls{padding:0 12px!important;margin:0!important}html.dpc-comment-keyboard #comment-panel{padding:8px 0!important;margin:0!important}html.dpc-comment-keyboard #dpc-comment-input{height:80px!important;min-height:56px!important;margin:4px 0!important}html.dpc-comment-keyboard #dpc-app .dpc-slide{padding:5px!important}";
     style.textContent += "#dpc-app #dpc-submit-comment{display:block;width:100%;min-height:36px;margin:8px 0 0;border:1px solid var(--accent);border-radius:6px;background:var(--accent);color:#111115;font-size:13px;font-weight:600}html.dpc-light #dpc-app #dpc-submit-comment{color:white}html.dpc-comment-keyboard #dpc-app #dpc-submit-comment{margin-top:5px;min-height:34px}";
     style.textContent += "#dpc-app #comment-panel{height:auto!important;min-height:138px;padding-bottom:12px}#dpc-app #dpc-submit-comment{min-height:36px;margin:8px 0 0;background:transparent;color:var(--accent);border:1px solid var(--accent);font-weight:500}#dpc-app #dpc-submit-comment:disabled{opacity:.45;background:transparent;color:var(--muted);border-color:var(--line)}html.dpc-light #dpc-app #dpc-submit-comment{color:var(--accent)}#dpc-app .dpc-comment-hint:empty{display:none}html.dpc-comment-keyboard #dpc-app #comment-panel{min-height:0!important;padding-bottom:8px!important}#dpc-app #dpc-comment-input:focus{outline:none;box-shadow:none;border-color:var(--accent)}";
+    style.textContent += "#dpc-app #dpc-submit-comment{background:var(--accent);color:#111115;border:1px solid var(--accent);font-weight:600}html.dpc-light #dpc-app #dpc-submit-comment{color:#fff}#dpc-app #dpc-submit-comment:disabled,html.dpc-light #dpc-app #dpc-submit-comment:disabled{opacity:1;background:#24242c;color:#777580;border:1px solid #393842;cursor:default}html.dpc-light #dpc-app #dpc-submit-comment:disabled{background:#e4e5e9;color:#85858d;border-color:#d1d2d8}";
     document.head.append(style);
 
     const header = `
@@ -2904,7 +2905,11 @@ html.dpc-viewing body {
         commit(p,d);
     }
 
-    $('#dpc-submit-comment').onclick=()=>{if(!busy&&dirty){input.blur();navigate(current.next?1:-1);}};
+    const submitComment=$('#dpc-submit-comment');
+    // Prevent focus loss from collapsing the keyboard layout before click.
+    submitComment.addEventListener('pointerdown',e=>{if(!submitComment.disabled)e.preventDefault();});
+    submitComment.addEventListener('mousedown',e=>{if(!submitComment.disabled)e.preventDefault();});
+    submitComment.onclick=()=>{if(!busy&&dirty&&!submitComment.disabled){navigate(current.next?1:-1);}};
     $('#dpc-prev').onclick=()=>navigate(-1);
     $('#dpc-next').onclick=()=>navigate(1);
 
