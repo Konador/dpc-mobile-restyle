@@ -2,7 +2,7 @@
 // ==UserScript==
 // @name DPChallenge Mobile — Editorial Gallery
 // @namespace dpc-mobile
-// @version 4.43
+// @version 4.44
 // @updateURL https://raw.githubusercontent.com/Konador/dpc-mobile-restyle/main/dpc-mobile.user.js
 // @downloadURL https://raw.githubusercontent.com/Konador/dpc-mobile-restyle/main/dpc-mobile.user.js
 // @match *://*.dpchallenge.com/challenge_vote_image.php*
@@ -990,7 +990,7 @@ html.dpc-viewing body {
     style.textContent += "#dpc-app .dpc-thumb-comment{position:static;display:inline-flex;align-items:center;gap:4px;background:none;padding:0;margin-top:5px;color:var(--accent);font:10px/1.3 system-ui,sans-serif;letter-spacing:.01em}#dpc-app .dpc-thumb-comment svg{width:13px;height:13px;flex-shrink:0}html.dpc-light #dpc-app .dpc-thumb-comment{color:var(--accent)}";
     style.textContent += "#dpc-app .dpc-native-menu-group>summary{cursor:pointer;padding:12px 0;border-bottom:1px solid var(--line);font-weight:600;color:var(--accent)}#dpc-app .dpc-native-menu-children{padding-left:16px}#dpc-app .dpc-native-menu-children a{font-size:13px}#dpc-app .dpc-home-menu[hidden]{display:none!important}";
     style.textContent += "#dpc-app .dpc-home-menu a.dpc-restyled-link{display:flex;align-items:center;justify-content:space-between;gap:10px}#dpc-app .dpc-restyle-mark{display:inline-flex;align-items:center;gap:2px;color:var(--muted);opacity:.65;flex:none;height:13px}#dpc-app .dpc-restyle-mark svg{width:13px;height:13px;flex:none}#dpc-app .dpc-restyle-mark i{font:italic 500 17px/1 var(--serif);font-optical-sizing:none;font-variation-settings:'opsz' 12,'wght' 500;letter-spacing:-.6px;-webkit-text-stroke:0;position:relative;top:-2px;padding-right:1px}";
-    style.textContent += "#dpc-app .dpc-brand .dpc-brand-word{color:inherit;margin:0;white-space:nowrap}#dpc-app .dpc-brand-word em{font-family:var(--serif);font-weight:500;font-size:.85em;font-style:italic;color:var(--muted);letter-spacing:-.8px;margin-left:1px}html.dpc-comment-keyboard #dpc-app .dpc-home-menu{display:none!important}";
+    style.textContent += "#dpc-app .dpc-brand .dpc-brand-word{color:inherit;margin:0;white-space:nowrap}#dpc-app .dpc-brand-word em{font-family:var(--serif);font-weight:500;font-size:1em;font-style:italic;color:var(--accent);letter-spacing:-.8px;margin-left:1px}html.dpc-comment-keyboard #dpc-app .dpc-home-menu{display:none!important}";
     document.head.append(style);
 
     const header = `
