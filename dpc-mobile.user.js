@@ -2,7 +2,7 @@
 // ==UserScript==
 // @name DPChallenge Mobile — Editorial Gallery
 // @namespace dpc-mobile
-// @version 4.81
+// @version 4.82
 // @updateURL https://raw.githubusercontent.com/Konador/dpc-mobile-restyle/main/dpc-mobile.user.js
 // @downloadURL https://raw.githubusercontent.com/Konador/dpc-mobile-restyle/main/dpc-mobile.user.js
 // @match *://*.dpchallenge.com/challenge_vote_image.php*
@@ -2336,13 +2336,15 @@ html.dpc-viewing body {
             const cells=doc.querySelectorAll('#image_challenge table tr:first-child > td');
             const links=[cells[0]?.querySelector('a[href*="image.php"]'),cells[cells.length-1]?.querySelector('a[href*="image.php"]')];
             const slides=[null,null];let busy=false,drag=null,offset=0;
-            const distance=()=>body.clientWidth;
+            const distance=()=>body.clientWidth||document.documentElement.clientWidth||innerWidth;
             const move=(x,animate=false)=>{
                 offset=x;
                 const transition=animate&&!reducedMotion.matches?'transform 260ms cubic-bezier(.2,.75,.25,1)':'none';
                 current.style.transition=transition;current.style.transform='translate3d('+x+'px,0,0)';
+                if(x===0&&animate&&!reducedMotion.matches){current.addEventListener('transitionend',()=>{if(offset===0&&!drag&&!busy)slides.forEach(rec=>{if(rec)rec.root.style.opacity='0';});},{once:true});}
                 slides.forEach((rec,i)=>{
                     if(!rec)return;
+                    rec.root.style.opacity=x===0&&(!animate||reducedMotion.matches)?'0':'1';
                     rec.root.style.transition=transition;
                     rec.root.style.transform='translate3d('+((i===0?-1:1)*distance()+x)+'px,0,0)';
                 });
@@ -2360,7 +2362,7 @@ html.dpc-viewing body {
                 const url=new URL(link.getAttribute('href'),location.href).href;
                 const thumb=link.querySelector('img');
                 const preview=make('img');if(thumb)preview.src=thumb.getAttribute('src');
-                const root=make('div','dpc-photo-detail dpc-detail-preview');root.inert=true;root.setAttribute('aria-hidden','true');body.append(root);
+                const root=make('div','dpc-photo-detail dpc-detail-preview');root.inert=true;root.style.opacity='0';root.setAttribute('aria-hidden','true');body.append(root);
                 const rec={url,preview,root};slides[i]=rec;move(offset);
                 rec.promise=fetch(url,{credentials:'same-origin'}).then(async response=>{
                     if(!response.ok)throw Error('Unavailable');
@@ -2378,6 +2380,8 @@ html.dpc-viewing body {
                 return rec;
             }
             prepare(0);prepare(1);move(0);
+            requestAnimationFrame(()=>{if(current.isConnected&&!drag&&!busy)move(0);});
+            const resize=new ResizeObserver(()=>{if(!current.isConnected){resize.disconnect();return;}if(!drag&&!busy)move(0);});resize.observe(body);
             async function go(d){
                 if(busy)return;const rec=slides[d<0?0:1];if(!rec){move(0,true);return;}
                 busy=true;fallback(rec);move(-d*distance(),true);
