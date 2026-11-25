@@ -2,7 +2,7 @@
 // ==UserScript==
 // @name DPChallenge Mobile — Editorial Gallery
 // @namespace dpc-mobile
-// @version 4.67
+// @version 4.68
 // @updateURL https://raw.githubusercontent.com/Konador/dpc-mobile-restyle/main/dpc-mobile.user.js
 // @downloadURL https://raw.githubusercontent.com/Konador/dpc-mobile-restyle/main/dpc-mobile.user.js
 // @match *://*.dpchallenge.com/challenge_vote_image.php*
@@ -1011,6 +1011,7 @@ html.dpc-viewing body {
     style.textContent += "#dpc-app .dpc-detail-swipe-area{touch-action:pan-y pinch-zoom;min-width:0}";
     style.textContent += "#dpc-app .dpc-detail-results-layout:not(.single){grid-template-columns:minmax(0,1fr) minmax(0,1.06fr);gap:14px}#dpc-app .dpc-detail-summary .dpc-detail-fields{align-items:baseline;column-gap:6px;font-variant-numeric:tabular-nums}#dpc-app .dpc-detail-summary .dpc-detail-fields dt,#dpc-app .dpc-detail-summary .dpc-detail-fields dd{padding:5px 0;align-self:stretch}#dpc-app .dpc-detail-summary .dpc-detail-fields dt:first-child,#dpc-app .dpc-detail-summary .dpc-detail-fields dd:nth-child(2){padding-top:0}#dpc-app .dpc-detail-summary .dpc-detail-fields dt:nth-last-child(2),#dpc-app .dpc-detail-summary .dpc-detail-fields dd:last-child{padding-bottom:0;border-bottom:0}#dpc-app .dpc-detail-column-plot{top:13px}#dpc-app .dpc-detail-distribution-note{margin-top:6px}#dpc-app .dpc-detail-column-score{padding-top:4px}";
     style.textContent += "#dpc-app .dpc-photo-detail{position:relative;overflow-x:clip}#dpc-app .dpc-detail-current{min-width:0}#dpc-app .dpc-photo-detail.dpc-detail-preview{position:absolute;top:0;left:0;width:100%;margin:0;pointer-events:none;overflow:visible}#dpc-app .dpc-detail-preview .dpc-photo-caption,#dpc-app .dpc-detail-preview .dpc-detail-photographer,#dpc-app .dpc-detail-preview .dpc-detail-section>*{visibility:hidden}#dpc-app .dpc-detail-column-fill{transform-origin:center bottom}#dpc-app .dpc-detail-stage img{width:100%;height:100%;object-fit:contain;pointer-events:none;user-select:none}";
+    style.textContent += "#dpc-app .dpc-detail-preview .dpc-photo-caption,#dpc-app .dpc-detail-preview .dpc-detail-photographer,#dpc-app .dpc-detail-preview .dpc-detail-section>*{visibility:visible}#dpc-app .dpc-photo-detail{overflow-anchor:none}#dpc-app .dpc-photo-caption.has-result{padding-bottom:24px;min-height:127px}#dpc-app .dpc-detail-caption-result{position:absolute;bottom:0;right:0;display:flex;align-items:baseline;gap:5px;color:var(--accent);white-space:nowrap;font:italic 500 15px/1.2 var(--serif),Georgia,serif;font-variant-numeric:tabular-nums}#dpc-app .dpc-detail-caption-rank{font-size:19px;color:inherit}#dpc-app .dpc-detail-caption-slash{color:var(--muted);font-size:13px}#dpc-app .dpc-detail-caption-average{color:var(--muted)}";
     document.head.append(style);
 
     const header = `
@@ -2164,7 +2165,11 @@ html.dpc-viewing body {
         const stats=doc.querySelector('.dpc-vote-breakdown');
         const thread=doc.querySelector('.dpc-forum-thread');
         if(!mounted&&!previewRoot)app.innerHTML=header+'<div class="dpc-photo-detail"></div>'+footer;
-        const body=previewRoot||$('.dpc-photo-detail');body.replaceChildren();
+        const body=previewRoot||$('.dpc-photo-detail');
+        const previousScroll=mounted&&!previewRoot?window.scrollY:null;
+        const oldHeight=body.offsetHeight;
+        if(previousScroll!==null)body.style.minHeight=oldHeight+'px';
+        body.replaceChildren();
         const current=make('div','dpc-detail-current');body.append(current);
         const swipeArea=make('div','dpc-detail-swipe-area');current.append(swipeArea);
         const challenge=info?.querySelector('a[href*="challenge_results.php"]');
@@ -2265,7 +2270,14 @@ html.dpc-viewing body {
                 }
                 if(highlighted)chart.append(make('div','dpc-detail-distribution-note','Your vote highlighted'));
             }
-            if(primary){const summary=make('div','dpc-detail-summary');layout.append(summary);fields(primary,summary);}
+            if(primary){const summary=make('div','dpc-detail-summary');layout.append(summary);fields(primary,summary);
+                const values=new Map([...summary.querySelectorAll('dt')].map(dt=>[dt.textContent.trim().toLowerCase(),dt.nextElementSibling?.textContent.trim()||'']));
+                const rank=parseInt(values.get('place'),10),avg=parseFloat(values.get('avg (all users)'));
+                const result=make('div','dpc-detail-caption-result');
+                if(Number.isFinite(rank)&&rank>0){const suffix=rank%100>=11&&rank%100<=13?'th':({1:'st',2:'nd',3:'rd'}[rank%10]||'th');result.append(make('span','dpc-detail-caption-rank',rank+suffix));}
+                if(Number.isFinite(avg)){if(result.children.length)result.append(make('span','dpc-detail-caption-slash','/'));result.append(make('span','dpc-detail-caption-average',avg.toFixed(3)+' avg'));}
+                if(result.children.length){caption.append(result);caption.classList.add('has-result');}
+            }
             if(!primary||!votes.length)layout.classList.add('single');
         }
         if(info){const sec=section('Photograph information');const source=info.querySelector('.dpc-detail-primary-content');fields(source,sec);for(const a of source?.querySelectorAll('a[href*="favorites_mgr.php"]')||[]){const link=make('a','dpc-detail-action',a.textContent.trim());link.href=a.href;actionIcon(link,/photographer/i.test(link.textContent)?'person':'heart');sec.append(link);}}
@@ -2284,27 +2296,13 @@ html.dpc-viewing body {
         fit();
         if(previewRoot)return;
         if(!direction)document.fonts?.ready.then(()=>{if(heading.isConnected)fit();});
+        if(previousScroll!==null){
+            body.style.minHeight='';
+            window.scrollTo({top:previousScroll,behavior:'instant'});
+        }
         if(direction&&!reducedMotion.matches){
-            const enter=(el,transform,delay,duration=420)=>{if(el)el.animate([{opacity:0,transform},{opacity:1,transform:'translate(0,0)'}],{duration,delay,easing:'cubic-bezier(.16,1,.3,1)',fill:'both'});};
-            [...heading.querySelectorAll('.dpc-title-part')].forEach((part,i)=>enter(part,'translateX('+(direction*(part.tagName==='EM'?38:24))+'px)',i*105,part.tagName==='EM'?520:420));
-            enter(credit,'translateY(8px)',140);
-            enter(gallery.querySelector('.dpc-detail-photographer h2'),'translateY(12px)',220);
-            enter(gallery.querySelector('.dpc-detail-photographer .dpc-detail-prose'),'translateY(14px)',310);
-            const cards=[...swipeArea.querySelectorAll(':scope > .dpc-detail-section'),comments];
-            cards.forEach((card,i)=>{
-                enter(card.querySelector('h2'),'translateY(10px)',90+i*70,380);
-                if(card.querySelector('.dpc-detail-results-layout')){
-                    enter(card.querySelector('.dpc-detail-summary'),'translateY(12px)',190,420);
-                    enter(card.querySelector('.dpc-detail-distribution-note'),'translateY(5px)',370,300);
-                    [...card.querySelectorAll('.dpc-detail-column')].forEach((column,k)=>{
-                        const bar=column.querySelector('.dpc-detail-column-fill'),count=column.querySelector('.dpc-detail-column-count');
-                        if(bar)bar.animate([{transform:'scaleY(0)'},{transform:'scaleY(1)'}],{duration:480,delay:120+k*24,easing:'cubic-bezier(.16,1,.3,1)',fill:'both'});
-                        enter(count,'translateY(5px)',340+k*24,300);
-                        enter(column.querySelector('.dpc-detail-column-score'),'translateY(4px)',100+k*12,300);
-                    });
-                }else{
-                    [...card.children].filter(el=>el.tagName!=='H2').forEach((el,k)=>enter(el,'translateY(10px)',190+i*70+Math.min(k,4)*45,400));
-                }
+            [...swipeArea.querySelectorAll('.dpc-detail-column-fill')].forEach((bar,k)=>{
+                bar.animate([{transform:'scaleY(0)'},{transform:'scaleY(1)'}],{duration:460,delay:k*22,easing:'cubic-bezier(.16,1,.3,1)',fill:'both'});
             });
         }
     }
