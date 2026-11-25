@@ -2,7 +2,7 @@
 // ==UserScript==
 // @name DPChallenge Mobile — Editorial Gallery
 // @namespace dpc-mobile
-// @version 4.69
+// @version 4.70
 // @updateURL https://raw.githubusercontent.com/Konador/dpc-mobile-restyle/main/dpc-mobile.user.js
 // @downloadURL https://raw.githubusercontent.com/Konador/dpc-mobile-restyle/main/dpc-mobile.user.js
 // @match *://*.dpchallenge.com/challenge_vote_image.php*
@@ -1013,6 +1013,7 @@ html.dpc-viewing body {
     style.textContent += "#dpc-app .dpc-photo-detail{position:relative;overflow-x:clip}#dpc-app .dpc-detail-current{min-width:0}#dpc-app .dpc-photo-detail.dpc-detail-preview{position:absolute;top:0;left:0;width:100%;margin:0;pointer-events:none;overflow:visible}#dpc-app .dpc-detail-preview .dpc-photo-caption,#dpc-app .dpc-detail-preview .dpc-detail-photographer,#dpc-app .dpc-detail-preview .dpc-detail-section>*{visibility:hidden}#dpc-app .dpc-detail-column-fill{transform-origin:center bottom}#dpc-app .dpc-detail-stage img{width:100%;height:100%;object-fit:contain;pointer-events:none;user-select:none}";
     style.textContent += "#dpc-app .dpc-detail-preview .dpc-photo-caption,#dpc-app .dpc-detail-preview .dpc-detail-photographer,#dpc-app .dpc-detail-preview .dpc-detail-section>*{visibility:visible}#dpc-app .dpc-photo-detail{overflow-anchor:none}#dpc-app .dpc-photo-caption.has-result{padding-bottom:24px;min-height:127px}#dpc-app .dpc-detail-caption-result{position:absolute;bottom:0;right:0;display:flex;align-items:baseline;gap:5px;color:var(--accent);white-space:nowrap;font:italic 500 15px/1.2 var(--serif),Georgia,serif;font-variant-numeric:tabular-nums}#dpc-app .dpc-detail-caption-rank{font-size:19px;color:inherit}#dpc-app .dpc-detail-caption-slash{color:var(--muted);font-size:13px}#dpc-app .dpc-detail-caption-average{color:var(--muted)}";
     style.textContent += "@media (prefers-reduced-motion:no-preference){#dpc-app .dpc-detail-preview .dpc-detail-column-fill,#dpc-app .dpc-detail-preview .dpc-detail-column-count,#dpc-app .dpc-detail-preview .dpc-title-part{visibility:hidden}}";
+    style.textContent += "#dpc-app .dpc-detail-gallery .dpc-detail-stage{width:100%;height:auto;min-height:0;max-height:none;display:block}#dpc-app .dpc-detail-gallery .dpc-detail-stage img{display:block;width:100%;height:auto;max-width:100%;max-height:none;object-fit:contain}";
     document.head.append(style);
 
     const header = `
