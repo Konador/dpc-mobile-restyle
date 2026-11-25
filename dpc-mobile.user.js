@@ -2,7 +2,7 @@
 // ==UserScript==
 // @name DPChallenge Mobile — Editorial Gallery
 // @namespace dpc-mobile
-// @version 4.74
+// @version 4.75
 // @updateURL https://raw.githubusercontent.com/Konador/dpc-mobile-restyle/main/dpc-mobile.user.js
 // @downloadURL https://raw.githubusercontent.com/Konador/dpc-mobile-restyle/main/dpc-mobile.user.js
 // @match *://*.dpchallenge.com/challenge_vote_image.php*
@@ -2306,15 +2306,15 @@ html.dpc-viewing body {
         if(direction&&!reducedMotion.matches){
             [...heading.querySelectorAll('.dpc-title-part')].forEach((part,k)=>{
                 const italic=part.tagName==='EM';
-                part.animate([{opacity:0,transform:'translateX('+(direction*(italic?38:24))+'px)'},{opacity:1,transform:'translateX(0)'}],{duration:italic?520:420,delay:k*105,easing:'cubic-bezier(.16,1,.3,1)',fill:'both'});
+                part.animate([{opacity:0,transform:'translateX('+(direction*(italic?38:24))+'px)'},{opacity:1,transform:'translateX(0)'}],{duration:italic?720:600,delay:k*125,easing:'cubic-bezier(.28,.08,.18,1)',fill:'both'});
             });
-            credit.animate([{opacity:0,transform:'translateY(8px)'},{opacity:1,transform:'translateY(0)'}],{duration:420,delay:160,easing:'cubic-bezier(.16,1,.3,1)',fill:'both'});
+            credit.animate([{opacity:0,transform:'translateY(8px)'},{opacity:1,transform:'translateY(0)'}],{duration:600,delay:220,easing:'cubic-bezier(.28,.08,.18,1)',fill:'both'});
             [...swipeArea.querySelectorAll('.dpc-detail-column')].forEach(column=>{
                 const score=parseInt(column.querySelector('.dpc-detail-column-score')?.textContent,10);
                 const bar=column.querySelector('.dpc-detail-column-fill'),count=column.querySelector('.dpc-detail-column-count');
-                const delay=Math.max(0,(Number.isFinite(score)?score:1)-1)*65;
-                if(bar)bar.animate([{transform:'scaleY(0)'},{transform:'scaleY(1)'}],{duration:420,delay,easing:'cubic-bezier(.16,1,.3,1)',fill:'both'});
-                if(count)count.animate([{opacity:0},{opacity:1}],{duration:160,delay:delay+300,fill:'both'});
+                const delay=Math.max(0,(Number.isFinite(score)?score:1)-1)*80;
+                if(bar)bar.animate([{transform:'scaleY(0)'},{transform:'scaleY(1)'}],{duration:620,delay,easing:'cubic-bezier(.28,.08,.18,1)',fill:'both'});
+                if(count)count.animate([{opacity:0},{opacity:1}],{duration:240,delay:delay+440,fill:'both'});
             });
         }
     }
