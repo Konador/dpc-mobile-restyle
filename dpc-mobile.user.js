@@ -2,7 +2,7 @@
 // ==UserScript==
 // @name DPChallenge Mobile — Editorial Gallery
 // @namespace dpc-mobile
-// @version 4.78
+// @version 4.79
 // @updateURL https://raw.githubusercontent.com/Konador/dpc-mobile-restyle/main/dpc-mobile.user.js
 // @downloadURL https://raw.githubusercontent.com/Konador/dpc-mobile-restyle/main/dpc-mobile.user.js
 // @match *://*.dpchallenge.com/challenge_vote_image.php*
@@ -2143,6 +2143,7 @@ html.dpc-viewing body {
         const labels=['Submissions','Disqualifications','Votes','Comments','Average Score','Highest Score','Median Score','Lowest Score'];
         const details=labels.map(label=>[label,nativeText.match(new RegExp('\\b'+label+':\\s*([\\d,.]+)','i'))?.[1]]).filter(x=>x[1]);
         const dates=['Submission Dates','Voting Dates'].map(label=>[label,nativeText.match(new RegExp(label+':\\s*(\\w{3}\\s+\\d{1,2}\\s+\\d{4}\\s*-\\s*\\w{3}\\s+\\d{1,2}\\s+\\d{4})','i'))?.[1]]).filter(x=>x[1]);
+        const total=details.find(([label])=>label==='Submissions')?.[1];
         const queue=[],queued=new Set(),visited=new Set(),seen=new Set();
         function normalize(u){u.hash='';u.searchParams.sort();return u.href;}
         visited.add(normalize(new URL(initial.href)));
@@ -2176,6 +2177,23 @@ html.dpc-viewing body {
         const sentinel=make('button','dpc-infinite-sentinel','Load more photographs');sentinel.type='button';main.append(sentinel);
         main.insertAdjacentHTML('beforeend',footer);
         const stateKey='dpc-results-scroll-'+initial.pathname+initial.search;
+        const fullQueue=[];let fullActive=0;
+        async function upgrade(entry,image){
+            const key='dpc-result-full-'+entry.id;
+            let cached=null;try{cached=sessionStorage.getItem(key);}catch{}
+            const apply=src=>new Promise(resolve=>{
+                const probe=new Image();
+                probe.onload=()=>{if(image.isConnected){image.src=src;image.width=probe.naturalWidth;image.height=probe.naturalHeight;}try{sessionStorage.setItem(key,src);}catch{}resolve(true);};
+                probe.onerror=()=>resolve(false);probe.src=src;
+            });
+            if(cached&&await apply(cached))return;
+            const response=await fetch(entry.href,{credentials:'same-origin'});if(!response.ok)return;
+            const template=document.createElement('template');template.innerHTML=await response.text();
+            const photo=template.content.querySelector('#img_container img:not([src*="pix.gif"])');
+            if(photo?.getAttribute('src')){const src=url(photo.getAttribute('src'),response.url);if(src)await apply(src.href);}
+        }
+        function pumpFull(){while(fullActive<3&&fullQueue.length){const [entry,image]=fullQueue.shift();fullActive++;upgrade(entry,image).catch(()=>{}).finally(()=>{fullActive--;pumpFull();});}}
+        const fullObserver=new IntersectionObserver(records=>{for(const record of records){if(!record.isIntersecting)continue;fullObserver.unobserve(record.target);fullQueue.push([record.target.dpcResultEntry,record.target]);}pumpFull();},{rootMargin:'600px 0px'});
         let loading=false,failed=false,restore=null;
         try{restore=JSON.parse(sessionStorage.getItem(stateKey)||'null');sessionStorage.removeItem(stateKey);}catch{}
         function remember(){try{sessionStorage.setItem(stateKey,JSON.stringify({count:seen.size,y:scrollY}));}catch{}}
@@ -2184,7 +2202,7 @@ html.dpc-viewing body {
             for(const entry of entries){
                 if(seen.has(entry.id))continue;seen.add(entry.id);
                 const card=make('article','dpc-result-photo-card');const photoLink=make('a','dpc-result-photo-link');photoLink.href=entry.href;photoLink.onclick=remember;
-                const image=make('img');image.loading='lazy';image.decoding='async';image.alt=entry.title;image.src=entry.src;photoLink.append(image);card.append(photoLink);
+                const image=make('img');image.loading='lazy';image.decoding='async';image.alt=entry.title;image.src=entry.src;image.dpcResultEntry=entry;photoLink.append(image);card.append(photoLink);fullObserver.observe(image);
                 const caption=make('div','dpc-result-photo-caption');card.append(caption);
                 const titleLink=make('a','dpc-result-photo-title');titleLink.href=entry.href;titleLink.onclick=remember;caption.append(titleLink);
                 const titleWords=entry.title.split(/\s+/);if(titleWords.length>1){titleLink.append(titleWords.slice(0,-1).join(' ')+' ');titleLink.append(make('em','',titleWords.at(-1)));}else titleLink.textContent=entry.title;
@@ -2196,7 +2214,7 @@ html.dpc-viewing body {
                 if(entry.comment&&entry.comment!=='N/A'){const comment=make('div','dpc-result-own-comment');comment.append(make('span','','Your comment'),make('p','',entry.comment));caption.append(comment);}
                 fragment.append(card);
             }
-            grid.append(fragment);count.textContent=seen.size+' photographs';
+            grid.append(fragment);count.textContent=total?total+' photographs':'Challenge photographs';
         }
         function status(){sentinel.hidden=!queue.length&&!loading&&!failed;sentinel.disabled=loading;sentinel.textContent=loading?'Loading more photographs…':failed?'Retry loading photographs':'Load more photographs';}
         async function more(){
