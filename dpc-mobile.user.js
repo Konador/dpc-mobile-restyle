@@ -2,7 +2,7 @@
 // ==UserScript==
 // @name DPChallenge Mobile — Editorial Gallery
 // @namespace dpc-mobile
-// @version 4.54
+// @version 4.55
 // @updateURL https://raw.githubusercontent.com/Konador/dpc-mobile-restyle/main/dpc-mobile.user.js
 // @downloadURL https://raw.githubusercontent.com/Konador/dpc-mobile-restyle/main/dpc-mobile.user.js
 // @match *://*.dpchallenge.com/challenge_vote_image.php*
@@ -1003,12 +1003,13 @@ html.dpc-viewing body {
     style.textContent += "#dpc-app .dpc-detail-carousel{overflow:hidden;position:relative;touch-action:pan-y pinch-zoom;display:block}#dpc-app .dpc-detail-rail{display:flex;width:100%;height:100%;will-change:transform}#dpc-app .dpc-detail-slide{flex:0 0 100%;min-width:0;height:100%;display:flex;align-items:center;justify-content:center}#dpc-app .dpc-detail-slide img{width:100%;height:100%;object-fit:contain;pointer-events:none;user-select:none}";
     style.textContent += "#dpc-app .dpc-detail-title{margin:8px 0 0!important}#dpc-app .dpc-detail-credit{justify-content:center;margin:0 0 12px}";
     style.textContent += "#dpc-app .dpc-photo-caption{height:132px;padding:12px 4px 10px;overflow:visible;box-sizing:border-box}#dpc-app .dpc-photo-caption .dpc-title{height:auto;flex:1;min-height:0;margin-block:6px!important}#dpc-app .dpc-photo-caption .dpc-detail-credit{font:italic 500 20px/1.25 var(--serif);justify-content:center;flex:none;margin:0;gap:7px}#dpc-app .dpc-photo-caption .dpc-detail-credit a{font:inherit;color:var(--accent)}";
+    style.textContent += "#dpc-app .dpc-brand-word .dpc-brand-end{position:relative;display:inline-block}#dpc-app .dpc-brand-word .dpc-brand-end em{position:absolute;left:0;bottom:.92em;font-size:.53em;line-height:1;letter-spacing:0;margin:0;transform:translateY(-.65em)}#dpc-app .dpc-brand .dpc-brand-word{padding-top:4px}";
     document.head.append(style);
 
     const header = `
 <header class="dpc-header">
     <a class="dpc-brand" href="/">
-        <svg viewBox="0 0 40 40" aria-hidden="true"><mask id="dpc-shutter-mask"><circle cx="20" cy="20" r="18.5" fill="white"/><path d="M20 12 L26.928 16 L26.928 24 L20 28 L13.072 24 L13.072 16 Z" fill="black"/><path d="M20 12 L41 24.124" stroke="black" stroke-width="1.7" transform="rotate(0 20 20)"/><path d="M20 12 L41 24.124" stroke="black" stroke-width="1.7" transform="rotate(60 20 20)"/><path d="M20 12 L41 24.124" stroke="black" stroke-width="1.7" transform="rotate(120 20 20)"/><path d="M20 12 L41 24.124" stroke="black" stroke-width="1.7" transform="rotate(180 20 20)"/><path d="M20 12 L41 24.124" stroke="black" stroke-width="1.7" transform="rotate(240 20 20)"/><path d="M20 12 L41 24.124" stroke="black" stroke-width="1.7" transform="rotate(300 20 20)"/></mask><circle cx="20" cy="20" r="18.5" fill="currentColor" mask="url(#dpc-shutter-mask)"/></svg><span class="dpc-brand-word">DPC<em>restyle</em></span>
+        <svg viewBox="0 0 40 40" aria-hidden="true"><mask id="dpc-shutter-mask"><circle cx="20" cy="20" r="18.5" fill="white"/><path d="M20 12 L26.928 16 L26.928 24 L20 28 L13.072 24 L13.072 16 Z" fill="black"/><path d="M20 12 L41 24.124" stroke="black" stroke-width="1.7" transform="rotate(0 20 20)"/><path d="M20 12 L41 24.124" stroke="black" stroke-width="1.7" transform="rotate(60 20 20)"/><path d="M20 12 L41 24.124" stroke="black" stroke-width="1.7" transform="rotate(120 20 20)"/><path d="M20 12 L41 24.124" stroke="black" stroke-width="1.7" transform="rotate(180 20 20)"/><path d="M20 12 L41 24.124" stroke="black" stroke-width="1.7" transform="rotate(240 20 20)"/><path d="M20 12 L41 24.124" stroke="black" stroke-width="1.7" transform="rotate(300 20 20)"/></mask><circle cx="20" cy="20" r="18.5" fill="currentColor" mask="url(#dpc-shutter-mask)"/></svg><span class="dpc-brand-word">DPChall<span class="dpc-brand-end">enge<em>restyle</em></span></span>
     </a>
     <div class="dpc-header-right"><button type="button" class="dpc-theme-toggle" aria-label="Switch theme"></button></div>
 </header>`;
