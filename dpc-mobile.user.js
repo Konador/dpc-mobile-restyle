@@ -2,7 +2,7 @@
 // ==UserScript==
 // @name DPChallenge Mobile — Editorial Gallery
 // @namespace dpc-mobile
-// @version 4.56
+// @version 4.57
 // @updateURL https://raw.githubusercontent.com/Konador/dpc-mobile-restyle/main/dpc-mobile.user.js
 // @downloadURL https://raw.githubusercontent.com/Konador/dpc-mobile-restyle/main/dpc-mobile.user.js
 // @match *://*.dpchallenge.com/challenge_vote_image.php*
@@ -1004,6 +1004,7 @@ html.dpc-viewing body {
     style.textContent += "#dpc-app .dpc-detail-title{margin:8px 0 0!important}#dpc-app .dpc-detail-credit{justify-content:center;margin:0 0 12px}";
     style.textContent += "#dpc-app .dpc-photo-caption{margin:10px 0;min-height:103px}#dpc-app .dpc-photo-caption .dpc-detail-credit{justify-content:flex-start;gap:7px}#dpc-app .dpc-photo-caption .dpc-detail-credit a{font:inherit;color:inherit}";
     style.textContent += "#dpc-app .dpc-brand-word .dpc-brand-end{position:relative;display:inline-block}#dpc-app .dpc-brand-word .dpc-brand-end em{position:absolute;left:0;bottom:.92em;font-size:.53em;line-height:1;letter-spacing:0;margin:0;transform:translateY(-.65em)}#dpc-app .dpc-brand .dpc-brand-word{padding-top:4px}";
+    style.textContent += "#dpc-app .dpc-photo-detail{padding:12px 12px 24px}#dpc-app .dpc-detail-gallery,#dpc-app .dpc-detail-section{background:#25262e;border:1px solid #ffffff20;border-radius:6px;padding:12px;margin:0 0 14px;min-width:0}#dpc-app .dpc-detail-gallery .dpc-detail-stage{margin:0;background:#151515}#dpc-app .dpc-detail-gallery .dpc-photo-caption{margin:10px 0}#dpc-app .dpc-photo-caption .dpc-detail-credit{font:italic 500 18px/1.25 var(--serif);margin:0}#dpc-app .dpc-detail-gallery .dpc-detail-nav{padding:8px 0 0;border-top:1px solid var(--line)}#dpc-app .dpc-photo-detail .dpc-detail-challenge{margin:8px 4px 10px;font:500 15px/1.4 system-ui,sans-serif}#dpc-app .dpc-brand-word .dpc-brand-end{color:inherit;margin:0}#dpc-app .dpc-brand-word .dpc-brand-end em{left:.12em;bottom:.83em;transform:none}html.dpc-light #dpc-app .dpc-detail-gallery,html.dpc-light #dpc-app .dpc-detail-section{background:#fff;border-color:#cdd3df}";
     document.head.append(style);
 
     const header = `
@@ -2155,8 +2156,8 @@ html.dpc-viewing body {
         if(!mounted)app.innerHTML=header+'<div class="dpc-photo-detail"></div>'+footer;
         const body=$('.dpc-photo-detail');body.replaceChildren();
         const challenge=info?.querySelector('a[href*="challenge_results.php"]');
-        if(challenge){const a=copy(challenge);a.className='dpc-detail-challenge';body.append(a);}
         const stage=make('div','dpc-detail-stage');const image=copy(photo);image.removeAttribute('style');stage.append(image);body.append(stage);
+        const gallery=make('div','dpc-detail-gallery');body.append(gallery);gallery.append(stage);
         const caption=make('div','dpc-editorial-credit dpc-photo-caption');stage.after(caption);const heading=make('h1','dpc-home-feature-title');caption.append(heading);
         const credit=make('div','dpc-detail-credit dpc-home-feature-author');const ribbon=title.querySelector('img[alt]');if(ribbon){const rank=parseInt(ribbon.alt,10);const badge=detailRibbon(rank-1);if(badge){badge.classList.add('dpc-caption-ribbon');credit.append(badge);}}
         const author=title.nextElementSibling;if(author?.matches('a')){const a=copy(author);a.textContent='by '+a.textContent.trim();credit.append(a);}caption.append(credit);
@@ -2222,6 +2223,7 @@ html.dpc-viewing body {
         if(primary){const sec=section('Statistics');fields(primary,sec);}
         const votes=[...(stats?.querySelectorAll('.breakdown_vote')||[])].map(n=>({score:n.textContent.trim(),bar:n.nextElementSibling,count:Number(n.nextElementSibling?.nextElementSibling?.textContent)||0}));
         if(votes.length){const sec=section('Voting breakdown');const max=Math.max(1,...votes.map(v=>v.count));for(const v of votes){const own=/rgb\(173,\s*47,\s*89\)|#ad2f59/i.test(v.bar?.style.backgroundColor||'');const row=make('div','dpc-detail-vote'+(own?' own':''));row.append(make('span','',v.score));const track=make('div','dpc-detail-track');const fill=make('div');fill.style.width=(100*v.count/max)+'%';track.append(fill);row.append(track,make('span','',String(v.count)));if(own)row.setAttribute('aria-label',v.score+' — your vote, '+v.count+' votes');sec.append(row);}if(votes.some(v=>/rgb\(173,\s*47,\s*89\)|#ad2f59/i.test(v.bar?.style.backgroundColor||'')))sec.append(make('p','dpc-detail-note','Highlighted: your vote'));}
+        if(challenge){const a=copy(challenge);a.className='dpc-detail-challenge';body.append(a);}
         const description=info?.querySelector('.dpc-detail-secondary-content');
         if(description?.textContent.trim()){const sec=section("Photographer’s comments");const p=make('div','dpc-detail-prose');for(const n of description.childNodes)p.append(copy(n));sec.append(p);}
         if(info){const sec=section('Photograph information');const source=info.querySelector('.dpc-detail-primary-content');fields(source,sec);for(const a of source?.querySelectorAll('a[href*="favorites_mgr.php"]')||[]){const link=make('a','dpc-detail-action',a.textContent.trim());link.href=a.href;sec.append(link);}}
