@@ -2,7 +2,7 @@
 // ==UserScript==
 // @name DPChallenge Mobile — Editorial Gallery
 // @namespace dpc-mobile
-// @version 4.58
+// @version 4.59
 // @updateURL https://raw.githubusercontent.com/Konador/dpc-mobile-restyle/main/dpc-mobile.user.js
 // @downloadURL https://raw.githubusercontent.com/Konador/dpc-mobile-restyle/main/dpc-mobile.user.js
 // @match *://*.dpchallenge.com/challenge_vote_image.php*
@@ -1006,6 +1006,7 @@ html.dpc-viewing body {
     style.textContent += "#dpc-app .dpc-brand-word .dpc-brand-end{position:relative;display:inline-block}#dpc-app .dpc-brand-word .dpc-brand-end em{position:absolute;left:0;bottom:.92em;font-size:.53em;line-height:1;letter-spacing:0;margin:0;transform:translateY(-.65em)}#dpc-app .dpc-brand .dpc-brand-word{padding-top:4px}";
     style.textContent += "#dpc-app .dpc-photo-detail{padding:12px 12px 24px}#dpc-app .dpc-detail-gallery,#dpc-app .dpc-detail-section{background:#25262e;border:1px solid #ffffff20;border-radius:6px;padding:12px;margin:0 0 14px;min-width:0}#dpc-app .dpc-detail-gallery .dpc-detail-stage{margin:0;background:#151515}#dpc-app .dpc-detail-gallery .dpc-photo-caption{margin:10px 0}#dpc-app .dpc-photo-caption .dpc-detail-credit{font:italic 500 18px/1.25 var(--serif);margin:0}#dpc-app .dpc-detail-gallery .dpc-detail-nav{padding:8px 0 0;border-top:1px solid var(--line)}#dpc-app .dpc-photo-detail .dpc-detail-challenge{margin:8px 4px 10px;font:500 15px/1.4 system-ui,sans-serif}#dpc-app .dpc-brand-word .dpc-brand-end{color:inherit;margin:0}#dpc-app .dpc-brand-word .dpc-brand-end em{left:.12em;bottom:.83em;transform:none}html.dpc-light #dpc-app .dpc-detail-gallery,html.dpc-light #dpc-app .dpc-detail-section{background:#fff;border-color:#cdd3df}";
     style.textContent += "#dpc-app .dpc-detail-results-layout{display:grid;grid-template-columns:minmax(0,1.1fr) minmax(0,1fr);gap:12px;align-items:start}#dpc-app .dpc-detail-results-layout.single{grid-template-columns:minmax(0,1fr)}#dpc-app .dpc-detail-columns{display:grid;grid-template-columns:repeat(10,minmax(0,1fr));gap:3px;align-items:end}#dpc-app .dpc-detail-column{min-width:0;text-align:center;font:400 10px/1.2 system-ui,sans-serif;color:var(--muted)}#dpc-app .dpc-detail-column-track{height:100px;position:relative;display:flex;align-items:flex-end;justify-content:center;border-bottom:1px solid var(--line);padding-top:14px}#dpc-app .dpc-detail-column-fill{width:100%;background:var(--accent);border-radius:2px 2px 0 0;position:relative}#dpc-app .dpc-detail-column-count{position:absolute;top:0;left:0;right:0;color:inherit;font-size:9px}#dpc-app .dpc-detail-column-score{display:block;padding-top:5px}#dpc-app .dpc-detail-column.own{color:#d66c78;font-weight:700}#dpc-app .dpc-detail-column.own .dpc-detail-column-fill{background:#d66c78}#dpc-app .dpc-detail-distribution-note{font:400 10px/1.3 system-ui,sans-serif;color:var(--muted);margin-top:8px}#dpc-app .dpc-detail-summary .dpc-detail-fields{grid-template-columns:minmax(0,1fr) auto;font-size:11px;line-height:1.3}#dpc-app .dpc-detail-summary .dpc-detail-fields dt,#dpc-app .dpc-detail-summary .dpc-detail-fields dd{padding:5px 0;overflow-wrap:anywhere}#dpc-app .dpc-detail-summary .dpc-detail-fields dd{padding-left:5px}";
+    style.textContent += "#dpc-app .dpc-brand-word .dpc-brand-end em{left:.48em;bottom:1.48em;transform:none}#dpc-app .dpc-detail-gallery{overflow:hidden}#dpc-app .dpc-detail-gallery .dpc-photo-caption{margin:10px 0 4px}#dpc-app .dpc-detail-photographer{border-top:1px solid var(--line);padding:12px 0 2px;margin:0}#dpc-app .dpc-detail-photographer h2{font:500 19px/1.2 var(--serif),Georgia,serif;margin:0 0 8px;color:inherit}#dpc-app .dpc-photo-detail .dpc-detail-prose{font:400 12px/1.5 system-ui,sans-serif}#dpc-app .dpc-detail-results-layout{align-items:stretch}#dpc-app .dpc-detail-distribution{display:flex;flex-direction:column;min-width:0;min-height:130px}#dpc-app .dpc-detail-columns{flex:1;align-items:stretch;gap:4px;min-height:110px}#dpc-app .dpc-detail-column{display:flex;flex-direction:column;min-height:0}#dpc-app .dpc-detail-column-track{height:auto;flex:1;min-height:0;padding:0}#dpc-app .dpc-detail-column-plot{position:absolute;inset:16px 0 0;display:flex;align-items:flex-end;justify-content:center}#dpc-app .dpc-detail-column-fill{width:65%;max-width:12px}#dpc-app .dpc-detail-column-score{flex:none}#dpc-app .dpc-detail-distribution-note{flex:none}";
     document.head.append(style);
 
     const header = `
@@ -2195,9 +2196,11 @@ html.dpc-viewing body {
             async function go(d){
                 if(busy)return;const rec=slides[d<0?0:1];if(!rec){move(0,true);return;}
                 busy=true;move(-d*stage.clientWidth,true);
+                const outgoing=[caption,...gallery.querySelectorAll('.dpc-detail-photographer'),...body.querySelectorAll(':scope > .dpc-detail-section')];
+                const animations=!reducedMotion.matches?outgoing.map(el=>el.animate([{opacity:1,transform:'translateX(0)'},{opacity:0,transform:'translateX('+(-d*14)+'px)'}],{duration:180,easing:'ease-in',fill:'forwards'})):[];
                 const page=await rec.promise;
                 await new Promise(resolve=>setTimeout(resolve,reducedMotion.matches?0:270));
-                if(!page){move(0,true);busy=false;return;}
+                if(!page){animations.forEach(a=>a.cancel());move(0,true);busy=false;return;}
                 history.pushState(null,'',rec.url);buildPhotoDetail(page,true,d);
             }
             stage.addEventListener('pointerdown',e=>{if(busy||!e.isPrimary||e.button!==0)return;drag={id:e.pointerId,x:e.clientX,y:e.clientY,axis:null};});
@@ -2217,7 +2220,7 @@ html.dpc-viewing body {
             if(dl.children.length)parent.append(dl);
         }
         const description=info?.querySelector('.dpc-detail-secondary-content');
-        if(description?.textContent.trim()){const sec=section("Photographer’s comments");const p=make('div','dpc-detail-prose');for(const n of description.childNodes)p.append(copy(n));sec.append(p);}
+        if(description?.textContent.trim()){const sec=make('section','dpc-detail-photographer');sec.append(make('h2','','Photographer’s comments'));const p=make('div','dpc-detail-prose');for(const n of description.childNodes)p.append(copy(n));sec.append(p);gallery.append(sec);}
         const primary=stats?.querySelector('.dpc-detail-primary-content');
         const votes=[...(stats?.querySelectorAll('.breakdown_vote')||[])].map(n=>({score:n.textContent.trim(),bar:n.nextElementSibling,count:Number(n.nextElementSibling?.nextElementSibling?.textContent)||0}));
         if(primary||votes.length){
@@ -2232,7 +2235,7 @@ html.dpc-viewing body {
                     highlighted=highlighted||own;
                     const column=make('div','dpc-detail-column'+(own?' own':''));
                     const track=make('div','dpc-detail-column-track'),fill=make('div','dpc-detail-column-fill'),count=make('span','dpc-detail-column-count',String(v.count));
-                    fill.style.height=(100*v.count/max)+'%';track.append(fill,count);column.append(track,make('span','dpc-detail-column-score',v.score));
+                    fill.style.height=(100*v.count/max)+'%';const plot=make('div','dpc-detail-column-plot');plot.append(fill);track.append(plot,count);column.append(track,make('span','dpc-detail-column-score',v.score));
                     column.setAttribute('aria-label',v.score+': '+v.count+' votes'+(own?' — your vote':''));bars.append(column);
                 }
                 if(highlighted)chart.append(make('div','dpc-detail-distribution-note','Your vote highlighted'));
@@ -2254,6 +2257,10 @@ html.dpc-viewing body {
         if(!mounted){mount();addEventListener('popstate',()=>location.reload());}
         const fit=()=>{editorialTypeset(heading,title.textContent.trim(),direction,false);composeEditorialCredit(caption,heading,credit);};
         fit();document.fonts?.ready.then(()=>{if(heading.isConnected)fit();});
+        if(direction&&!reducedMotion.matches){
+            const incoming=[caption,...gallery.querySelectorAll('.dpc-detail-photographer'),...body.querySelectorAll(':scope > .dpc-detail-section')];
+            incoming.forEach(el=>el.animate([{opacity:0,transform:'translateX('+(direction*14)+'px)'},{opacity:1,transform:'translateX(0)'}],{duration:260,easing:'cubic-bezier(.2,.75,.25,1)'}));
+        }
     }
 
     if (isPhotoDetail) { buildPhotoDetail(); return; }
