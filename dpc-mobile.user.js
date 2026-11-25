@@ -2,7 +2,7 @@
 // ==UserScript==
 // @name DPChallenge Mobile — Editorial Gallery
 // @namespace dpc-mobile
-// @version 4.73
+// @version 4.74
 // @updateURL https://raw.githubusercontent.com/Konador/dpc-mobile-restyle/main/dpc-mobile.user.js
 // @downloadURL https://raw.githubusercontent.com/Konador/dpc-mobile-restyle/main/dpc-mobile.user.js
 // @match *://*.dpchallenge.com/challenge_vote_image.php*
@@ -1012,7 +1012,7 @@ html.dpc-viewing body {
     style.textContent += "#dpc-app .dpc-detail-results-layout:not(.single){grid-template-columns:minmax(0,1fr) minmax(0,1.06fr);gap:14px}#dpc-app .dpc-detail-summary .dpc-detail-fields{align-items:baseline;column-gap:6px;font-variant-numeric:tabular-nums}#dpc-app .dpc-detail-summary .dpc-detail-fields dt,#dpc-app .dpc-detail-summary .dpc-detail-fields dd{padding:5px 0;align-self:stretch}#dpc-app .dpc-detail-summary .dpc-detail-fields dt:first-child,#dpc-app .dpc-detail-summary .dpc-detail-fields dd:nth-child(2){padding-top:0}#dpc-app .dpc-detail-summary .dpc-detail-fields dt:nth-last-child(2),#dpc-app .dpc-detail-summary .dpc-detail-fields dd:last-child{padding-bottom:0;border-bottom:0}#dpc-app .dpc-detail-column-plot{top:13px}#dpc-app .dpc-detail-distribution-note{margin-top:6px}#dpc-app .dpc-detail-column-score{padding-top:4px}";
     style.textContent += "#dpc-app .dpc-photo-detail{position:relative;overflow-x:clip}#dpc-app .dpc-detail-current{min-width:0}#dpc-app .dpc-photo-detail.dpc-detail-preview{position:absolute;top:0;left:0;width:100%;margin:0;pointer-events:none;overflow:visible}#dpc-app .dpc-detail-preview .dpc-photo-caption,#dpc-app .dpc-detail-preview .dpc-detail-photographer,#dpc-app .dpc-detail-preview .dpc-detail-section>*{visibility:hidden}#dpc-app .dpc-detail-column-fill{transform-origin:center bottom}#dpc-app .dpc-detail-stage img{width:100%;height:100%;object-fit:contain;pointer-events:none;user-select:none}";
     style.textContent += "#dpc-app .dpc-detail-preview .dpc-photo-caption,#dpc-app .dpc-detail-preview .dpc-detail-photographer,#dpc-app .dpc-detail-preview .dpc-detail-section>*{visibility:visible}#dpc-app .dpc-photo-detail{overflow-anchor:none}#dpc-app .dpc-photo-caption.has-result{padding-bottom:24px;min-height:127px}#dpc-app .dpc-detail-caption-result{position:absolute;bottom:0;right:0;display:flex;align-items:baseline;gap:5px;color:var(--accent);white-space:nowrap;font:italic 600 15px/1.2 var(--serif),Georgia,serif;font-variant-numeric:tabular-nums}#dpc-app .dpc-detail-caption-rank{font-size:19px;color:inherit}#dpc-app .dpc-detail-caption-slash{color:var(--muted);font-size:13px}#dpc-app .dpc-detail-caption-average{color:var(--muted)}";
-    style.textContent += "@media (prefers-reduced-motion:no-preference){#dpc-app .dpc-detail-preview .dpc-detail-column-fill,#dpc-app .dpc-detail-preview .dpc-detail-column-count,#dpc-app .dpc-detail-preview .dpc-title-part{visibility:hidden}}";
+    style.textContent += "@media (prefers-reduced-motion:no-preference){#dpc-app .dpc-detail-preview .dpc-detail-column-fill,#dpc-app .dpc-detail-preview .dpc-detail-column-count,#dpc-app .dpc-detail-preview .dpc-title-part,#dpc-app .dpc-detail-preview .dpc-detail-credit{visibility:hidden}}";
     style.textContent += "#dpc-app .dpc-detail-gallery .dpc-detail-stage{width:100%;height:auto;min-height:0;max-height:none;display:block}#dpc-app .dpc-detail-gallery .dpc-detail-stage img{display:block;width:100%;height:auto;max-width:100%;max-height:none;object-fit:contain}";
     style.textContent += "#dpc-app .dpc-detail-gallery .dpc-detail-stage{margin:-12px -12px 0;width:calc(100% + 24px);max-width:none}";
     document.head.append(style);
@@ -2308,6 +2308,7 @@ html.dpc-viewing body {
                 const italic=part.tagName==='EM';
                 part.animate([{opacity:0,transform:'translateX('+(direction*(italic?38:24))+'px)'},{opacity:1,transform:'translateX(0)'}],{duration:italic?520:420,delay:k*105,easing:'cubic-bezier(.16,1,.3,1)',fill:'both'});
             });
+            credit.animate([{opacity:0,transform:'translateY(8px)'},{opacity:1,transform:'translateY(0)'}],{duration:420,delay:160,easing:'cubic-bezier(.16,1,.3,1)',fill:'both'});
             [...swipeArea.querySelectorAll('.dpc-detail-column')].forEach(column=>{
                 const score=parseInt(column.querySelector('.dpc-detail-column-score')?.textContent,10);
                 const bar=column.querySelector('.dpc-detail-column-fill'),count=column.querySelector('.dpc-detail-column-count');
