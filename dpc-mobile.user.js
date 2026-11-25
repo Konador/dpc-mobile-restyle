@@ -2,7 +2,7 @@
 // ==UserScript==
 // @name DPChallenge Mobile — Editorial Gallery
 // @namespace dpc-mobile
-// @version 4.75
+// @version 4.76
 // @updateURL https://raw.githubusercontent.com/Konador/dpc-mobile-restyle/main/dpc-mobile.user.js
 // @downloadURL https://raw.githubusercontent.com/Konador/dpc-mobile-restyle/main/dpc-mobile.user.js
 // @match *://*.dpchallenge.com/challenge_vote_image.php*
@@ -10,6 +10,7 @@
 // @match *://*.dpchallenge.com/
 // @match *://*.dpchallenge.com/index.php*
 // @match *://*.dpchallenge.com/image.php*
+// @match *://*.dpchallenge.com/challenge_results.php*
 // @grant none
 // @run-at document-start
 // @noframes
@@ -69,6 +70,7 @@ function boot() {
 let root = document.documentElement;
 const isHome = location.pathname === '/' || location.pathname === '/index.php';
 const isPhotoDetail = location.pathname === '/image.php';
+const isResults = location.pathname === '/challenge_results.php';
 const isList = location.pathname.includes('challenge_vote_list.php');
 
 function viewport() {
@@ -1015,6 +1017,7 @@ html.dpc-viewing body {
     style.textContent += "@media (prefers-reduced-motion:no-preference){#dpc-app .dpc-detail-preview .dpc-detail-column-fill,#dpc-app .dpc-detail-preview .dpc-detail-column-count,#dpc-app .dpc-detail-preview .dpc-title-part,#dpc-app .dpc-detail-preview .dpc-detail-credit{visibility:hidden}}";
     style.textContent += "#dpc-app .dpc-detail-gallery .dpc-detail-stage{width:100%;height:auto;min-height:0;max-height:none;display:block}#dpc-app .dpc-detail-gallery .dpc-detail-stage img{display:block;width:100%;height:auto;max-width:100%;max-height:none;object-fit:contain}";
     style.textContent += "#dpc-app .dpc-detail-gallery .dpc-detail-stage{margin:-12px -12px 0;width:calc(100% + 24px);max-width:none}";
+    style.textContent += "#dpc-app .dpc-results-page{max-width:1000px;padding:20px 12px}#dpc-app .dpc-results-page .dpc-list-title{font-size:clamp(32px,9vw,60px)!important}#dpc-app .dpc-results-description{font:400 13px/1.45 system-ui,sans-serif;color:var(--muted);margin:0 4px 12px}#dpc-app .dpc-results-details{margin:12px 0 24px;padding:0 12px}#dpc-app .dpc-results-details .dpc-detail-fields{padding-bottom:12px}#dpc-app .dpc-challenge-results-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;align-items:start}#dpc-app .dpc-result-photo-card{background:#25262e;border:1px solid #ffffff20;border-radius:6px;overflow:hidden;min-width:0}#dpc-app .dpc-result-photo-link{display:block}#dpc-app .dpc-result-photo-link img{display:block;width:100%;height:auto;max-width:100%}#dpc-app .dpc-result-photo-caption{padding:10px 10px 12px}#dpc-app .dpc-result-photo-title{display:block;font:500 25px/1.04 var(--serif),Georgia,serif;letter-spacing:-.035em;color:inherit;overflow-wrap:anywhere;margin-bottom:8px}#dpc-app .dpc-result-photo-meta{display:flex;align-items:center;gap:6px}#dpc-app .dpc-result-photo-author{display:flex;align-items:center;gap:5px;font:italic 500 15px/1.2 var(--serif),Georgia,serif;color:var(--accent);min-width:0}#dpc-app .dpc-result-photo-author a{overflow-wrap:anywhere}#dpc-app .dpc-result-photo-score{display:flex;justify-content:flex-end;align-items:baseline;gap:5px;font:italic 600 14px/1.2 var(--serif),Georgia,serif;color:var(--accent);margin-top:8px;white-space:nowrap}#dpc-app .dpc-result-personal{display:flex;justify-content:space-between;gap:5px;color:var(--muted);font-size:10px;margin-top:7px}#dpc-app .dpc-results-page .dpc-infinite-sentinel{display:block;width:100%;border:0;background:none;color:var(--muted);padding:18px;font-size:12px}html.dpc-light #dpc-app .dpc-result-photo-card{background:#fff;border-color:#cdd3df}@media(min-width:700px){#dpc-app .dpc-challenge-results-grid{grid-template-columns:repeat(3,minmax(0,1fr))}}@media(max-width:480px){#dpc-app .dpc-challenge-results-grid{grid-template-columns:1fr}#dpc-app .dpc-result-photo-title{font-size:32px}#dpc-app .dpc-result-photo-caption{padding:12px}#dpc-app .dpc-result-photo-author{font-size:18px}}";
     document.head.append(style);
 
     const header = `
@@ -2090,11 +2093,132 @@ html.dpc-viewing body {
     }
 
 
+
+    function buildChallengeResults(){
+        const make=(tag,cls,txt)=>{const n=document.createElement(tag);if(cls)n.className=cls;if(txt!==undefined)n.textContent=txt;return n;};
+        const clean=t=>String(t||'').replace(/\s+/g,' ').trim();
+        const initial=new URL(location.href),challengeId=initial.searchParams.get('CHALLENGE_ID');
+        if(!challengeId)return;
+        const url=(raw,base)=>{try{const u=new URL(raw,base);return /^https?:$/.test(u.protocol)?u:null;}catch{return null;}};
+        function imageID(a,base){const u=url(a.getAttribute('href'),base);return u&&/\/image\.php$/i.test(u.pathname)?u.searchParams.get('IMAGE_ID'):null;}
+        function parse(doc,base){
+            const entries=new Map();
+            for(const a of doc.querySelectorAll('a[href*="image.php"]')){
+                const id=imageID(a,base);if(!id||entries.has(id))continue;
+                let entry=null;
+                for(let n=a.parentElement;n&&n!==doc.body&&n!==doc.documentElement;n=n.parentElement){
+                    const text=clean(n.textContent);
+                    if(!/\b\d+(?:st|nd|rd|th)\s+place\b/i.test(text)||!/average\s+vote\s+of\s+[\d.]+/i.test(text))continue;
+                    const links=[...n.querySelectorAll('a[href*="image.php"]')];
+                    const ids=new Set(links.map(l=>imageID(l,base)).filter(Boolean));
+                    if(ids.size!==1||!ids.has(id))break;
+                    const related=links.filter(l=>imageID(l,base)===id);
+                    const titleLink=related.find(l=>clean(l.textContent)&&!l.querySelector('img'))||related.find(l=>clean(l.textContent));
+                    const author=n.querySelector('a[href*="profile.php"]');
+                    const img=related.map(l=>l.querySelector('img')).find(im=>im&&im.getAttribute('src')&&!/ribbon|\/pix\.gif|\/page\//i.test(im.getAttribute('src')))||
+                        [...n.querySelectorAll('img[src]')].find(im=>/images\.dpchallenge\.com/i.test(im.getAttribute('src'))&&!/ribbon|removed/i.test(im.getAttribute('src')));
+                    if(!img||!titleLink||!author)continue;
+                    const place=text.match(/\b(\d+(?:st|nd|rd|th))\s+place\b/i)?.[1];
+                    const score=text.match(/average\s+vote\s+of\s+(\d+(?:\.\d+)?)/i)?.[1];
+                    const photoUrl=url(img.getAttribute('src'),base),href=url(titleLink.getAttribute('href'),base),authorUrl=url(author.getAttribute('href'),base);
+                    if(!photoUrl||!href)continue;
+                    const own=text.match(/Your Vote:\s*(10|[1-9])\b/i)?.[1];
+                    const commented=/Your Comment:\s*Yes\b/i.test(text);
+                    entry={id,title:clean(titleLink.textContent),author:clean(author.textContent),authorUrl:authorUrl?.href,href:href.href,src:photoUrl.href,place,score,own,commented};
+                    break;
+                }
+                if(entry)entries.set(id,entry);
+            }
+            return [...entries.values()];
+        }
+        const first=parse(document,initial.href);
+        // Never hide the original if a different native layout cannot be parsed.
+        if(!first.length)return;
+        const name=document.title.replace(/\s+Challenge Results.*$/i,'').trim()||'Challenge results';
+        const nativeText=clean(document.body.textContent);
+        const rules=nativeText.match(/An?\s+(.+?Challenge)\s+using\s+the\s+(.+?Editing)\s+rules/i);
+        const metadata=nativeText.match(/(?:Challenge Description\s*)?Description\s+(.+?)\s+Submission Dates:/i)?.[1];
+        const labels=['Submissions','Disqualifications','Votes','Comments','Average Score','Highest Score','Median Score','Lowest Score'];
+        const details=labels.map(label=>[label,nativeText.match(new RegExp('\\b'+label+':\\s*([\\d,.]+)','i'))?.[1]]).filter(x=>x[1]);
+        const dates=['Submission Dates','Voting Dates'].map(label=>[label,nativeText.match(new RegExp(label+':\\s*(\\w{3}\\s+\\d{1,2}\\s+\\d{4}\\s*-\\s*\\w{3}\\s+\\d{1,2}\\s+\\d{4})','i'))?.[1]]).filter(x=>x[1]);
+        const queue=[],queued=new Set(),visited=new Set(),seen=new Set();
+        function normalize(u){u.hash='';u.searchParams.sort();return u.href;}
+        visited.add(normalize(new URL(initial.href)));
+        function enqueue(doc,base){
+            for(const a of doc.querySelectorAll('a[href]')){
+                const u=url(a.getAttribute('href'),base);
+                if(!u||u.origin!==initial.origin||u.pathname!==initial.pathname||u.searchParams.get('CHALLENGE_ID')!==challengeId)continue;
+                const pagination=a.querySelector('img[src*="/images/page/"]')||/\b(next|previous|page\s+\d+)\b/i.test(clean(a.textContent))||/^\d+$/.test(clean(a.textContent));
+                if(!pagination)continue;
+                const key=normalize(u);if(visited.has(key)||queued.has(key))continue;
+                queued.add(key);queue.push(key);
+            }
+            // Native links are normally in ascending page order.
+            const pageNumber=u=>{const q=new URL(u).searchParams;return Number(q.get('page')||q.get('PAGE')||q.get('PAGE_ID')||q.get('page_id')||0);};
+            queue.sort((a,b)=>pageNumber(a)-pageNumber(b));
+        }
+        enqueue(document,initial.href);
+        app.innerHTML=header;
+        const main=make('main','dpc-list-content dpc-results-page');app.append(main);
+        const kicker=make('div','dpc-list-edition',rules?rules[1]+' · '+rules[2]:'Challenge results');main.append(kicker);
+        const h=make('h1','dpc-list-title');const words=name.split(/\s+/),split=Math.ceil(words.length/2);h.append(words.slice(0,split).join(' '));if(words.length>1)h.append(make('em','',words.slice(split).join(' ')));main.append(h);
+        if(metadata&&metadata.length<2000)main.append(make('p','dpc-results-description',metadata));
+        const info=make('details','dpc-details dpc-results-details');info.append(make('summary','','Challenge details & statistics'));
+        const dl=make('dl','dpc-detail-fields');for(const [label,value] of [...dates,...details])dl.append(make('dt','',label),make('dd','',value));info.append(dl);main.append(info);
+        const top=make('div','dpc-group-heading');top.append(make('span','dpc-group-name','Results'));const count=make('span','dpc-group-count');top.append(count);main.append(top);
+        const grid=make('div','dpc-challenge-results-grid');main.append(grid);
+        const sentinel=make('button','dpc-infinite-sentinel','Load more photographs');sentinel.type='button';main.append(sentinel);
+        main.insertAdjacentHTML('beforeend',footer);
+        const stateKey='dpc-results-scroll-'+initial.pathname+initial.search;
+        let loading=false,failed=false,restore=null;
+        try{restore=JSON.parse(sessionStorage.getItem(stateKey)||'null');sessionStorage.removeItem(stateKey);}catch{}
+        function remember(){try{sessionStorage.setItem(stateKey,JSON.stringify({count:seen.size,y:scrollY}));}catch{}}
+        function append(entries){
+            const fragment=document.createDocumentFragment();
+            for(const entry of entries){
+                if(seen.has(entry.id))continue;seen.add(entry.id);
+                const card=make('article','dpc-result-photo-card');const photoLink=make('a','dpc-result-photo-link');photoLink.href=entry.href;photoLink.onclick=remember;
+                const image=make('img');image.loading='lazy';image.decoding='async';image.alt=entry.title;image.src=entry.src;photoLink.append(image);card.append(photoLink);
+                const caption=make('div','dpc-result-photo-caption');card.append(caption);
+                const titleLink=make('a','dpc-result-photo-title');titleLink.href=entry.href;titleLink.onclick=remember;caption.append(titleLink);
+                const titleWords=entry.title.split(/\s+/);if(titleWords.length>1){titleLink.append(titleWords.slice(0,-1).join(' ')+' ');titleLink.append(make('em','',titleWords.at(-1)));}else titleLink.textContent=entry.title;
+                const meta=make('div','dpc-result-photo-meta');caption.append(meta);
+                const credit=make('div','dpc-result-photo-author');const ribbon=detailRibbon(parseInt(entry.place,10)-1);if(ribbon){ribbon.classList.add('dpc-caption-ribbon');credit.append(ribbon);}
+                const author=make(entry.authorUrl?'a':'span','','by '+entry.author);if(entry.authorUrl)author.href=entry.authorUrl;credit.append(author);meta.append(credit);
+                const result=make('span','dpc-result-photo-score');result.append(make('span','dpc-detail-caption-rank',entry.place),make('span','dpc-detail-caption-slash','/'),make('span','dpc-detail-caption-average',Number(entry.score).toFixed(3)+' avg'));caption.append(result);
+                if(entry.own||entry.commented){const personal=make('div','dpc-result-personal');if(entry.own)personal.append(make('span','','Your vote: '+entry.own));if(entry.commented)personal.append(make('span','','Commented'));caption.append(personal);}
+                fragment.append(card);
+            }
+            grid.append(fragment);count.textContent=seen.size+' photographs';
+        }
+        function status(){sentinel.hidden=!queue.length&&!loading&&!failed;sentinel.disabled=loading;sentinel.textContent=loading?'Loading more photographs…':failed?'Retry loading photographs':'Load more photographs';}
+        async function more(){
+            if(loading||!queue.length)return;
+            loading=true;failed=false;status();
+            const next=queue.shift();queued.delete(next);
+            try{
+                const response=await fetch(next,{credentials:'same-origin'});if(!response.ok)throw Error('Results unavailable');
+                const doc=new DOMParser().parseFromString(await response.text(),'text/html');
+                const records=parse(doc,response.url);if(!records.length)throw Error('No results found');
+                visited.add(next);visited.add(normalize(new URL(response.url)));append(records);enqueue(doc,response.url);
+            }catch(error){queue.unshift(next);queued.add(next);failed=true;console.warn('DPC challenge results:',error);}
+            finally{loading=false;status();}
+        }
+        sentinel.onclick=more;
+        $('#dpc-original').onclick=()=>original();
+        mount();append(first);status();
+        const observer=new IntersectionObserver(async entries=>{
+            if(entries.some(e=>e.isIntersecting)&&!failed&&!restore){await more();if(queue.length&&!failed&&sentinel.getBoundingClientRect().top<innerHeight+500){observer.unobserve(sentinel);observer.observe(sentinel);}}
+        },{rootMargin:'500px 0px'});observer.observe(sentinel);
+        if(restore){(async()=>{while(queue.length&&seen.size<restore.count&&!failed)await more();const y=restore.y;restore=null;requestAnimationFrame(()=>window.scrollTo({top:y,behavior:'instant'}));})();}
+    }
+
+    let detailRibbonSerial=0;
     function detailRibbon(i){
                     if(i<0||i>2)return null;
                     const icon=document.createElementNS('http://www.w3.org/2000/svg','svg');
                     icon.setAttribute('class','dpc-overlay-ribbon');icon.setAttribute('viewBox','0 0 40 54');icon.setAttribute('aria-label',['First place','Second place','Third place'][i]);
-                    const id='dpc-detail-award-mask';
+                    const id='dpc-detail-award-mask-'+(++detailRibbonSerial);
                     icon.innerHTML='<defs><mask id="'+id+'"><circle cx="20" cy="20" r="18.5" fill="white"/><path d="M20 12 L26.928 16 L26.928 24 L20 28 L13.072 24 L13.072 16 Z" fill="black"/>'+Array.from({length:6},(_,j)=>'<path d="M20 12 L41 24.124" stroke="black" stroke-width="1.7" transform="rotate('+(j*60)+' 20 20)"/>').join('')+'</mask></defs><circle cx="20" cy="20" r="18.5" fill="currentColor" mask="url(#'+id+')"/>';
                     icon.innerHTML+='<path d="M8 34 A20.2 20.2 0 0 0 19 40.2 L13 52 L10 46 L3 48 Z M21 40.2 A20.2 20.2 0 0 0 32 34 L37 48 L30 46 L27 52 Z" fill="currentColor"/>';icon.style.color=['#668cda','#d45a65','#e4c45c'][i];return icon;
                 }
@@ -2312,13 +2436,14 @@ html.dpc-viewing body {
             [...swipeArea.querySelectorAll('.dpc-detail-column')].forEach(column=>{
                 const score=parseInt(column.querySelector('.dpc-detail-column-score')?.textContent,10);
                 const bar=column.querySelector('.dpc-detail-column-fill'),count=column.querySelector('.dpc-detail-column-count');
-                const delay=Math.max(0,(Number.isFinite(score)?score:1)-1)*80;
-                if(bar)bar.animate([{transform:'scaleY(0)'},{transform:'scaleY(1)'}],{duration:620,delay,easing:'cubic-bezier(.28,.08,.18,1)',fill:'both'});
-                if(count)count.animate([{opacity:0},{opacity:1}],{duration:240,delay:delay+440,fill:'both'});
+                const delay=Math.max(0,(Number.isFinite(score)?score:1)-1)*65;
+                if(bar)bar.animate([{transform:'scaleY(0)'},{transform:'scaleY(1)'}],{duration:420,delay,easing:'cubic-bezier(.16,1,.3,1)',fill:'both'});
+                if(count)count.animate([{opacity:0},{opacity:1}],{duration:160,delay:delay+300,fill:'both'});
             });
         }
     }
 
+    if (isResults) { buildChallengeResults(); return; }
     if (isPhotoDetail) { buildPhotoDetail(); return; }
     if (isHome) { buildHome(); return; }
     if (isList) {
@@ -3709,7 +3834,7 @@ html.dpc-viewing body {
 }
 
 /* V3.1 — Reliable photograph metadata */
-if (isList || isHome || isPhotoDetail) {
+if (isList || isHome || isPhotoDetail || isResults) {
     if (document.readyState === 'loading') {
         document.addEventListener('DOMContentLoaded',boot,{once:true});
     } else {
