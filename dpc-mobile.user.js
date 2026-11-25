@@ -2,13 +2,14 @@
 // ==UserScript==
 // @name DPChallenge Mobile — Editorial Gallery
 // @namespace dpc-mobile
-// @version 4.49
+// @version 4.50
 // @updateURL https://raw.githubusercontent.com/Konador/dpc-mobile-restyle/main/dpc-mobile.user.js
 // @downloadURL https://raw.githubusercontent.com/Konador/dpc-mobile-restyle/main/dpc-mobile.user.js
 // @match *://*.dpchallenge.com/challenge_vote_image.php*
 // @match *://*.dpchallenge.com/challenge_vote_list.php*
 // @match *://*.dpchallenge.com/
 // @match *://*.dpchallenge.com/index.php*
+// @match *://*.dpchallenge.com/image.php*
 // @grant none
 // @run-at document-start
 // @noframes
@@ -67,6 +68,7 @@ function boot() {
 
 let root = document.documentElement;
 const isHome = location.pathname === '/' || location.pathname === '/index.php';
+const isPhotoDetail = location.pathname === '/image.php';
 const isList = location.pathname.includes('challenge_vote_list.php');
 
 function viewport() {
@@ -996,6 +998,7 @@ html.dpc-viewing body {
     style.textContent += "#dpc-app .dpc-native-menu-children>details>summary,#dpc-app .dpc-native-menu-children>a{min-height:34px;padding:7px 0;font:400 14px/20px system-ui,sans-serif;box-sizing:border-box}#dpc-app .dpc-native-menu-children>details>summary.dpc-split-summary{padding:0;min-height:34px}#dpc-app .dpc-native-menu-children .dpc-split-summary>.dpc-expand-hit{min-height:0;height:auto;align-self:stretch}#dpc-app .dpc-native-menu-children .dpc-split-summary>a.dpc-parent-link{padding:7px 0;min-height:34px}";
     style.textContent += "#dpc-app .dpc-native-menu-group>summary{position:relative;align-items:center}#dpc-app .dpc-native-menu-group>summary:after{position:absolute;right:15px;top:50%;margin:0;transform:translate(0,-50%) rotate(-45deg);transform-origin:center}#dpc-app .dpc-native-menu-group[open]>summary:after{transform:translate(0,-50%) rotate(45deg)}#dpc-app .dpc-split-summary>a.dpc-parent-link{align-items:center}#dpc-app .dpc-split-summary .dpc-restyle-mark{align-self:center;transform:translateY(0);margin-top:0;margin-bottom:0}#dpc-app .dpc-restyle-mark i{top:-1px}";
     style.textContent += "#dpc-app .dpc-home-thread{display:flex;flex-direction:column;gap:4px;padding:12px 0;border-bottom:1px solid var(--line);font:400 14px/1.4 system-ui,sans-serif;color:inherit;text-decoration:none}#dpc-app .dpc-home-thread[hidden]{display:none!important}#dpc-app .dpc-thread-category{font:500 11px/1.35 system-ui,sans-serif;color:var(--accent)}#dpc-app .dpc-thread-title{font:500 16px/1.35 system-ui,sans-serif;color:inherit;overflow-wrap:anywhere}#dpc-app .dpc-thread-details{display:flex;justify-content:space-between;align-items:baseline;gap:10px;color:var(--muted);font:400 11px/1.4 system-ui,sans-serif}#dpc-app .dpc-thread-time{flex:none;text-align:right}#dpc-app .dpc-home-thread small{font:400 11px/1.4 system-ui,sans-serif;margin:0}";
+    style.textContent += "#dpc-app .dpc-photo-detail{padding:16px;max-width:900px;margin:auto}#dpc-app .dpc-detail-challenge{display:block;margin-bottom:12px;color:var(--accent);font-size:14px}#dpc-app .dpc-detail-stage{background:#151515;margin:0 -16px;display:flex;justify-content:center;align-items:center}#dpc-app .dpc-detail-stage img{display:block;max-width:100%;max-height:75vh;object-fit:contain}#dpc-app .dpc-detail-title{height:100px;margin:12px 0 0}#dpc-app .dpc-detail-credit{display:flex;justify-content:center;align-items:center;gap:10px;margin:0 0 24px;color:var(--accent)}#dpc-app .dpc-detail-ribbon{font-size:12px;border:1px solid currentColor;border-radius:4px;padding:3px 7px}#dpc-app .dpc-detail-ribbon[data-place=\"1st Place\"]{color:#709ce5}#dpc-app .dpc-detail-ribbon[data-place=\"2nd Place\"]{color:#d66c78}#dpc-app .dpc-detail-ribbon[data-place=\"3rd Place\"]{color:#c6a34c}#dpc-app .dpc-detail-section{border-top:1px solid var(--line);padding:18px 0;margin:0}#dpc-app .dpc-detail-section h2{font:500 25px Georgia,serif;margin:0 0 15px}#dpc-app .dpc-detail-fields{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.2fr);gap:9px 12px;font-size:14px;margin:0}#dpc-app .dpc-detail-fields dt{color:var(--muted)}#dpc-app .dpc-detail-fields dd{margin:0;overflow-wrap:anywhere}#dpc-app .dpc-detail-vote{display:grid;grid-template-columns:22px 1fr 30px;gap:8px;align-items:center;font-size:13px;margin:7px 0}#dpc-app .dpc-detail-track{height:9px;background:var(--line);border-radius:3px;overflow:hidden}#dpc-app .dpc-detail-track div{height:100%;background:var(--accent)}#dpc-app .dpc-detail-vote.own{color:#d66c78;font-weight:bold}#dpc-app .dpc-detail-vote.own .dpc-detail-track div{background:#d66c78}#dpc-app .dpc-detail-note{font-size:12px;color:var(--muted)}#dpc-app .dpc-detail-prose{font-size:15px;line-height:1.6;overflow-wrap:anywhere}#dpc-app .dpc-detail-prose img{max-width:100%;height:auto}#dpc-app .dpc-detail-action{display:block;width:100%;box-sizing:border-box;padding:12px;margin:12px 0;border:1px solid var(--line);border-radius:6px;color:var(--accent);background:transparent;text-align:center;font:inherit}#dpc-app .dpc-detail-related{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}#dpc-app .dpc-detail-related img{width:100%;height:90px;object-fit:contain;background:#151515}#dpc-app .dpc-detail-related span{display:block;font-size:12px}#dpc-app .dpc-detail-comment{padding:16px 0;border-bottom:1px solid var(--line)}#dpc-app .dpc-detail-comment-head{display:flex;align-items:center;gap:10px;margin-bottom:12px}#dpc-app .dpc-detail-comment-head img{width:40px;height:40px;object-fit:cover;border-radius:50%}#dpc-app .dpc-detail-comment-head small{display:block;color:var(--muted);font-size:11px;margin-top:3px}#dpc-app .dpc-detail-comment-actions{display:flex;flex-wrap:wrap;gap:12px;margin-top:10px;font-size:12px}#dpc-app .dpc-detail-comment-actions button{background:none;border:0;color:var(--muted);padding:0;font:inherit}#dpc-app .dpc-detail-helpful{display:block;color:var(--accent);margin-top:10px}#dpc-app .dpc-detail-divider{font-size:13px;color:var(--muted);margin:22px 0 0}";
     document.head.append(style);
 
     const header = `
@@ -1194,7 +1197,7 @@ html.dpc-viewing body {
         const welcome=(document.body.textContent||'').match(/Welcome back[^\r\n]{0,80}/i);
         if(welcome)menu.prepend(make('div','dpc-home-welcome',welcome[0].split(/\(\s*log out/i)[0].trim()));
         // Mark only destinations actually covered by the userscript's @match paths.
-        const supportedPaths=["/challenge_vote_image.php","/challenge_vote_list.php","/","/index.php"];
+        const supportedPaths=["/challenge_vote_image.php","/challenge_vote_list.php","/","/index.php","/image.php"];
         let markerId=0;
         for(const a of menu.querySelectorAll('a[href]')){
             let u;try{u=new URL(a.href,location.href);}catch{continue;}
@@ -2125,6 +2128,60 @@ html.dpc-viewing body {
 
     }
 
+
+    function buildPhotoDetail(){
+        const photo=document.querySelector('#img_container img:not([src*="pix.gif"])');
+        const title=document.querySelector('.imagetitle');
+        if(!photo||!title)return;
+        const make=(tag,cls,txt)=>{const n=document.createElement(tag);if(cls)n.className=cls;if(txt)n.textContent=txt;return n;};
+        const copy=n=>n.cloneNode(true);
+        const info=document.querySelector('.dpc-image-information');
+        const stats=document.querySelector('.dpc-vote-breakdown');
+        const thread=document.querySelector('.dpc-forum-thread');
+        app.innerHTML=header+'<div class="dpc-photo-detail"></div>'+footer;
+        const body=$('.dpc-photo-detail');
+        const challenge=info?.querySelector('a[href*="challenge_results.php"]');
+        if(challenge){const a=copy(challenge);a.className='dpc-detail-challenge';body.append(a);}
+        const stage=make('div','dpc-detail-stage');const image=copy(photo);image.removeAttribute('style');stage.append(image);body.append(stage);
+        const heading=make('h1','dpc-detail-title');body.append(heading);
+        const credit=make('div','dpc-detail-credit');const ribbon=title.querySelector('img[alt]');if(ribbon){const badge=make('span','dpc-detail-ribbon',ribbon.alt);badge.dataset.place=ribbon.alt;credit.append(badge);}
+        const author=title.nextElementSibling;if(author?.matches('a'))credit.append(copy(author));body.append(credit);
+        function section(name){const sec=make('section','dpc-detail-section');sec.append(make('h2','',name));body.append(sec);return sec;}
+        function fields(source,parent){
+            if(!source)return;
+            const dl=make('dl','dpc-detail-fields');let dt=null,dd=null;
+            for(const node of source.childNodes){
+                if(node.nodeType===1&&node.matches('b')){dt=make('dt','',node.textContent.replace(/:\s*$/,''));dd=make('dd');dl.append(dt,dd);}
+                else if(node.nodeType===1&&node.matches('br')){dt=dd=null;}
+                else if(dd){dd.append(copy(node));}
+            }
+            if(dl.children.length)parent.append(dl);
+        }
+        const primary=stats?.querySelector('.dpc-detail-primary-content');
+        if(primary){const sec=section('Statistics');fields(primary,sec);}
+        const votes=[...(stats?.querySelectorAll('.breakdown_vote')||[])].map(n=>({score:n.textContent.trim(),bar:n.nextElementSibling,count:Number(n.nextElementSibling?.nextElementSibling?.textContent)||0}));
+        if(votes.length){const sec=section('Voting breakdown');const max=Math.max(1,...votes.map(v=>v.count));for(const v of votes){const own=/rgb\(173,\s*47,\s*89\)|#ad2f59/i.test(v.bar?.style.backgroundColor||'');const row=make('div','dpc-detail-vote'+(own?' own':''));row.append(make('span','',v.score));const track=make('div','dpc-detail-track');const fill=make('div');fill.style.width=(100*v.count/max)+'%';track.append(fill);row.append(track,make('span','',String(v.count)));if(own)row.setAttribute('aria-label',v.score+' — your vote, '+v.count+' votes');sec.append(row);}if(votes.some(v=>/rgb\(173,\s*47,\s*89\)|#ad2f59/i.test(v.bar?.style.backgroundColor||'')))sec.append(make('p','dpc-detail-note','Highlighted: your vote'));}
+        const description=info?.querySelector('.dpc-detail-secondary-content');
+        if(description?.textContent.trim()){const sec=section("Photographer’s comments");const p=make('div','dpc-detail-prose');for(const n of description.childNodes)p.append(copy(n));sec.append(p);}
+        if(info){const sec=section('Photograph information');const source=info.querySelector('.dpc-detail-primary-content');fields(source,sec);for(const a of source?.querySelectorAll('a[href*="favorites_mgr.php"]')||[]){const link=make('a','dpc-detail-action',a.textContent.trim());link.href=a.href;sec.append(link);}}
+        const adjacent=[...document.querySelectorAll('#image_challenge a[href*="image.php"],#image_portfolio a[href*="image.php"]')];
+        if(adjacent.length){const sec=section('More photographs');const grid=make('div','dpc-detail-related');for(const a of adjacent){const link=make('a');link.href=a.href;const img=a.querySelector('img');if(img){const thumb=copy(img);thumb.removeAttribute('style');thumb.removeAttribute('onmouseover');thumb.removeAttribute('onmouseout');thumb.loading='lazy';link.append(thumb);}link.append(make('span','',a.title||a.textContent.trim()));grid.append(link);}sec.append(grid);}
+        const comments=section('Community comments');
+        const composer=make('button','dpc-detail-action','Add your comment');composer.type='button';composer.onclick=()=>original(location.href.split('#')[0]+'#post');comments.append(composer);
+        if(thread){let card=null;for(const row of thread.rows){
+            const a=row.querySelector('.dpc-forum-author-details a[href*="profile.php"]');
+            if(a){card=make('article','dpc-detail-comment');const head=make('div','dpc-detail-comment-head');const avatar=row.querySelector('.forumpic img');if(avatar){const im=copy(avatar);im.removeAttribute('style');im.loading='lazy';head.append(im);}const meta=make('div');meta.append(copy(a));const actions=row.querySelector('.dpc-forum-actions');if(actions){const time=copy(actions);time.querySelectorAll('span,img,a').forEach(n=>n.remove());meta.append(make('small','',time.textContent.trim()));}head.append(meta);card.append(head);comments.append(card);if(actions){const bar=make('div','dpc-detail-comment-actions');for(const link of actions.querySelectorAll('a[href]')){const b=make('a','',link.querySelector('img')?.title||'Reply');b.href=link.href;b.onclick=e=>{e.preventDefault();original(b.href);};bar.append(b);}for(const icon of actions.querySelectorAll('img[onclick]')){const b=make('button','',icon.title||'Report');b.type='button';b.onclick=()=>icon.click();bar.append(b);}card.append(bar);}}
+            const message=row.querySelector('.dpc-forum-message .forum-post td');if(message&&card){const p=make('div','dpc-detail-prose');for(const n of message.childNodes)p.append(copy(n));card.insertBefore(p,card.querySelector('.dpc-detail-comment-actions'));}
+            if(row.querySelector('img[src*="ratings/helpful"]')&&card)card.append(make('small','dpc-detail-helpful','Photographer found comment helpful'));
+            if(!a&&/Comments Made During the Challenge/i.test(row.textContent)){comments.append(make('h3','dpc-detail-divider','Comments made during the challenge'));card=null;}
+        }}
+        $('#dpc-original').onclick=()=>original();
+        mount();
+        const fit=()=>editorialTypeset(heading,title.textContent.trim(),0,false);
+        fit();document.fonts?.ready.then(fit);let width=innerWidth;addEventListener('resize',()=>{if(width!==innerWidth){width=innerWidth;fit();}});
+    }
+
+    if (isPhotoDetail) { buildPhotoDetail(); return; }
     if (isHome) { buildHome(); return; }
     if (isList) {
         buildList();
@@ -3514,7 +3571,7 @@ html.dpc-viewing body {
 }
 
 /* V3.1 — Reliable photograph metadata */
-if (isList || isHome) {
+if (isList || isHome || isPhotoDetail) {
     if (document.readyState === 'loading') {
         document.addEventListener('DOMContentLoaded',boot,{once:true});
     } else {
