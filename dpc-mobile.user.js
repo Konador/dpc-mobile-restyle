@@ -2,7 +2,7 @@
 // ==UserScript==
 // @name DPChallenge Mobile — Editorial Gallery
 // @namespace dpc-mobile
-// @version 4.51
+// @version 4.52
 // @updateURL https://raw.githubusercontent.com/Konador/dpc-mobile-restyle/main/dpc-mobile.user.js
 // @downloadURL https://raw.githubusercontent.com/Konador/dpc-mobile-restyle/main/dpc-mobile.user.js
 // @match *://*.dpchallenge.com/challenge_vote_image.php*
@@ -1000,6 +1000,7 @@ html.dpc-viewing body {
     style.textContent += "#dpc-app .dpc-home-thread{display:flex;flex-direction:column;gap:4px;padding:12px 0;border-bottom:1px solid var(--line);font:400 14px/1.4 system-ui,sans-serif;color:inherit;text-decoration:none}#dpc-app .dpc-home-thread[hidden]{display:none!important}#dpc-app .dpc-thread-category{font:500 11px/1.35 system-ui,sans-serif;color:var(--accent)}#dpc-app .dpc-thread-title{font:500 16px/1.35 system-ui,sans-serif;color:inherit;overflow-wrap:anywhere}#dpc-app .dpc-thread-details{display:flex;justify-content:space-between;align-items:baseline;gap:10px;color:var(--muted);font:400 11px/1.4 system-ui,sans-serif}#dpc-app .dpc-thread-time{flex:none;text-align:right}#dpc-app .dpc-home-thread small{font:400 11px/1.4 system-ui,sans-serif;margin:0}";
     style.textContent += "#dpc-app .dpc-photo-detail{padding:16px;max-width:900px;margin:auto}#dpc-app .dpc-detail-challenge{display:block;margin-bottom:12px;color:var(--accent);font-size:14px}#dpc-app .dpc-detail-stage{background:#151515;margin:0 -16px;display:flex;justify-content:center;align-items:center}#dpc-app .dpc-detail-stage img{display:block;max-width:100%;max-height:75vh;object-fit:contain}#dpc-app .dpc-detail-title{height:100px;margin:12px 0 0}#dpc-app .dpc-detail-credit{display:flex;justify-content:center;align-items:center;gap:10px;margin:0 0 24px;color:var(--accent)}#dpc-app .dpc-detail-ribbon{font-size:12px;border:1px solid currentColor;border-radius:4px;padding:3px 7px}#dpc-app .dpc-detail-ribbon[data-place=\"1st Place\"]{color:#709ce5}#dpc-app .dpc-detail-ribbon[data-place=\"2nd Place\"]{color:#d66c78}#dpc-app .dpc-detail-ribbon[data-place=\"3rd Place\"]{color:#c6a34c}#dpc-app .dpc-detail-section{border-top:1px solid var(--line);padding:18px 0;margin:0}#dpc-app .dpc-detail-section h2{font:500 25px Georgia,serif;margin:0 0 15px}#dpc-app .dpc-detail-fields{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.2fr);gap:9px 12px;font-size:14px;margin:0}#dpc-app .dpc-detail-fields dt{color:var(--muted)}#dpc-app .dpc-detail-fields dd{margin:0;overflow-wrap:anywhere}#dpc-app .dpc-detail-vote{display:grid;grid-template-columns:22px 1fr 30px;gap:8px;align-items:center;font-size:13px;margin:7px 0}#dpc-app .dpc-detail-track{height:9px;background:var(--line);border-radius:3px;overflow:hidden}#dpc-app .dpc-detail-track div{height:100%;background:var(--accent)}#dpc-app .dpc-detail-vote.own{color:#d66c78;font-weight:bold}#dpc-app .dpc-detail-vote.own .dpc-detail-track div{background:#d66c78}#dpc-app .dpc-detail-note{font-size:12px;color:var(--muted)}#dpc-app .dpc-detail-prose{font-size:15px;line-height:1.6;overflow-wrap:anywhere}#dpc-app .dpc-detail-prose img{max-width:100%;height:auto}#dpc-app .dpc-detail-action{display:block;width:100%;box-sizing:border-box;padding:12px;margin:12px 0;border:1px solid var(--line);border-radius:6px;color:var(--accent);background:transparent;text-align:center;font:inherit}#dpc-app .dpc-detail-related{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}#dpc-app .dpc-detail-related img{width:100%;height:90px;object-fit:contain;background:#151515}#dpc-app .dpc-detail-related span{display:block;font-size:12px}#dpc-app .dpc-detail-comment{padding:16px 0;border-bottom:1px solid var(--line)}#dpc-app .dpc-detail-comment-head{display:flex;align-items:center;gap:10px;margin-bottom:12px}#dpc-app .dpc-detail-comment-head img{width:40px;height:40px;object-fit:cover;border-radius:50%}#dpc-app .dpc-detail-comment-head small{display:block;color:var(--muted);font-size:11px;margin-top:3px}#dpc-app .dpc-detail-comment-actions{display:flex;flex-wrap:wrap;gap:12px;margin-top:10px;font-size:12px}#dpc-app .dpc-detail-comment-actions button{background:none;border:0;color:var(--muted);padding:0;font:inherit}#dpc-app .dpc-detail-helpful{display:block;color:var(--accent);margin-top:10px}#dpc-app .dpc-detail-divider{font-size:13px;color:var(--muted);margin:22px 0 0}";
     style.textContent += "#dpc-app .dpc-photo-detail{padding:12px 16px 24px}#dpc-app .dpc-detail-challenge{margin:0;font:500 13px/1.4 system-ui,sans-serif}#dpc-app .dpc-detail-title{height:90px;margin:0!important}#dpc-app .dpc-detail-credit{justify-content:flex-start;margin:0 0 12px;gap:7px;font:400 14px/1.4 system-ui,sans-serif}#dpc-app .dpc-detail-credit svg{position:static;width:19px;height:26px;flex:none}#dpc-app .dpc-detail-stage{height:min(55vh,520px);touch-action:pan-y pinch-zoom}#dpc-app .dpc-detail-stage img{max-height:100%;max-width:100%}#dpc-app .dpc-detail-nav{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:10px 0 16px;font-size:12px;color:var(--muted)}#dpc-app .dpc-detail-nav button{background:transparent;color:var(--accent);border:1px solid var(--line);border-radius:6px;padding:9px 12px;font:500 13px system-ui,sans-serif}#dpc-app .dpc-detail-section h2{font:500 23px/1.2 var(--serif),Georgia,serif;margin:0 0 14px}#dpc-app .dpc-detail-fields{grid-template-columns:minmax(0,1fr) minmax(0,1.2fr);gap:0;font:400 13px/1.45 system-ui,sans-serif}#dpc-app .dpc-detail-fields dt,#dpc-app .dpc-detail-fields dd{padding:8px 0;border-bottom:1px solid var(--line)}#dpc-app .dpc-detail-fields dd{text-align:right;padding-left:12px}#dpc-app .dpc-detail-prose{font:400 14px/1.6 system-ui,sans-serif}#dpc-app .dpc-detail-comment-head a{font:600 14px system-ui,sans-serif}#dpc-app .dpc-detail-comment-actions{font:400 12px system-ui,sans-serif}";
+    style.textContent += "#dpc-app .dpc-detail-carousel{overflow:hidden;position:relative;touch-action:pan-y pinch-zoom;display:block}#dpc-app .dpc-detail-rail{display:flex;width:100%;height:100%;will-change:transform}#dpc-app .dpc-detail-slide{flex:0 0 100%;min-width:0;height:100%;display:flex;align-items:center;justify-content:center}#dpc-app .dpc-detail-slide img{width:100%;height:100%;object-fit:contain;pointer-events:none;user-select:none}";
     document.head.append(style);
 
     const header = `
@@ -2138,17 +2139,17 @@ html.dpc-viewing body {
                     icon.innerHTML='<defs><mask id="'+id+'"><circle cx="20" cy="20" r="18.5" fill="white"/><path d="M20 12 L26.928 16 L26.928 24 L20 28 L13.072 24 L13.072 16 Z" fill="black"/>'+Array.from({length:6},(_,j)=>'<path d="M20 12 L41 24.124" stroke="black" stroke-width="1.7" transform="rotate('+(j*60)+' 20 20)"/>').join('')+'</mask></defs><circle cx="20" cy="20" r="18.5" fill="currentColor" mask="url(#'+id+')"/>';
                     icon.innerHTML+='<path d="M8 34 A20.2 20.2 0 0 0 19 40.2 L13 52 L10 46 L3 48 Z M21 40.2 A20.2 20.2 0 0 0 32 34 L37 48 L30 46 L27 52 Z" fill="currentColor"/>';icon.style.color=['#668cda','#d45a65','#e4c45c'][i];return icon;
                 }
-    function buildPhotoDetail(){
-        const photo=document.querySelector('#img_container img:not([src*="pix.gif"])');
-        const title=document.querySelector('.imagetitle');
+    function buildPhotoDetail(doc=document, mounted=false, direction=0){
+        const photo=doc.querySelector('#img_container img:not([src*="pix.gif"])');
+        const title=doc.querySelector('.imagetitle');
         if(!photo||!title)return;
         const make=(tag,cls,txt)=>{const n=document.createElement(tag);if(cls)n.className=cls;if(txt)n.textContent=txt;return n;};
         const copy=n=>n.cloneNode(true);
-        const info=document.querySelector('.dpc-image-information');
-        const stats=document.querySelector('.dpc-vote-breakdown');
-        const thread=document.querySelector('.dpc-forum-thread');
-        app.innerHTML=header+'<div class="dpc-photo-detail"></div>'+footer;
-        const body=$('.dpc-photo-detail');
+        const info=doc.querySelector('.dpc-image-information');
+        const stats=doc.querySelector('.dpc-vote-breakdown');
+        const thread=doc.querySelector('.dpc-forum-thread');
+        if(!mounted)app.innerHTML=header+'<div class="dpc-photo-detail"></div>'+footer;
+        const body=$('.dpc-photo-detail');body.replaceChildren();
         const challenge=info?.querySelector('a[href*="challenge_results.php"]');
         if(challenge){const a=copy(challenge);a.className='dpc-detail-challenge';body.append(a);}
         const stage=make('div','dpc-detail-stage');const image=copy(photo);image.removeAttribute('style');stage.append(image);body.append(stage);
@@ -2158,44 +2159,49 @@ html.dpc-viewing body {
 
         if(challenge){
             const nav=make('div','dpc-detail-nav');
-            const prev=make('button','','‹ Previous'),next=make('button','','Next ›'),status=make('span','','');
+            const prev=make('button','','‹ Previous'),next=make('button','','Next ›'),status=make('span');
             prev.type=next.type='button';nav.append(prev,status,next);stage.after(nav);
-            let busy=false, indexPromise=null;
-            const idOf=url=>new URL(url,location.href).searchParams.get('IMAGE_ID');
-            const currentId=idOf(location.href);
-            async function index(){
-                if(indexPromise)return indexPromise;
-                indexPromise=(async()=>{
-                    const response=await fetch(challenge.href,{credentials:'same-origin'});
-                    if(!response.ok)throw Error('Results unavailable');
+            const cells=doc.querySelectorAll('#image_challenge table tr:first-child > td');
+            const links=[cells[0]?.querySelector('a[href*="image.php"]'),cells[cells.length-1]?.querySelector('a[href*="image.php"]')];
+            const slides=[null,null];let busy=false,drag=null,offset=0;
+            stage.classList.add('dpc-detail-carousel');
+            const rail=make('div','dpc-detail-rail');stage.replaceChildren(rail);
+            const panels=[-1,0,1].map(()=>{const panel=make('div','dpc-detail-slide');rail.append(panel);return panel;});
+            panels[1].append(image);
+            const move=(x,animate=false)=>{offset=x;rail.style.transition=animate&&!reducedMotion.matches?'transform 260ms cubic-bezier(.2,.75,.25,1)':'none';rail.style.transform='translate3d(calc(-100% + '+x+'px),0,0)';};
+            move(0);
+            function prepare(i){
+                const link=links[i];if(!link)return null;
+                const url=new URL(link.getAttribute('href'),location.href).href;
+                const thumb=link.querySelector('img');const panel=panels[i===0?0:2];
+                const preview=make('img');if(thumb)preview.src=thumb.getAttribute('src');panel.append(preview);
+                const rec={url,preview};slides[i]=rec;
+                rec.promise=fetch(url,{credentials:'same-origin'}).then(async response=>{
+                    if(!response.ok)throw Error('Unavailable');
                     const template=document.createElement('template');template.innerHTML=await response.text();
-                    const entries=[],seen=new Set();
-                    for(const a of template.content.querySelectorAll('a[href*="image.php"]')){
-                        const u=new URL(a.getAttribute('href'),response.url||challenge.href);
-                        const id=idOf(u.href);
-                        if(u.origin!==location.origin||u.pathname!=='/image.php'||!id||seen.has(id)||!a.querySelector('img'))continue;
-                        seen.add(id);entries.push(u.href);
-                    }
-                    if(!entries.some(u=>idOf(u)===currentId))throw Error('Current photograph not found');
-                    return entries;
-                })();
-                return indexPromise;
+                    const page=template.content;
+                    const photo=page.querySelector('#img_container img:not([src*="pix.gif"])');
+                    if(!photo||!page.querySelector('.imagetitle'))throw Error('Invalid photo');
+                    rec.doc=page;
+                    const full=new Image();full.onload=()=>{preview.src=full.src;};full.src=new URL(photo.getAttribute('src'),url).href;
+                    return page;
+                }).catch(()=>null);
+                return rec;
             }
-            async function go(direction){
-                if(busy)return;busy=true;prev.disabled=next.disabled=true;status.textContent='Loading…';
-                try{
-                    const entries=await index(),i=entries.findIndex(u=>idOf(u)===currentId),target=entries[i+direction];
-                    if(target){location.href=target;return;}
-                    status.textContent=direction<0?'First photograph':'Last on this results page';
-                }catch{status.textContent='Results unavailable';}
-                busy=false;prev.disabled=next.disabled=false;
+            prepare(0);prepare(1);prev.disabled=!slides[0];next.disabled=!slides[1];
+            async function go(d){
+                if(busy)return;const rec=slides[d<0?0:1];if(!rec){move(0,true);return;}
+                busy=true;prev.disabled=next.disabled=true;move(-d*stage.clientWidth,true);
+                const page=await rec.promise;
+                await new Promise(resolve=>setTimeout(resolve,reducedMotion.matches?0:270));
+                if(!page){move(0,true);status.textContent='Unable to load photograph';busy=false;prev.disabled=!slides[0];next.disabled=!slides[1];return;}
+                history.pushState(null,'',rec.url);buildPhotoDetail(page,true,d);
             }
             prev.onclick=()=>go(-1);next.onclick=()=>go(1);
-            let touch=null;
-            stage.addEventListener('touchstart',e=>{touch=e.touches.length===1?{x:e.touches[0].clientX,y:e.touches[0].clientY}:null;},{passive:true});
-            stage.addEventListener('touchmove',e=>{if(e.touches.length!==1)touch=null;},{passive:true});
-            stage.addEventListener('touchcancel',()=>touch=null);
-            stage.addEventListener('touchend',e=>{if(!touch)return;const p=e.changedTouches[0],dx=p.clientX-touch.x,dy=p.clientY-touch.y;touch=null;if(Math.abs(dx)>55&&Math.abs(dx)>Math.abs(dy)*1.5)go(dx<0?1:-1);},{passive:true});
+            stage.addEventListener('pointerdown',e=>{if(busy||!e.isPrimary||e.button!==0)return;drag={id:e.pointerId,x:e.clientX,y:e.clientY,axis:null};});
+            stage.addEventListener('pointermove',e=>{if(!drag||drag.id!==e.pointerId)return;const dx=e.clientX-drag.x,dy=e.clientY-drag.y;if(!drag.axis&&Math.max(Math.abs(dx),Math.abs(dy))>8){drag.axis=Math.abs(dx)>Math.abs(dy)*1.2?'x':'y';if(drag.axis==='x')stage.setPointerCapture(e.pointerId);}if(drag.axis==='x'){const available=slides[dx>0?0:1];move(Math.max(-stage.clientWidth,Math.min(stage.clientWidth,available?dx:dx*.18)));}});
+            stage.addEventListener('pointerup',e=>{if(!drag||drag.id!==e.pointerId)return;const horizontal=drag.axis==='x';drag=null;if(horizontal&&Math.abs(offset)>Math.min(90,stage.clientWidth*.22))go(offset<0?1:-1);else move(0,true);});
+            stage.addEventListener('pointercancel',()=>{drag=null;if(!busy)move(0,true);});
         }
         function section(name){const sec=make('section','dpc-detail-section');sec.append(make('h2','',name));body.append(sec);return sec;}
         function fields(source,parent){
@@ -2215,21 +2221,21 @@ html.dpc-viewing body {
         const description=info?.querySelector('.dpc-detail-secondary-content');
         if(description?.textContent.trim()){const sec=section("Photographer’s comments");const p=make('div','dpc-detail-prose');for(const n of description.childNodes)p.append(copy(n));sec.append(p);}
         if(info){const sec=section('Photograph information');const source=info.querySelector('.dpc-detail-primary-content');fields(source,sec);for(const a of source?.querySelectorAll('a[href*="favorites_mgr.php"]')||[]){const link=make('a','dpc-detail-action',a.textContent.trim());link.href=a.href;sec.append(link);}}
-        const adjacent=[...document.querySelectorAll('#image_challenge a[href*="image.php"],#image_portfolio a[href*="image.php"]')];
+        const adjacent=[...doc.querySelectorAll('#image_challenge a[href*="image.php"],#image_portfolio a[href*="image.php"]')];
         if(adjacent.length){const sec=section('More photographs');const grid=make('div','dpc-detail-related');for(const a of adjacent){const link=make('a');link.href=a.href;const img=a.querySelector('img');if(img){const thumb=copy(img);thumb.removeAttribute('style');thumb.removeAttribute('onmouseover');thumb.removeAttribute('onmouseout');thumb.loading='lazy';link.append(thumb);}link.append(make('span','',a.title||a.textContent.trim()));grid.append(link);}sec.append(grid);}
         const comments=section('Community comments');
         const composer=make('button','dpc-detail-action','Add your comment');composer.type='button';composer.onclick=()=>original(location.href.split('#')[0]+'#post');comments.append(composer);
         if(thread){let card=null;for(const row of thread.rows){
             const a=row.querySelector('.dpc-forum-author-details a[href*="profile.php"]');
-            if(a){card=make('article','dpc-detail-comment');const head=make('div','dpc-detail-comment-head');const avatar=row.querySelector('.forumpic img');if(avatar){const im=copy(avatar);im.removeAttribute('style');im.loading='lazy';head.append(im);}const meta=make('div');meta.append(copy(a));const actions=row.querySelector('.dpc-forum-actions');if(actions){const time=copy(actions);time.querySelectorAll('span,img,a').forEach(n=>n.remove());meta.append(make('small','',time.textContent.trim()));}head.append(meta);card.append(head);comments.append(card);if(actions){const bar=make('div','dpc-detail-comment-actions');for(const link of actions.querySelectorAll('a[href]')){const b=make('a','',link.querySelector('img')?.title||'Reply');b.href=link.href;b.onclick=e=>{e.preventDefault();original(b.href);};bar.append(b);}for(const icon of actions.querySelectorAll('img[onclick]')){const b=make('button','',icon.title||'Report');b.type='button';b.onclick=()=>icon.click();bar.append(b);}card.append(bar);}}
+            if(a){card=make('article','dpc-detail-comment');const head=make('div','dpc-detail-comment-head');const avatar=row.querySelector('.forumpic img');if(avatar){const im=copy(avatar);im.removeAttribute('style');im.loading='lazy';head.append(im);}const meta=make('div');meta.append(copy(a));const actions=row.querySelector('.dpc-forum-actions');if(actions){const time=copy(actions);time.querySelectorAll('span,img,a').forEach(n=>n.remove());meta.append(make('small','',time.textContent.trim()));}head.append(meta);card.append(head);comments.append(card);if(actions){const bar=make('div','dpc-detail-comment-actions');for(const link of actions.querySelectorAll('a[href]')){const b=make('a','',link.querySelector('img')?.title||'Reply');b.href=link.href;b.onclick=e=>{e.preventDefault();original(b.href);};bar.append(b);}for(const icon of actions.querySelectorAll('img[onclick]')){const b=make('button','',icon.title||'Report');b.type='button';b.onclick=()=>{if(mounted)original(location.href);else icon.click();};bar.append(b);}card.append(bar);}}
             const message=row.querySelector('.dpc-forum-message .forum-post td');if(message&&card){const p=make('div','dpc-detail-prose');for(const n of message.childNodes)p.append(copy(n));card.insertBefore(p,card.querySelector('.dpc-detail-comment-actions'));}
             if(row.querySelector('img[src*="ratings/helpful"]')&&card)card.append(make('small','dpc-detail-helpful','Photographer found comment helpful'));
             if(!a&&/Comments Made During the Challenge/i.test(row.textContent)){comments.append(make('h3','dpc-detail-divider','Comments made during the challenge'));card=null;}
         }}
         $('#dpc-original').onclick=()=>original();
-        mount();
-        const fit=()=>editorialTypeset(heading,title.textContent.trim(),0,false);
-        fit();document.fonts?.ready.then(fit);let width=innerWidth;addEventListener('resize',()=>{if(width!==innerWidth){width=innerWidth;fit();}});
+        if(!mounted){mount();addEventListener('popstate',()=>location.reload());}
+        const fit=()=>editorialTypeset(heading,title.textContent.trim(),direction,!!direction);
+        fit();document.fonts?.ready.then(()=>{if(heading.isConnected)fit();});
     }
 
     if (isPhotoDetail) { buildPhotoDetail(); return; }
