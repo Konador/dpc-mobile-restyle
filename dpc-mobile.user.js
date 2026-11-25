@@ -2,7 +2,7 @@
 // ==UserScript==
 // @name DPChallenge Mobile — Editorial Gallery
 // @namespace dpc-mobile
-// @version 4.53
+// @version 4.54
 // @updateURL https://raw.githubusercontent.com/Konador/dpc-mobile-restyle/main/dpc-mobile.user.js
 // @downloadURL https://raw.githubusercontent.com/Konador/dpc-mobile-restyle/main/dpc-mobile.user.js
 // @match *://*.dpchallenge.com/challenge_vote_image.php*
@@ -1002,6 +1002,7 @@ html.dpc-viewing body {
     style.textContent += "#dpc-app .dpc-photo-detail{padding:12px 16px 24px}#dpc-app .dpc-detail-challenge{margin:0;font:500 13px/1.4 system-ui,sans-serif}#dpc-app .dpc-detail-title{height:90px;margin:0!important}#dpc-app .dpc-detail-credit{justify-content:flex-start;margin:0 0 12px;gap:7px;font:400 14px/1.4 system-ui,sans-serif}#dpc-app .dpc-detail-credit svg{position:static;width:19px;height:26px;flex:none}#dpc-app .dpc-detail-stage{height:min(55vh,520px);touch-action:pan-y pinch-zoom}#dpc-app .dpc-detail-stage img{max-height:100%;max-width:100%}#dpc-app .dpc-detail-nav{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:10px 0 16px;font-size:12px;color:var(--muted)}#dpc-app .dpc-detail-nav button{background:transparent;color:var(--accent);border:1px solid var(--line);border-radius:6px;padding:9px 12px;font:500 13px system-ui,sans-serif}#dpc-app .dpc-detail-section h2{font:500 23px/1.2 var(--serif),Georgia,serif;margin:0 0 14px}#dpc-app .dpc-detail-fields{grid-template-columns:minmax(0,1fr) minmax(0,1.2fr);gap:0;font:400 13px/1.45 system-ui,sans-serif}#dpc-app .dpc-detail-fields dt,#dpc-app .dpc-detail-fields dd{padding:8px 0;border-bottom:1px solid var(--line)}#dpc-app .dpc-detail-fields dd{text-align:right;padding-left:12px}#dpc-app .dpc-detail-prose{font:400 14px/1.6 system-ui,sans-serif}#dpc-app .dpc-detail-comment-head a{font:600 14px system-ui,sans-serif}#dpc-app .dpc-detail-comment-actions{font:400 12px system-ui,sans-serif}";
     style.textContent += "#dpc-app .dpc-detail-carousel{overflow:hidden;position:relative;touch-action:pan-y pinch-zoom;display:block}#dpc-app .dpc-detail-rail{display:flex;width:100%;height:100%;will-change:transform}#dpc-app .dpc-detail-slide{flex:0 0 100%;min-width:0;height:100%;display:flex;align-items:center;justify-content:center}#dpc-app .dpc-detail-slide img{width:100%;height:100%;object-fit:contain;pointer-events:none;user-select:none}";
     style.textContent += "#dpc-app .dpc-detail-title{margin:8px 0 0!important}#dpc-app .dpc-detail-credit{justify-content:center;margin:0 0 12px}";
+    style.textContent += "#dpc-app .dpc-photo-caption{height:132px;padding:12px 4px 10px;overflow:visible;box-sizing:border-box}#dpc-app .dpc-photo-caption .dpc-title{height:auto;flex:1;min-height:0;margin-block:6px!important}#dpc-app .dpc-photo-caption .dpc-detail-credit{font:italic 500 20px/1.25 var(--serif);justify-content:center;flex:none;margin:0;gap:7px}#dpc-app .dpc-photo-caption .dpc-detail-credit a{font:inherit;color:var(--accent)}";
     document.head.append(style);
 
     const header = `
@@ -2154,14 +2155,14 @@ html.dpc-viewing body {
         const challenge=info?.querySelector('a[href*="challenge_results.php"]');
         if(challenge){const a=copy(challenge);a.className='dpc-detail-challenge';body.append(a);}
         const stage=make('div','dpc-detail-stage');const image=copy(photo);image.removeAttribute('style');stage.append(image);body.append(stage);
-        const heading=make('h1','dpc-detail-title');stage.after(heading);
-        const credit=make('div','dpc-detail-credit');const ribbon=title.querySelector('img[alt]');if(ribbon){const rank=parseInt(ribbon.alt,10);const badge=detailRibbon(rank-1);if(badge){badge.classList.add('dpc-caption-ribbon');credit.append(badge);}}
-        const author=title.nextElementSibling;if(author?.matches('a')){const a=copy(author);a.textContent='by '+a.textContent.trim();credit.append(a);}heading.after(credit);
+        const caption=make('div','dpc-info dpc-photo-caption');stage.after(caption);const heading=make('h1','dpc-title');caption.append(heading);
+        const credit=make('div','dpc-detail-credit dpc-home-feature-author');const ribbon=title.querySelector('img[alt]');if(ribbon){const rank=parseInt(ribbon.alt,10);const badge=detailRibbon(rank-1);if(badge){badge.classList.add('dpc-caption-ribbon');credit.append(badge);}}
+        const author=title.nextElementSibling;if(author?.matches('a')){const a=copy(author);a.textContent='by '+a.textContent.trim();credit.append(a);}caption.append(credit);
 
         if(challenge){
             const nav=make('div','dpc-detail-nav');
             const prev=make('button','','‹ Previous'),next=make('button','','Next ›'),status=make('span');
-            prev.type=next.type='button';nav.append(prev,status,next);credit.after(nav);
+            prev.type=next.type='button';nav.append(prev,status,next);caption.after(nav);
             const cells=doc.querySelectorAll('#image_challenge table tr:first-child > td');
             const links=[cells[0]?.querySelector('a[href*="image.php"]'),cells[cells.length-1]?.querySelector('a[href*="image.php"]')];
             const slides=[null,null];let busy=false,drag=null,offset=0;
