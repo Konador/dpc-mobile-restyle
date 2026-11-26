@@ -2,7 +2,7 @@
 // ==UserScript==
 // @name DPChallenge Mobile — Editorial Gallery
 // @namespace dpc-mobile
-// @version 5.48
+// @version 5.49
 // @updateURL https://raw.githubusercontent.com/Konador/dpc-mobile-restyle/main/dpc-mobile.user.js
 // @downloadURL https://raw.githubusercontent.com/Konador/dpc-mobile-restyle/main/dpc-mobile.user.js
 // @match *://*.dpchallenge.com/challenge_vote_image.php*
@@ -3507,17 +3507,58 @@ html.dpc-viewing body {
                 card.addEventListener('click',e=>{if(!e.target.closest('a,button,input')&&!getSelection()?.toString())location.href=u;});feed.append(card);
             }
         }
-        function nextPage(doc,base){
-            const current=new URL(base);const links=[...doc.querySelectorAll('a[href]')].filter(a=>{try{const u=new URL(href(a,base));return u.pathname===current.pathname&&u.searchParams.get('FORUM_THREAD_ID')===tid&&(!sid||tid||u.searchParams.get('FORUM_SECTION_ID')===sid)&&u.searchParams.has('page')&&u.href!==current.href;}catch{return false;}});
-            const explicit=links.find(a=>/^(?:next(?: page)?|next posts?|>|»|→)$/i.test(label(a).trim())||a.rel==='next');if(explicit)return href(explicit,base);
-            const pageKey=['PAGE','page','OFFSET','offset','start','START'].find(k=>links.some(a=>new URL(href(a,base)).searchParams.has(k)));if(!pageKey)return '';
-            const here=Number(current.searchParams.get(pageKey)||(/page/i.test(pageKey)?1:0));return links.map(a=>href(a,base)).filter(u=>Number(new URL(u).searchParams.get(pageKey))>here).sort((a,b)=>Number(new URL(a).searchParams.get(pageKey))-Number(new URL(b).searchParams.get(pageKey)))[0]||'';
+        function pageLinks(doc,base){
+            const current=new URL(base),key=tid?'FORUM_THREAD_ID':'FORUM_SECTION_ID',value=tid||sid;
+            return [...doc.querySelectorAll('a[href]')].map(a=>{try{return {a,u:new URL(href(a,base))};}catch{return null;}}).filter(x=>x&&x.u.origin===current.origin&&x.u.pathname===current.pathname&&x.u.searchParams.get(key)===value&&[...x.u.searchParams.keys()].some(k=>/^page$/i.test(k)));
+        }
+        function nextPage(doc,base,direction=1){
+            const links=pageLinks(doc,base),current=new URL(base);
+            const graphic=direction===1?/\/next\.gif/i:/\/prev\.gif/i;
+            const explicit=links.find(({a})=>graphic.test(a.querySelector('img')?.getAttribute('src')||'')||(direction===1?a.rel==='next':a.rel==='prev'));
+            if(explicit)return explicit.u.href;
+            const active=[...doc.querySelectorAll('img[src]')].map(i=>i.getAttribute('src').match(/\/page\/(\d+)y\.gif/i)).find(Boolean);
+            const page=u=>Number([...u.searchParams].find(([k])=>/^page$/i.test(k))?.[1]||1);
+            const here=active?Number(active[1]):page(current);
+            return links.filter(({u})=>direction*(page(u)-here)>0).sort((a,b)=>direction*(page(a.u)-page(b.u)))[0]?.u.href||'';
         }
         if(initialPosts.length||(sid&&action==='list'&&feed.children.length)){
-            const noun=initialPosts.length?'posts':'threads';let next=nextPage(document,location.href),busy=false;const visited=new Set([location.href]);const more=make('button','dpc-forum-more','Load more '+noun);more.type='button';body.append(more);
-            const nativePages=make('div','dpc-forum-nav');for(const a of originalLinks.filter(a=>isThread(a)&&/^(?:\d+|next|previous|first|last|[<>«»])$/i.test(label(a))))nativePages.append(link(a));if(nativePages.children.length)body.append(nativePages);
-            async function load(){if(busy||!next||visited.has(next))return;busy=true;more.disabled=true;more.textContent='Loading '+noun+'…';const url=next;try{const response=await backgroundFetch(url,{credentials:'same-origin'});if(!response.ok)throw Error('HTTP '+response.status);const doc=new DOMParser().parseFromString(await response.text(),'text/html');const count=initialPosts.length?renderPosts(doc,response.url||url):renderTopics(doc,response.url||url);visited.add(url);next=count?nextPage(doc,response.url||url):'';if(visited.has(next))next='';more.textContent=next?'Load more '+noun:initialPosts.length?'End of thread':'End of forum';if(next){io?.unobserve(more);io?.observe(more);}else io?.unobserve(more);}catch{more.textContent='Retry loading '+noun;io?.unobserve(more);}finally{busy=false;more.disabled=!next;}}
-            more.onclick=load;more.hidden=!next;const io=typeof IntersectionObserver==='function'?new IntersectionObserver(entries=>{if(entries.some(e=>e.isIntersecting))load();},{rootMargin:'250px'}):null;if(next)io?.observe(more);
+            const noun=initialPosts.length?'posts':'threads',visited=new Set();
+            const states=[{direction:1,url:nextPage(document,location.href,1),busy:false},{direction:-1,url:initialPosts.length?nextPage(document,location.href,-1):'',busy:false}];
+            const total=clean(document.body).match(/Showing (?:posts|threads)\s+[\d,]+\s*-\s*[\d,]+\s+of\s+([\d,]+)/i);
+            const status=make('div','dpc-forum-meta');status.style.textAlign='center';
+            const updateStatus=()=>{status.textContent=known.size.toLocaleString()+(total?' of '+total[1]:'')+' '+noun+' loaded';};updateStatus();feed.after(status);
+            let loading=false;
+            for(const state of states){
+                const more=make('button','dpc-forum-more',state.direction===1?'Load more '+noun:'Load earlier posts');more.type='button';
+                if(state.direction===1)status.after(more);else feed.before(more);
+                more.hidden=!state.url;
+                let observer=null;
+                async function load(){
+                    if(loading||state.busy||!state.url||visited.has(state.url))return;
+                    loading=state.busy=true;more.disabled=true;more.textContent='Loading '+noun+'…';
+                    const url=state.url;let ok=false;
+                    try{
+                        const response=await backgroundFetch(url,{credentials:'same-origin'});
+                        if(!response.ok)throw Error('HTTP '+response.status);
+                        const doc=new DOMParser().parseFromString(await response.text(),'text/html');
+                        if(initialPosts.length?!postRows(doc).length:!topicRows(doc).length)throw Error('No forum content');
+                        const before=feed.children.length,anchor=feed.firstElementChild,top=anchor?.getBoundingClientRect().top;
+                        const count=initialPosts.length?renderPosts(doc,response.url||url):renderTopics(doc,response.url||url);
+                        if(state.direction===-1&&count){
+                            const fragment=document.createDocumentFragment();for(const node of [...feed.children].slice(before))fragment.append(node);feed.prepend(fragment);
+                            if(anchor)scrollBy(0,anchor.getBoundingClientRect().top-top);
+                        }
+                        visited.add(url);
+                        state.url=nextPage(doc,response.url||url,state.direction);
+                        if(visited.has(state.url)||state.url===url)state.url='';
+                        updateStatus();ok=true;
+                        more.textContent=state.url?(state.direction===1?'Load more '+noun:'Load earlier posts'):(state.direction===1?'End of '+(initialPosts.length?'thread':'forum'):'Start of thread');
+                    }catch{more.textContent='Retry loading '+noun;observer?.unobserve(more);}
+                    finally{loading=state.busy=false;more.disabled=!state.url;if(ok&&state.url&&state.direction===1){observer?.unobserve(more);observer?.observe(more);}else if(!state.url)observer?.unobserve(more);}
+                }
+                more.onclick=load;
+                if(state.direction===1&&typeof IntersectionObserver==='function'){observer=new IntersectionObserver(entries=>{if(entries.some(e=>e.isIntersecting))load();},{rootMargin:'500px'});if(state.url)observer.observe(more);}
+            }
         }
         for(const form of forms){
             const box=make('section','dpc-forum-card');box.append(make('h2','',form.querySelector('textarea')?(tid?'Reply':'New thread'):'Forum options'));
