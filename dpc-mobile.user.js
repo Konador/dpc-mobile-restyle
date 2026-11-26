@@ -2,7 +2,7 @@
 // ==UserScript==
 // @name DPChallenge Mobile — Editorial Gallery
 // @namespace dpc-mobile
-// @version 5.43
+// @version 5.44
 // @updateURL https://raw.githubusercontent.com/Konador/dpc-mobile-restyle/main/dpc-mobile.user.js
 // @downloadURL https://raw.githubusercontent.com/Konador/dpc-mobile-restyle/main/dpc-mobile.user.js
 // @match *://*.dpchallenge.com/challenge_vote_image.php*
@@ -15,6 +15,8 @@
 // @match *://*.dpchallenge.com/challenge_index.php*
 // @match *://*.dpchallenge.com/challenge_submit.php*
 // @match *://*.dpchallenge.com/challenge_submit_preview.php*
+// @match *://*.dpchallenge.com/forum.php*
+// @match *://*.dpchallenge.com/community_index.php*
 // @grant none
 // @run-at document-start
 // @noframes
@@ -160,6 +162,7 @@ function sharedPhotoWrite(href,full,width,height){
 }
 
 let root = document.documentElement;
+const isForum = /\/(?:forum|community_index)\.php$/i.test(location.pathname);
 const isHome = location.pathname === '/' || location.pathname === '/index.php';
 const isPhotoDetail = location.pathname === '/image.php';
 const isProfile = location.pathname === '/profile.php';
@@ -1095,6 +1098,7 @@ html.dpc-viewing body {
     style.textContent += "#dpc-app .dpc-native-menu-group>summary.dpc-split-summary{position:relative;padding:0;gap:0;min-height:44px}#dpc-app .dpc-split-summary>a.dpc-parent-link{font:inherit;letter-spacing:inherit;color:inherit;flex:1;min-width:0;padding:8px 0;border:0;display:flex;align-items:center;justify-content:space-between;gap:8px;align-self:stretch}#dpc-app .dpc-split-summary>.dpc-expand-hit{width:48px;min-height:44px;flex:none;align-self:stretch}#dpc-app .dpc-split-summary:after{position:absolute;right:15px;top:50%;margin:0;pointer-events:none;transform:translateY(-50%) rotate(-45deg)}#dpc-app .dpc-native-menu-group[open]>summary.dpc-split-summary:after{transform:translateY(-50%) rotate(45deg)}#dpc-app .dpc-split-summary .dpc-restyle-mark{margin-right:2px}";
     style.textContent += "#dpc-app .dpc-native-menu-children>details>summary,#dpc-app .dpc-native-menu-children>a{min-height:34px;padding:7px 0;font:400 14px/20px system-ui,sans-serif;box-sizing:border-box}#dpc-app .dpc-native-menu-children>details>summary.dpc-split-summary{padding:0;min-height:34px}#dpc-app .dpc-native-menu-children .dpc-split-summary>.dpc-expand-hit{min-height:0;height:auto;align-self:stretch}#dpc-app .dpc-native-menu-children .dpc-split-summary>a.dpc-parent-link{padding:7px 0;min-height:34px}";
     style.textContent += "#dpc-app .dpc-native-menu-group>summary{position:relative;align-items:center}#dpc-app .dpc-native-menu-group>summary:after{position:absolute;right:15px;top:50%;margin:0;transform:translate(0,-50%) rotate(-45deg);transform-origin:center}#dpc-app .dpc-native-menu-group[open]>summary:after{transform:translate(0,-50%) rotate(45deg)}#dpc-app .dpc-split-summary>a.dpc-parent-link{align-items:center}#dpc-app .dpc-split-summary .dpc-restyle-mark{align-self:center;transform:translateY(0);margin-top:0;margin-bottom:0}#dpc-app .dpc-restyle-mark i{top:-1px}";
+    style.textContent += '#dpc-app .dpc-home-thread a{text-decoration:none;color:inherit}#dpc-app .dpc-home-thread a.dpc-thread-category{color:var(--accent)}';
     style.textContent += "#dpc-app .dpc-home-thread{display:flex;flex-direction:column;gap:4px;padding:12px 0;border-bottom:1px solid var(--line);font:400 14px/1.4 system-ui,sans-serif;color:inherit;text-decoration:none}#dpc-app .dpc-home-thread[hidden]{display:none!important}#dpc-app .dpc-thread-category{font:500 11px/1.35 system-ui,sans-serif;color:var(--accent)}#dpc-app .dpc-thread-title{font:500 16px/1.35 system-ui,sans-serif;color:inherit;overflow-wrap:anywhere}#dpc-app .dpc-thread-details{display:flex;justify-content:space-between;align-items:baseline;gap:10px;color:var(--muted);font:400 11px/1.4 system-ui,sans-serif}#dpc-app .dpc-thread-time{flex:none;text-align:right}#dpc-app .dpc-home-thread small{font:400 11px/1.4 system-ui,sans-serif;margin:0}";
     style.textContent += "#dpc-app .dpc-photo-detail{padding:16px;max-width:900px;margin:auto}#dpc-app .dpc-detail-challenge{display:block;margin-bottom:12px;color:var(--accent);font-size:14px}#dpc-app .dpc-detail-stage{background:#151515;margin:0 -16px;display:flex;justify-content:center;align-items:center}#dpc-app .dpc-detail-stage img{display:block;max-width:100%;max-height:75vh;object-fit:contain}#dpc-app .dpc-detail-title{height:100px;margin:12px 0 0}#dpc-app .dpc-detail-credit{display:flex;justify-content:center;align-items:center;gap:10px;margin:0 0 24px;color:var(--accent)}#dpc-app .dpc-detail-ribbon{font-size:12px;border:1px solid currentColor;border-radius:4px;padding:3px 7px}#dpc-app .dpc-detail-ribbon[data-place=\"1st Place\"]{color:#709ce5}#dpc-app .dpc-detail-ribbon[data-place=\"2nd Place\"]{color:#d66c78}#dpc-app .dpc-detail-ribbon[data-place=\"3rd Place\"]{color:#c6a34c}#dpc-app .dpc-detail-section{border-top:1px solid var(--line);padding:18px 0;margin:0}#dpc-app .dpc-detail-section h2{font:500 25px Georgia,serif;margin:0 0 15px}#dpc-app .dpc-detail-fields{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.2fr);gap:9px 12px;font-size:14px;margin:0}#dpc-app .dpc-detail-fields dt{color:var(--muted)}#dpc-app .dpc-detail-fields dd{margin:0;overflow-wrap:anywhere}#dpc-app .dpc-detail-vote{display:grid;grid-template-columns:22px 1fr 30px;gap:8px;align-items:center;font-size:13px;margin:7px 0}#dpc-app .dpc-detail-track{height:9px;background:var(--line);border-radius:3px;overflow:hidden}#dpc-app .dpc-detail-track div{height:100%;background:var(--accent)}#dpc-app .dpc-detail-vote.own{color:#d66c78;font-weight:bold}#dpc-app .dpc-detail-vote.own .dpc-detail-track div{background:#d66c78}#dpc-app .dpc-detail-note{font-size:12px;color:var(--muted)}#dpc-app .dpc-detail-prose{font-size:15px;line-height:1.6;overflow-wrap:anywhere}#dpc-app .dpc-detail-prose img{max-width:100%;height:auto}#dpc-app .dpc-detail-action{display:block;width:100%;box-sizing:border-box;padding:12px;margin:12px 0;border:1px solid var(--line);border-radius:6px;color:var(--accent);background:transparent;text-align:center;font:inherit}#dpc-app .dpc-detail-related{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}#dpc-app .dpc-detail-related img{width:100%;height:90px;object-fit:contain;background:#151515}#dpc-app .dpc-detail-related span{display:block;font-size:12px}#dpc-app .dpc-detail-comment{padding:16px 0;border-bottom:1px solid var(--line)}#dpc-app .dpc-detail-comment-head{display:flex;align-items:center;gap:10px;margin-bottom:12px}#dpc-app .dpc-detail-comment-head img{width:40px;height:40px;object-fit:cover;border-radius:50%}#dpc-app .dpc-detail-comment-head small{display:block;color:var(--muted);font-size:11px;margin-top:3px}#dpc-app .dpc-detail-comment-actions{display:flex;flex-wrap:wrap;gap:12px;margin-top:10px;font-size:12px}#dpc-app .dpc-detail-comment-actions button{background:none;border:0;color:var(--muted);padding:0;font:inherit}#dpc-app .dpc-detail-helpful{display:block;color:var(--accent);margin-top:10px}#dpc-app .dpc-detail-divider{font-size:13px;color:var(--muted);margin:22px 0 0}";
     style.textContent += "#dpc-app .dpc-photo-detail{padding:12px 16px 24px}#dpc-app .dpc-detail-challenge{margin:0;font:500 13px/1.4 system-ui,sans-serif}#dpc-app .dpc-detail-title{height:90px;margin:0!important}#dpc-app .dpc-detail-credit{justify-content:flex-start;margin:0 0 12px;gap:7px;font:400 14px/1.4 system-ui,sans-serif}#dpc-app .dpc-detail-credit svg{position:static;width:19px;height:26px;flex:none}#dpc-app .dpc-detail-stage{height:min(55vh,520px);touch-action:pan-y pinch-zoom}#dpc-app .dpc-detail-stage img{max-height:100%;max-width:100%}#dpc-app .dpc-detail-nav{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:10px 0 16px;font-size:12px;color:var(--muted)}#dpc-app .dpc-detail-nav button{background:transparent;color:var(--accent);border:1px solid var(--line);border-radius:6px;padding:9px 12px;font:500 13px system-ui,sans-serif}#dpc-app .dpc-detail-section h2{font:500 23px/1.2 var(--serif),Georgia,serif;margin:0 0 14px}#dpc-app .dpc-detail-fields{grid-template-columns:minmax(0,1fr) minmax(0,1.2fr);gap:0;font:400 13px/1.45 system-ui,sans-serif}#dpc-app .dpc-detail-fields dt,#dpc-app .dpc-detail-fields dd{padding:8px 0;border-bottom:1px solid var(--line)}#dpc-app .dpc-detail-fields dd{text-align:right;padding-left:12px}#dpc-app .dpc-detail-prose{font:400 14px/1.6 system-ui,sans-serif}#dpc-app .dpc-detail-comment-head a{font:600 14px system-ui,sans-serif}#dpc-app .dpc-detail-comment-actions{font:400 12px system-ui,sans-serif}";
@@ -1381,7 +1385,7 @@ html.dpc-viewing body {
         const welcome=(document.body.textContent||'').match(/Welcome back[^\r\n]{0,80}/i);
         if(welcome)menu.prepend(make('div','dpc-home-welcome',welcome[0].split(/\(\s*log out/i)[0].trim()));
         // Mark only destinations actually covered by the userscript's @match paths.
-        const supportedPaths=["/challenge_vote_image.php","/challenge_vote_list.php","/","/index.php","/image.php","/challenge_results.php","/profile.php","/challenge_index.php","/challenge_submit.php"];
+        const supportedPaths=["/challenge_vote_image.php","/challenge_vote_list.php","/","/index.php","/image.php","/challenge_results.php","/profile.php","/challenge_index.php","/challenge_submit.php","/forum.php","/community_index.php"];
         let markerId=0;
         for(const a of menu.querySelectorAll('a[href]')){
             let u;try{u=new URL(a.href,location.href);}catch{continue;}
@@ -1985,13 +1989,14 @@ html.dpc-viewing body {
             for(const a of forum.querySelectorAll('a[href]')){
                 const url=safe(a);if(!/forum.*(?:THREAD_ID|thread)/i.test(url)||!clean(a)||seenThreads.has(url))continue;
                 seenThreads.add(url);
-                const n=link(a,'dpc-home-thread');n.textContent='';
+                const n=make('article','dpc-home-thread');
                 const row=a.closest('tr'),cell=a.closest('td');
                 const cells=row?[...row.cells]:[],idx=cells.indexOf(cell);
                 const meta=idx>=0?cells.slice(idx+1).map(clean):[];
-                const title=make('span','dpc-thread-title',clean(a));
+                const title=link(a,'dpc-thread-title');
                 if(meta.length>=3){
-                    n.append(make('span','dpc-thread-category',meta[1]),title);
+                    const category=cells[idx+2]?.querySelector('a[href*="FORUM_SECTION_ID"]');
+                    n.append(category?link(category,'dpc-thread-category'):make('span','dpc-thread-category',meta[1]),title);
                     const details=make('span','dpc-thread-details');
                     details.append(make('span','dpc-thread-author',meta[0]),make('span','dpc-thread-time',meta.slice(2).join(' ')));n.append(details);
                 }else{
@@ -3383,7 +3388,96 @@ html.dpc-viewing body {
         requestAnimationFrame(refreshUploader);addEventListener('load',refreshUploader,{once:true});addEventListener('resize',refreshUploader);
         if(drop&&window.ResizeObserver){const observer=new ResizeObserver(refreshUploader);observer.observe(drop);}
     }
+
+    function buildForum(){
+        const make=(tag,cls,txt)=>{const n=document.createElement(tag);if(cls)n.className=cls;if(txt!==undefined)n.textContent=txt;return n;};
+        const clean=n=>(n?.textContent||'').replace(/\s+/g,' ').trim();
+        const href=(a,base=location.href)=>{try{const u=new URL(a.getAttribute('href'),base);return /^https?:$/.test(u.protocol)?u.href:'';}catch{return '';}};
+        const params=new URLSearchParams(location.search),tid=params.get('FORUM_THREAD_ID'),action=params.get('action')||'';
+        const originalLinks=[...document.querySelectorAll('a[href]')];
+        const label=a=>clean(a)||a.title||a.querySelector('img')?.alt||a.querySelector('img')?.title||'';
+        const link=(a,txt,base)=>{const n=make('a','',txt||label(a));n.href=href(a,base);return n;};
+        const isThread=a=>/FORUM_THREAD_ID=/i.test(href(a));
+        const isSection=a=>/FORUM_SECTION_ID=/i.test(href(a))&&!isThread(a);
+        const forms=[...document.forms].filter(f=>f.querySelector('textarea')||/forum/i.test(f.action)&&f.querySelector('input[type=submit],button'));
+        const postRows=doc=>[...doc.querySelectorAll('.dpc-forum-author-details')].map(n=>n.closest('tr')).filter((r,i,a)=>r&&a.indexOf(r)===i&&r.querySelector('.dpc-forum-message,.forum-post'));
+        const initialPosts=postRows(document);
+        const listRows=[...document.querySelectorAll('tr')].filter(r=>[...r.cells].some(c=>[...c.querySelectorAll('a[href]')].some(a=>a.closest('tr')===r&&(isThread(a)||isSection(a))&&clean(a))));
+        if(!initialPosts.length&&!listRows.length&&!forms.length)return;
+        app.innerHTML=header+'<div class="dpc-forum-page"></div>'+footer;
+        const body=$('.dpc-forum-page');
+        const css=make('style');css.textContent=
+        '#dpc-app .dpc-home-thread a{text-decoration:none;color:inherit}#dpc-app .dpc-home-thread a.dpc-thread-category{color:var(--accent)}'+
+        '#dpc-app .dpc-forum-page{max-width:800px;margin:auto;padding:14px 12px 30px;overflow-wrap:anywhere}#dpc-app .dpc-forum-page h1{font:600 23px/1.2 system-ui;margin:14px 0}#dpc-app .dpc-forum-page h2{font:600 13px/1.4 system-ui;border-left:3px solid var(--accent);padding-left:9px;margin:22px 0 9px}#dpc-app .dpc-forum-page a{color:var(--accent);text-decoration:none}#dpc-app .dpc-forum-nav{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin:8px 0 14px;font-size:12px}#dpc-app .dpc-forum-nav a,#dpc-app .dpc-forum-nav button,#dpc-app .dpc-forum-more{border:1px solid var(--line);background:transparent;color:var(--accent);padding:9px 12px;border-radius:5px;font:500 13px system-ui}#dpc-app .dpc-forum-card{background:#25262e;border:1px solid #ffffff20;border-radius:6px;padding:12px;margin:0 0 8px;min-width:0}html.dpc-light #dpc-app .dpc-forum-card{background:white;border-color:#cdd3df}#dpc-app .dpc-forum-card .dpc-forum-title{font:600 15px/1.35 system-ui;color:inherit;display:block}#dpc-app .dpc-forum-meta{font:400 11px/1.5 system-ui;color:var(--muted);margin-top:6px}#dpc-app .dpc-forum-prose{font:400 14px/1.65 system-ui;margin-top:12px;overflow-wrap:anywhere}#dpc-app .dpc-forum-prose img{max-width:100%;height:auto}#dpc-app .dpc-forum-prose table{max-width:100%;width:100%!important;table-layout:fixed}#dpc-app .dpc-forum-prose blockquote,#dpc-app .dpc-forum-prose .quote{margin:8px 0;padding:10px;border-left:2px solid var(--accent);background:var(--line)}#dpc-app .dpc-forum-page textarea,#dpc-app .dpc-forum-page input:not([type=hidden]):not([type=checkbox]):not([type=radio]),#dpc-app .dpc-forum-page select{font:inherit;max-width:100%;box-sizing:border-box}#dpc-app .dpc-forum-page textarea{width:100%!important;min-height:180px;background:transparent;color:inherit;border:1px solid var(--muted);border-radius:5px;padding:10px}#dpc-app .dpc-forum-page form table{width:100%!important;max-width:100%;table-layout:fixed}#dpc-app .dpc-forum-page form td{white-space:normal!important;overflow-wrap:anywhere}#dpc-app .dpc-forum-page input[type=submit],#dpc-app .dpc-forum-page button{padding:9px 12px;border-radius:5px;cursor:pointer}#dpc-app .dpc-forum-card{scroll-margin-top:90px}#dpc-app .dpc-forum-more{width:100%;margin:10px 0}';
+        document.head.append(css);
+        const nav=make('nav','dpc-forum-nav');const all=make('a','','All forums');all.href='/forum.php';nav.append(all);
+        const section=originalLinks.find(a=>isSection(a)&&clean(a)&&!a.closest('.dpc-forum-message'));
+        if(tid&&section)nav.append(link(section));
+        const heading=make('h1','',document.title.replace(/\s*-\s*DPChallenge Forums.*$/i,'').replace(/^DPChallenge Forums$/i,'Forums'));
+        body.append(heading,nav);
+        const controls=make('div','dpc-forum-nav');body.append(controls);
+        const actionLinks=originalLinks.filter(a=>/^(?:new (?:thread|topic|post)|create (?:thread|topic)|post (?:a )?reply|reply|subscribe|unsubscribe|search forums|forum search|mark.*read)$/i.test(label(a)));
+        const seenActions=new Set();for(const a of actionLinks){const u=href(a);if(!u||seenActions.has(u)||a.closest('.dpc-forum-message'))continue;seenActions.add(u);controls.append(link(a));}
+        const feed=make('div','dpc-forum-feed');body.append(feed);
+        const stripGraphics=(node,base)=>{for(const im of [...node.querySelectorAll('img')]){const src=im.getAttribute('src')||'';if(/(?:^|\/)(?:images|include|icons)\/|(?:pix|spacer|folder|button|arrow|smil|emoticon|icon)[^/]*\.(?:gif|png)$/i.test(src)&&!/\/(?:image|photo|profile)[^/]*\//i.test(src)){const t=im.alt||im.title||'';im.replaceWith(document.createTextNode(t));}else{try{im.src=new URL(src,base).href;}catch{}im.loading='lazy';im.removeAttribute('width');im.removeAttribute('height');}}for(const el of node.querySelectorAll('[background]'))el.removeAttribute('background');for(const a of node.querySelectorAll('a[href]')){const u=href(a,base);if(u)a.href=u;}};
+        const known=new Set();let firstUnread=null;
+        function renderPosts(doc,base){
+            let count=0;
+            for(const row of postRows(doc)){
+                const author=row.querySelector('.dpc-forum-author-details'),message=row.querySelector('.dpc-forum-message .forum-post td,.dpc-forum-message .forum-post,.dpc-forum-message');
+                if(!message)continue;
+                const nativeAnchor=row.querySelector('a[name],a[id]'),act=row.querySelector('.dpc-forum-actions');
+                const key=nativeAnchor?.name||nativeAnchor?.id||[clean(author),clean(act),clean(message)].join('|');
+                if(known.has(key))continue;known.add(key);count++;
+                const card=make('article','dpc-forum-card');if(nativeAnchor&&(nativeAnchor.name||nativeAnchor.id))card.id=nativeAnchor.name||nativeAnchor.id;
+                const person=author.querySelector('a[href*="profile.php"]');const head=person?link(person,clean(person),base):make('strong','',clean(author));head.className='dpc-forum-title';card.append(head);
+                if(act){const copy=act.cloneNode(true);copy.querySelectorAll('a,img,span').forEach(n=>n.remove());card.append(make('div','dpc-forum-meta',clean(copy)));}
+                const prose=make('div','dpc-forum-prose');for(const child of message.childNodes)prose.append(child.cloneNode(true));stripGraphics(prose,base);card.append(prose);
+                const actions=make('div','dpc-forum-nav');for(const a of (act||row).querySelectorAll('a[href]')){const t=label(a);if(/reply|quote|edit|report|permalink/i.test(t)&&href(a,base))actions.append(link(a,t,base));}if(actions.children.length)card.append(actions);
+                if(!firstUnread&&[row,...row.querySelectorAll('img,a')].some(n=>/\bunread\b|new post/i.test([n.className,n.title,n.alt,n.getAttribute('name')].join(' '))))firstUnread=card;
+                feed.append(card);
+            }return count;
+        }
+        if(initialPosts.length){
+            renderPosts(document,location.href);
+            const unread=make('button','','Jump to unread');unread.type='button';nav.append(unread);
+            unread.onclick=()=>{if(firstUnread){firstUnread.scrollIntoView({block:'start'});return;}const a=originalLinks.find(a=>/unread|readrecent|firstnew/i.test(label(a)+' '+href(a)));if(a){location.href=href(a);return;}const u=new URL(location.href);u.searchParams.set('action','readrecent');u.hash='';if(u.href!==location.href)location.href=u.href;else feed.lastElementChild?.scrollIntoView({block:'start'});};
+        }else if(!forms.some(f=>f.querySelector('textarea'))){
+            let group='';
+            for(const row of listRows){
+                const anchors=[...row.querySelectorAll('a[href]')].filter(a=>a.closest('tr')===row&&clean(a));
+                const a=anchors.find(isThread)||anchors.find(isSection);if(!a)continue;
+                const u=href(a);if(known.has(u))continue;known.add(u);
+                const card=make('article','dpc-forum-card');const title=link(a);title.className='dpc-forum-title';card.append(title);
+                const sec=anchors.find(x=>x!==a&&isSection(x));if(sec)card.append(link(sec));
+                const cell=a.closest('td');const desc=clean(cell).replace(clean(a),'').trim();if(desc)card.append(make('div','dpc-forum-prose',desc));
+                const meta=[...row.cells].filter(c=>c!==cell).map(clean).filter(Boolean).join(' · ');if(meta)card.append(make('div','dpc-forum-meta',meta));
+                card.addEventListener('click',e=>{if(!e.target.closest('a,button,input')&&!getSelection()?.toString())location.href=u;});feed.append(card);
+            }
+        }
+        function nextPage(doc,base){
+            const current=new URL(base);const links=[...doc.querySelectorAll('a[href]')].filter(a=>{try{const u=new URL(href(a,base));return u.pathname===current.pathname&&u.searchParams.get('FORUM_THREAD_ID')===tid&&u.href!==current.href;}catch{return false;}});
+            const explicit=links.find(a=>/^(?:next(?: page)?|next posts?|>|»|→)$/i.test(label(a).trim())||a.rel==='next');if(explicit)return href(explicit,base);
+            const pageKey=['PAGE','page','OFFSET','offset','start','START'].find(k=>links.some(a=>new URL(href(a,base)).searchParams.has(k)));if(!pageKey)return '';
+            const here=Number(current.searchParams.get(pageKey)||(/page/i.test(pageKey)?1:0));return links.map(a=>href(a,base)).filter(u=>Number(new URL(u).searchParams.get(pageKey))>here).sort((a,b)=>Number(new URL(a).searchParams.get(pageKey))-Number(new URL(b).searchParams.get(pageKey)))[0]||'';
+        }
+        if(initialPosts.length){
+            let next=nextPage(document,location.href),busy=false;const visited=new Set([location.href]);const more=make('button','dpc-forum-more','Load more posts');more.type='button';body.append(more);
+            const nativePages=make('div','dpc-forum-nav');for(const a of originalLinks.filter(a=>isThread(a)&&/^(?:\d+|next|previous|first|last|[<>«»])$/i.test(label(a))))nativePages.append(link(a));if(nativePages.children.length)body.append(nativePages);
+            async function load(){if(busy||!next||visited.has(next))return;busy=true;more.disabled=true;more.textContent='Loading posts…';const url=next;try{const response=await backgroundFetch(url,{credentials:'same-origin'});if(!response.ok)throw Error('HTTP '+response.status);const doc=new DOMParser().parseFromString(await response.text(),'text/html');const count=renderPosts(doc,response.url||url);visited.add(url);next=count?nextPage(doc,response.url||url):'';if(visited.has(next))next='';more.textContent=next?'Load more posts':'End of thread';}catch{more.textContent='Retry loading posts';io?.unobserve(more);}finally{busy=false;more.disabled=!next;}}
+            more.onclick=load;more.hidden=!next;const io=typeof IntersectionObserver==='function'?new IntersectionObserver(entries=>{if(entries.some(e=>e.isIntersecting))load();},{rootMargin:'250px'}):null;if(next)io?.observe(more);
+        }
+        for(const form of forms){
+            const box=make('section','dpc-forum-card');box.append(make('h2','',form.querySelector('textarea')?(tid?'Reply':'New thread'):'Forum options'));
+            for(const im of [...form.querySelectorAll('img,input[type=image]')]){const t=im.alt||im.title||'Action';if(im.matches('input')){const b=make('button','',t);b.type='submit';b.name=im.name;b.value=im.value;im.replaceWith(b);}else if(im.closest('a'))im.replaceWith(document.createTextNode(t));else im.replaceWith(document.createTextNode(t));}
+            box.append(form);body.append(box);
+        }
+        if(!feed.children.length&&!forms.length)return;
+        $('#dpc-original').onclick=()=>original();mount();
+    }
+
     document.addEventListener('click',captureGallery,true);
+    if (isForum) { buildForum(); return; }
     if (isSubmit) { buildSubmission(); return; }
     if (isChallengeIndex) { buildChallengeIndex(); return; }
     if (isProfile) { buildProfile(); return; }
@@ -4817,7 +4911,7 @@ html.dpc-viewing body {
 }
 
 /* V3.1 — Reliable photograph metadata */
-if (isList || isHome || isPhotoDetail || isResults || isProfile || isChallengeIndex) {
+if (isForum || isList || isHome || isPhotoDetail || isResults || isProfile || isChallengeIndex) {
     if (document.readyState === 'loading') {
         document.addEventListener('DOMContentLoaded',boot,{once:true});
     } else {
