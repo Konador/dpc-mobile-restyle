@@ -2,7 +2,7 @@
 // ==UserScript==
 // @name DPChallenge Mobile — Editorial Gallery
 // @namespace dpc-mobile
-// @version 5.18
+// @version 5.19
 // @updateURL https://raw.githubusercontent.com/Konador/dpc-mobile-restyle/main/dpc-mobile.user.js
 // @downloadURL https://raw.githubusercontent.com/Konador/dpc-mobile-restyle/main/dpc-mobile.user.js
 // @match *://*.dpchallenge.com/challenge_vote_image.php*
@@ -1701,7 +1701,17 @@ html.dpc-viewing body {
                     }
                     const voteObserver=new IntersectionObserver(items=>{if(items.some(x=>x.isIntersecting)){voteObserver.disconnect();loadVoteImage().catch(()=>{});}},{rootMargin:'300px'});voteObserver.observe(card);
                 }
-                if(voting)card.append(link(item.action,'dpc-home-action',completed?'Continue commenting':item.progress&&+item.progress[1]===0?'Start voting':'Continue voting'));
+                if(voting){
+                    const action=link(item.action,'dpc-home-action',completed?'Continue commenting':item.progress&&+item.progress[1]===0?'Start voting':'Continue voting');
+                    card.append(action);
+                    card.style.cursor='pointer';
+                    const titleLink=title.querySelector('a');if(titleLink)titleLink.href=action.href;
+                    card.addEventListener('click',e=>{
+                        if(e.defaultPrevented||e.target.closest('a,button,input,select,textarea')||window.getSelection()?.toString())return;
+                        if(e.ctrlKey||e.metaKey||e.shiftKey||e.altKey)return;
+                        location.href=action.href;
+                    });
+                }
                 grid.append(card);if(i>=limit){card.hidden=true;hidden.push(card);}
             });
             if(hidden.length){const b=make('button','dpc-home-more','View all '+items.length);b.onclick=()=>{hidden.forEach(c=>c.hidden=false);b.remove();};sec.append(b);}
