@@ -2,7 +2,7 @@
 // ==UserScript==
 // @name DPChallenge Mobile — Editorial Gallery
 // @namespace dpc-mobile
-// @version 5.40
+// @version 5.41
 // @updateURL https://raw.githubusercontent.com/Konador/dpc-mobile-restyle/main/dpc-mobile.user.js
 // @downloadURL https://raw.githubusercontent.com/Konador/dpc-mobile-restyle/main/dpc-mobile.user.js
 // @match *://*.dpchallenge.com/challenge_vote_image.php*
@@ -1143,6 +1143,7 @@ html.dpc-viewing body {
     style.textContent += "#dpc-app>.dpc-gallery-context-label{height:30px;min-height:30px;display:flex;align-items:center;justify-content:center;margin:0!important;padding:0 12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;box-sizing:border-box}#dpc-app .dpc-profile-section>h2,#dpc-app .dpc-detail-section>h2,#dpc-app .dpc-detail-photographer>h2{position:relative;padding-left:12px!important}#dpc-app .dpc-profile-section>h2:before,#dpc-app .dpc-detail-section>h2:before,#dpc-app .dpc-detail-photographer>h2:before{content:\"\";position:absolute;left:0;top:.16em;width:3px;height:.86em;background:var(--accent)}";
     style.textContent += "#dpc-app a.dpc-link-pressed,#dpc-app a.dpc-link-loading{opacity:.72;text-decoration:underline!important;text-decoration-thickness:1px!important;text-underline-offset:3px}#dpc-app a.dpc-link-loading{animation:dpc-link-feedback 1.2s ease-in-out infinite alternate}#dpc-app a.dpc-link-pressed:has(img),#dpc-app a.dpc-link-loading:has(img){text-decoration:none!important}#dpc-app a.dpc-link-pressed:has(img) img,#dpc-app a.dpc-link-loading:has(img) img{filter:brightness(.83)}@keyframes dpc-link-feedback{from{opacity:.72}to{opacity:1}}@media(prefers-reduced-motion:reduce){#dpc-app a.dpc-link-loading{animation:none}}";
     style.textContent += "#dpc-app>.dpc-gallery-context-label{height:27px;min-height:27px;font-size:10px;display:block;text-align:center;line-height:27px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}#dpc-app>.dpc-gallery-context-label+.dpc-photo-detail{padding-top:3px!important}";
+    style.textContent += "#dpc-app .dpc-home-main-tabs{display:grid!important;grid-template-columns:repeat(4,minmax(0,1fr));gap:0!important;justify-items:stretch;align-items:stretch}#dpc-app .dpc-home-main-tabs>.dpc-home-challenge-tab{display:block;width:100%!important;min-width:0!important;max-width:none!important;margin:0!important;padding:10px 0 12px!important;text-align:center!important;letter-spacing:-.035em;font-size:clamp(16px,4.5vw,25px)!important;box-sizing:border-box}#dpc-app .dpc-home-main-tabs>.dpc-home-challenge-tab em{margin:0!important;padding:0!important}#dpc-app .dpc-home .dpc-results-feature>h3{position:relative;padding-left:12px;margin:0 0 12px;font:500 23px/1.15 var(--serif),Georgia,serif;letter-spacing:-.025em;color:var(--accent);text-align:left}#dpc-app .dpc-home .dpc-results-feature>h3:before{content:\"\";position:absolute;left:0;top:.15em;width:3px;height:.85em;background:var(--accent)}#dpc-app .dpc-home .dpc-results-feature>h3 a{font:inherit;color:inherit;letter-spacing:inherit}#dpc-app .dpc-home .dpc-results-feature>h3 em{font:inherit;font-style:italic;color:inherit}";
     document.head.append(style);
 
     const header = `
@@ -1856,7 +1857,13 @@ html.dpc-viewing body {
                 
                 const h=make('h3');
                 const name=label?clean(label).split(/\s+-\s+(?:Member|Open|Invitational|Speed|Winning)/i)[0]:titleLink?clean(titleLink):'';
-                if(titleLink&&name)h.append(link(titleLink,'',name));else h.textContent=name;
+                if(name){
+                    const headingContent=titleLink?link(titleLink,'',name):h;
+                    headingContent.textContent='';
+                    const words=name.trim().split(/\s+/);
+                    if(words.length>1){const roman=/^[IVXLCDM]+$/.test(words.at(-1));const split=Math.max(1,words.length-(roman&&words.length>2?2:1));headingContent.append(words.slice(0,split).join(' ')+' ',make('em','',words.slice(split).join(' ')));}else headingContent.textContent=name;
+                    if(titleLink)h.append(headingContent);
+                }
                 if(name)card.append(h);
                 const grid=make('div','dpc-home-gallery');
                 const hero=make('a','dpc-home-hero'),heroImg=make('img');const rail=make('div','dpc-results-rail');const before=make('div','dpc-results-slide'),centre=make('div','dpc-results-slide'),after=make('div','dpc-results-slide');centre.append(heroImg);rail.append(before,centre,after);hero.append(rail);
