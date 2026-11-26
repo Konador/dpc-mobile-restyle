@@ -2,7 +2,7 @@
 // ==UserScript==
 // @name DPChallenge Mobile — Editorial Gallery
 // @namespace dpc-mobile
-// @version 5.26
+// @version 5.27
 // @updateURL https://raw.githubusercontent.com/Konador/dpc-mobile-restyle/main/dpc-mobile.user.js
 // @downloadURL https://raw.githubusercontent.com/Konador/dpc-mobile-restyle/main/dpc-mobile.user.js
 // @match *://*.dpchallenge.com/challenge_vote_image.php*
@@ -1166,6 +1166,7 @@ html.dpc-viewing body {
     style.textContent += "#dpc-app .dpc-entry-grid .dpc-home-submitted-card{grid-column:1/-1;min-height:160px;isolation:isolate;overflow:hidden;position:relative}#dpc-app .dpc-entry-grid .dpc-home-submitted-card:before{content:\"\";position:absolute;inset:0;z-index:-1;background-size:cover;background-position:center right;background-repeat:no-repeat}#dpc-app .dpc-entry-grid .dpc-home-submitted-card .dpc-home-meta{max-width:72%;margin:0 0 10px;opacity:1}#dpc-app .dpc-entry-grid .dpc-home-submitted-card .dpc-home-detail{display:flex;flex-direction:row;flex-wrap:wrap;gap:6px 10px;margin:0;padding-top:0;border:0}#dpc-app .dpc-entry-grid .dpc-home-submitted-status{font:600 12px/1.4 system-ui;color:var(--accent);margin-top:10px}#dpc-app .dpc-entry-grid .dpc-home-submitted-card .dpc-home-action{margin-top:8px;align-self:flex-start}";
     style.textContent += "#dpc-app .dpc-home-main-tabs{gap:0;justify-content:space-between}#dpc-app .dpc-home-main-tabs .dpc-home-challenge-tab{flex:1;text-align:center;font-size:clamp(19px,5.5vw,29px)}#dpc-app [id^=dpc-home-challenge-panel-][hidden]{display:none!important}";
     style.textContent += "#dpc-app .dpc-home-main-tabs .dpc-home-challenge-tab.active em{font-style:normal}#dpc-app #dpc-home-challenge-panel-1 .dpc-home-vote-card{padding:13px 12px!important;min-height:142px;border-radius:6px}#dpc-app #dpc-home-challenge-panel-1 .dpc-home-vote-card h3,#dpc-app #dpc-home-challenge-panel-1 .dpc-home-vote-card h3 a{font:500 23px/1.08 var(--serif)!important;letter-spacing:inherit}#dpc-app #dpc-home-challenge-panel-1 .dpc-home-vote-card .dpc-home-meta{font:400 13px/1.45 system-ui!important;margin:0 0 12px;opacity:.86}#dpc-app #dpc-home-challenge-panel-1 .dpc-home-vote-card .dpc-home-detail{font:400 11px/1.3 system-ui;gap:5px 8px}#dpc-app #dpc-home-challenge-panel-1 .dpc-home-vote-status{font:500 11px/1.4 system-ui}#dpc-app #dpc-home-challenge-panel-1 .dpc-home-action{font:500 11px/1.4 system-ui;padding:7px 8px}#dpc-app #dpc-home-challenge-panel-1 .dpc-home-vote-card:before{transition:none!important}";
+    style.textContent += "#dpc-app #dpc-home-challenge-panel-1 .dpc-vote-bg-reveal:before{background-image:linear-gradient(90deg,#111115fa 0%,#111115ed 40%,#111115b0 70%,#11111545 100%),var(--vote-blur,none);filter:blur(13px);transform:scale(1.08);opacity:0;transition:opacity .35s ease!important}#dpc-app #dpc-home-challenge-panel-1 .dpc-vote-bg-reveal.dpc-bg-preview:before{opacity:1}#dpc-app #dpc-home-challenge-panel-1 .dpc-vote-bg-reveal:after{content:\"\";position:absolute;inset:0;z-index:-1;pointer-events:none;background-image:linear-gradient(90deg,#111115fa 0%,#111115ed 40%,#111115b0 70%,#11111545 100%),var(--vote-image,none);background-size:cover;background-position:center,right center;opacity:0;transition:opacity .65s ease}#dpc-app #dpc-home-challenge-panel-1 .dpc-vote-bg-reveal.dpc-bg-ready:after{opacity:1}html.dpc-light #dpc-app #dpc-home-challenge-panel-1 .dpc-vote-bg-reveal:before{background-image:linear-gradient(90deg,#f5f6f8fa 0%,#f5f6f8ed 40%,#f5f6f8b0 70%,#f5f6f845 100%),var(--vote-blur,none)}html.dpc-light #dpc-app #dpc-home-challenge-panel-1 .dpc-vote-bg-reveal:after{background-image:linear-gradient(90deg,#f5f6f8fa 0%,#f5f6f8ed 40%,#f5f6f8b0 70%,#f5f6f845 100%),var(--vote-image,none)}@media(prefers-reduced-motion:reduce){#dpc-app #dpc-home-challenge-panel-1 .dpc-vote-bg-reveal:before,#dpc-app #dpc-home-challenge-panel-1 .dpc-vote-bg-reveal:after{transition:none!important}}";
     const progressMarkup = `
 <div class="dpc-progress">
     <div class="dpc-progress-label">
@@ -1675,8 +1676,21 @@ html.dpc-viewing body {
                     const voteKey='dpc-vote-bg-v3-'+(new URL(safe(item.a)).searchParams.get('CHALLENGE_ID')||safe(item.action));
                     const set=(src,base)=>{if(!src)return;try{const u=new URL(src,base);if(!/^https?:$/.test(u.protocol))return;card.style.setProperty('--vote-image','url('+JSON.stringify(u.href)+')');return u.href;}catch{}};
                     let voteCached=null;try{voteCached=JSON.parse(sessionStorage.getItem(voteKey)||'null');}catch{}
-                    if(voteCached?.src)set(voteCached.src,safe(item.action));
-                    function saveVote(src){if(src)try{sessionStorage.setItem(voteKey,JSON.stringify({src,time:Date.now()}));}catch{}}
+                    card.classList.add('dpc-vote-bg-reveal');
+                    async function showBlur(src){
+                        try{const im=new Image();im.src=src;await im.decode();card.style.setProperty('--vote-blur','url('+JSON.stringify(src)+')');card.classList.add('dpc-bg-preview');}catch{}
+                    }
+                    async function revealBg(src,thumb){
+                        if(thumb)await showBlur(thumb);
+                        const im=new Image();im.src=src;await im.decode();
+                        if(!card.classList.contains('dpc-bg-preview')){card.style.setProperty('--vote-blur','url('+JSON.stringify(src)+')');card.classList.add('dpc-bg-preview');}
+                        set(src,safe(item.action));
+                        await new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve)));
+                        if(!reducedMotion.matches)await sleep(100);
+                        card.classList.add('dpc-bg-ready');
+                    }
+                    if(voteCached?.src)revealBg(voteCached.src,voteCached.thumb).catch(()=>{});
+                    function saveVote(src,thumb){if(src)try{sessionStorage.setItem(voteKey,JSON.stringify({src,thumb,time:Date.now()}));}catch{}}
                     async function loadVoteImage(){
                         const response=await interactiveFetch(safe(item.action),{credentials:'same-origin'});if(!response.ok)return;
                         const doc=new DOMParser().parseFromString(await response.text(),'text/html');
@@ -1695,6 +1709,7 @@ html.dpc-viewing body {
                         const image=pool[Math.floor(Math.random()*pool.length)];
                         // Pick one photograph and reveal only one decoded background.
                         const thumb=new URL(image.getAttribute('src'),response.url).href;
+                        const blurred=showBlur(thumb);
                         let candidate=thumb;
                         if(!image.matches('.dpc-vote-primary-image')){
                             const entry=image.closest('a[href*="challenge_vote_image.php"]')||image.closest('.dpc-vote-thumbnail-cell')?.querySelector('a[href*="challenge_vote_image.php"]');
@@ -1709,7 +1724,7 @@ html.dpc-viewing body {
                             }catch{}
                         }
                         for(const url of new Set([candidate,thumb])){
-                            try{const preload=new Image();preload.src=url;await preload.decode();saveVote(set(url,response.url));break;}catch{}
+                            try{await blurred;await revealBg(url);saveVote(url,thumb);break;}catch{}
                         }
                     }
                     const voteObserver=new IntersectionObserver(items=>{if(items.some(x=>x.isIntersecting)){voteObserver.disconnect();loadVoteImage().catch(()=>{});}},{rootMargin:'300px'});voteObserver.observe(card);
