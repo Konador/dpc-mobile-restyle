@@ -2,7 +2,7 @@
 // ==UserScript==
 // @name DPChallenge Mobile — Editorial Gallery
 // @namespace dpc-mobile
-// @version 5.24
+// @version 5.25
 // @updateURL https://raw.githubusercontent.com/Konador/dpc-mobile-restyle/main/dpc-mobile.user.js
 // @downloadURL https://raw.githubusercontent.com/Konador/dpc-mobile-restyle/main/dpc-mobile.user.js
 // @match *://*.dpchallenge.com/challenge_vote_image.php*
@@ -1164,6 +1164,7 @@ html.dpc-viewing body {
     style.textContent += "#dpc-app .dpc-auto-continue{display:flex;align-items:center;justify-content:center;gap:6px;margin:8px 0 10px;font:400 11px/1.4 system-ui;color:var(--muted);cursor:pointer}#dpc-app .dpc-auto-continue input{width:14px;height:14px;margin:0;accent-color:var(--accent)}#dpc-app .dpc-auto-continue[hidden]{display:none!important}";
     style.textContent += "@property --dpc-save-angle{syntax:\"<angle>\";initial-value:0deg;inherits:false}@keyframes dpc-saving-gradient{to{--dpc-save-angle:360deg}}#dpc-app .dpc-score.dpc-saving-button,#dpc-app #dpc-submit-comment.dpc-saving-button:disabled{opacity:1!important;background:linear-gradient(var(--dpc-save-angle),#8fa7df 0%,#c5d3f3 48%,#91a8df 100%)!important;color:#102537!important;border-color:#b4c5ed!important;animation:dpc-saving-gradient 1.8s linear infinite}#dpc-app .dpc-score.pressed.dpc-saving-button{animation:dpc-vote-press .32s ease-out both,dpc-saving-gradient 1.8s linear infinite}@media(prefers-reduced-motion:reduce){#dpc-app .dpc-score.dpc-saving-button,#dpc-app .dpc-score.pressed.dpc-saving-button,#dpc-app #dpc-submit-comment.dpc-saving-button:disabled{animation:none!important}}";
     style.textContent += "#dpc-app .dpc-entry-grid .dpc-home-submitted-card{grid-column:1/-1;min-height:160px;isolation:isolate;overflow:hidden;position:relative}#dpc-app .dpc-entry-grid .dpc-home-submitted-card:before{content:\"\";position:absolute;inset:0;z-index:-1;background-size:cover;background-position:center right;background-repeat:no-repeat}#dpc-app .dpc-entry-grid .dpc-home-submitted-card .dpc-home-meta{max-width:72%;margin:0 0 10px;opacity:1}#dpc-app .dpc-entry-grid .dpc-home-submitted-card .dpc-home-detail{display:flex;flex-direction:row;flex-wrap:wrap;gap:6px 10px;margin:0;padding-top:0;border:0}#dpc-app .dpc-entry-grid .dpc-home-submitted-status{font:600 12px/1.4 system-ui;color:var(--accent);margin-top:10px}#dpc-app .dpc-entry-grid .dpc-home-submitted-card .dpc-home-action{margin-top:8px;align-self:flex-start}";
+    style.textContent += "#dpc-app .dpc-home-main-tabs{gap:0;justify-content:space-between}#dpc-app .dpc-home-main-tabs .dpc-home-challenge-tab{flex:1;text-align:center;font-size:clamp(19px,5.5vw,29px)}#dpc-app [id^=dpc-home-challenge-panel-][hidden]{display:none!important}";
     const progressMarkup = `
 <div class="dpc-progress">
     <div class="dpc-progress-label">
@@ -1750,8 +1751,10 @@ html.dpc-viewing body {
         else if(voteHead){const area=region(voteHead,a=>!!safe(a));if(area)votingSection.append(area.cloneNode(true));}
         if(votingSection.children.length===1)votingSection.append(make('p','dpc-home-meta','No challenges open for voting.'));
         let resultsSection=null;
-        if(entries.length)cards(entries,section('Open for','entries'),false,Infinity);
-        else if(entryHead){const sec=section('Open for','entries');const area=region(entryHead,a=>!!safe(a));if(area)sec.append(area.cloneNode(true));}
+        const entrySection=section('Open for','entries');
+        if(entries.length)cards(entries,entrySection,false,Infinity);
+        else if(entryHead){const area=region(entryHead,a=>!!safe(a));if(area)entrySection.append(area.cloneNode(true));}
+        if(entrySection.children.length===1)entrySection.append(make('p','dpc-home-meta','No challenges open for entries.'));
         const winnerLinks=originalLinks.filter(a=>/\/image\.php\?/i.test(safe(a))&&a.querySelector('img'));
         const groups=new Map();
         for(const a of winnerLinks){
@@ -1893,20 +1896,21 @@ html.dpc-viewing body {
         }
         if(!resultsSection){resultsSection=section('Recent','results');resultsSection.append(make('p','dpc-home-meta','No recent results available.'));}
         const tabs=make('div','dpc-home-challenge-tabs');tabs.setAttribute('role','tablist');tabs.setAttribute('aria-label','Challenges');
-        body.prepend(tabs,resultsSection,votingSection);
-        const panels=[resultsSection,votingSection],buttons=[];
-        const labels=['Recent results',voteSectionLabel];
+        tabs.classList.add('dpc-home-main-tabs');
+        body.prepend(tabs,resultsSection,votingSection,entrySection);
+        const panels=[resultsSection,votingSection,entrySection],buttons=[];
+        const labels=['Results',allVoted?'Comment':'Vote','Enter'];
         panels.forEach((panel,i)=>{
             panel.id='dpc-home-challenge-panel-'+i;panel.setAttribute('role','tabpanel');
             const button=make('button','dpc-home-challenge-tab');const words=labels[i].split(' ');button.append(words.slice(0,-1).join(' ')+' ',make('em','',words.at(-1)));button.type='button';button.id='dpc-home-challenge-tab-'+i;button.setAttribute('role','tab');button.setAttribute('aria-controls',panel.id);panel.setAttribute('aria-labelledby',button.id);panel.firstElementChild.hidden=true;
             tabs.append(button);buttons.push(button);button.onclick=()=>selectHomeTab(i);
-            button.onkeydown=e=>{if(['ArrowLeft','ArrowRight','Home','End'].includes(e.key)){e.preventDefault();const next=e.key==='Home'?0:e.key==='End'?1:1-i;selectHomeTab(next);buttons[next].focus();}};
+            button.onkeydown=e=>{if(['ArrowLeft','ArrowRight','Home','End'].includes(e.key)){e.preventDefault();const next=e.key==='Home'?0:e.key==='End'?panels.length-1:(i+(e.key==='ArrowLeft'?-1:1)+panels.length)%panels.length;selectHomeTab(next);buttons[next].focus();}};
         });
         function selectHomeTab(index){
             panels.forEach((panel,i)=>{panel.hidden=i!==index;buttons[i].classList.toggle('active',i===index);buttons[i].setAttribute('aria-selected',String(i===index));buttons[i].tabIndex=i===index?0:-1;});
             try{sessionStorage.setItem('dpc-home-challenge-tab',String(index));}catch{}
         }
-        let selectedTab=0;try{selectedTab=sessionStorage.getItem('dpc-home-challenge-tab')==='1'?1:0;}catch{}
+        let selectedTab=0;try{const saved=Number(sessionStorage.getItem('dpc-home-challenge-tab'));if(Number.isInteger(saved)&&saved>=0&&saved<panels.length)selectedTab=saved;}catch{}
         selectHomeTab(selectedTab);
         const forum=region(forumHead,a=>/forum.*(?:THREAD_ID|thread)/i.test(safe(a)));
         if(forum){
