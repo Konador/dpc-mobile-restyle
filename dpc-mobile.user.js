@@ -2,7 +2,7 @@
 // ==UserScript==
 // @name DPChallenge Mobile — Editorial Gallery
 // @namespace dpc-mobile
-// @version 5.33
+// @version 5.34
 // @updateURL https://raw.githubusercontent.com/Konador/dpc-mobile-restyle/main/dpc-mobile.user.js
 // @downloadURL https://raw.githubusercontent.com/Konador/dpc-mobile-restyle/main/dpc-mobile.user.js
 // @match *://*.dpchallenge.com/challenge_vote_image.php*
@@ -1173,6 +1173,7 @@ html.dpc-viewing body {
     style.textContent += "#dpc-app .dpc-home-carousel{max-width:100%;min-width:0;padding:0!important;box-sizing:border-box}#dpc-app .dpc-home-carousel-track{max-width:none!important;min-width:0;gap:0!important;padding:0!important;margin:0!important;box-sizing:border-box}#dpc-app .dpc-home-carousel-track>section{flex-shrink:0!important;flex-grow:0!important;overflow:hidden;box-sizing:border-box;padding:0!important;margin:0!important;border:0!important}#dpc-app .dpc-home-carousel-track>section .dpc-results-feature{margin-left:0;margin-right:0}";
     style.textContent += "#dpc-app .dpc-home-main-tabs .dpc-home-challenge-tab{font-size:clamp(16px,4.7vw,25px);min-width:0;padding-left:0;padding-right:0}";
     style.textContent += "#dpc-app #dpc-home-challenge-panel-1 .dpc-vote-bg-reveal.dpc-bg-instant:after{transition:none!important;opacity:1}#dpc-app #dpc-home-challenge-panel-1 .dpc-vote-bg-reveal.dpc-bg-instant:before{opacity:0!important;transition:none!important}";
+    style.textContent += "#dpc-app #dpc-home-challenge-panel-1 .dpc-vote-bg-reveal.dpc-bg-ready:before{opacity:0!important}#dpc-app #dpc-home-challenge-panel-1 .dpc-vote-bg-reveal.dpc-bg-ready:after{opacity:1!important}#dpc-app .dpc-home-submitted-card:before{opacity:0;transition:opacity .45s ease!important}#dpc-app .dpc-home-submitted-card.dpc-bg-ready:before,#dpc-app .dpc-home-submitted-card.dpc-bg-instant:before{opacity:1}#dpc-app .dpc-home-submitted-card.dpc-bg-instant:before{transition:none!important}";
     const progressMarkup = `
 <div class="dpc-progress">
     <div class="dpc-progress-label">
@@ -1658,6 +1659,7 @@ html.dpc-viewing body {
         app.innerHTML=header+'<div class="dpc-home"></div>'+footer;
         const body=$('.dpc-home');
         function section(first,last){const sec=make('section');const h=make('h2','',first+' ');h.append(make('em','',last));sec.append(h);body.append(sec);return sec;}
+        const submissionChecks=[];
         function cards(items,sec,voting,limit){
             const hidden=[];
             const grid=voting?sec:make('div','dpc-entry-grid');if(!voting)sec.append(grid);
@@ -1688,18 +1690,18 @@ html.dpc-viewing body {
                 if(item.progress){const bar=make('div','dpc-home-progress'),fill=make('i','dpc-home-rated-fill'),comments=make('i','dpc-home-comment-fill');fill.style.width=Math.min(100,100*+item.progress[1]/Math.max(1,+item.progress[2]))+'%';comments.style.width='0%';bar.append(fill,comments);card.append(bar);}
                 if(voting){
                     card.classList.add('dpc-home-vote-card');
-                    const voteKey='dpc-vote-bg-v4-'+(new URL(safe(item.a)).searchParams.get('CHALLENGE_ID')||safe(item.action));
+                    const voteKey='dpc-vote-bg-v5-'+(new URL(safe(item.a)).searchParams.get('CHALLENGE_ID')||safe(item.action));
                     let saved={pool:[],images:{},last:null};try{const data=JSON.parse(sessionStorage.getItem(voteKey)||'null');if(data&&Array.isArray(data.pool)&&data.images)saved=data;}catch{}
                     const persist=()=>{try{sessionStorage.setItem(voteKey,JSON.stringify(saved));}catch{}};
                     card.classList.add('dpc-vote-bg-reveal');
-                    const set=(src,base)=>{if(!src)return;try{const u=new URL(src,base);if(u.origin!==location.origin)return;card.style.setProperty('--vote-image','url('+JSON.stringify(u.href)+')');return u.href;}catch{}};
+                    const set=(src,base)=>{if(!src)return;try{const u=new URL(src,base);if(!/^https?:$/.test(u.protocol))return;card.style.setProperty('--vote-image','url('+JSON.stringify(u.href)+')');return u.href;}catch{}};
                     async function showBlur(src){
                         try{const im=new Image();im.src=src;await im.decode();card.style.setProperty('--vote-blur','url('+JSON.stringify(src)+')');card.classList.add('dpc-bg-preview');}catch{}
                     }
                     async function revealBg(src,known=false){
                         const im=new Image();im.src=src;
-                        const immediate=known||(im.complete&&im.naturalWidth>0);
-                        await im.decode();
+                        const immediate=im.complete&&im.naturalWidth>0;
+                        await im.decode().catch(()=>{if(!im.complete||!im.naturalWidth)throw Error('Image unavailable');});
                         if(!set(src,safe(item.action)))throw Error('Invalid background');
                         if(immediate){card.classList.add('dpc-bg-instant','dpc-bg-ready');return;}
                         if(!card.classList.contains('dpc-bg-preview')){card.style.setProperty('--vote-blur','url('+JSON.stringify(src)+')');card.classList.add('dpc-bg-preview');}
@@ -1734,7 +1736,9 @@ html.dpc-viewing body {
                     }
                     if(saved.pool.length)pickBackground(saved.pool).catch(()=>{});
                     async function loadVoteImage(){
-                        const response=await interactiveFetch(safe(item.action),{credentials:'same-origin'});if(!response.ok)return;
+                        const challengeId=new URL(safe(item.a)).searchParams.get('CHALLENGE_ID');
+                        const listUrl=challengeId?new URL('/challenge_vote_list.php?CHALLENGE_ID='+encodeURIComponent(challengeId),location.origin).href:safe(item.action);
+                        const response=await interactiveFetch(listUrl,{credentials:'same-origin'});if(!response.ok)return;
                         const doc=new DOMParser().parseFromString(await response.text(),'text/html');
                         const id=new URL(safe(item.a)).searchParams.get('CHALLENGE_ID')||new URL(safe(item.action)).searchParams.get('CHALLENGE_ID');
                         if(id&&item.progress)countHomeComments(doc,response.url||safe(item.action),id,+item.progress[2]).then(n=>{
@@ -1775,7 +1779,7 @@ html.dpc-viewing body {
                         const destination=new URL('/challenge_submit.php?CHALLENGE_ID='+encodeURIComponent(id),location.origin).href;
                         card.href=destination;
                         async function checkSubmission(){
-                            const response=await backgroundFetch(destination,{credentials:'same-origin'});if(!response.ok)return;
+                            const response=await interactiveFetch(destination,{credentials:'same-origin'},true);if(!response.ok)return;
                             const doc=new DOMParser().parseFromString(await response.text(),'text/html');
                             const form=doc.querySelector('form[name="frmSubmit"]');
                             const image=doc.querySelector('a[href*="challenge_submit_preview.php"] img');
@@ -1787,12 +1791,13 @@ html.dpc-viewing body {
                                 const url=new URL(image.getAttribute('src'),response.url||destination);
                                 if(url.origin===location.origin&&url.pathname.endsWith('/challenge_submit_readimage.php')){
                                     url.searchParams.set('TYPE','/');
-                                    card.style.setProperty('--vote-image','url('+JSON.stringify(url.href)+')');
-                                    const preload=new Image();preload.onerror=()=>{card.style.setProperty('--vote-image','url('+JSON.stringify(new URL(image.getAttribute('src'),response.url||destination).href)+')');};preload.src=url.href;
+                                    const originalUrl=new URL(image.getAttribute('src'),response.url||destination).href;
+                                    (async()=>{for(const src of new Set([url.href,originalUrl])){try{const preload=new Image();preload.src=src;const immediate=preload.complete&&preload.naturalWidth>0;await preload.decode();card.style.setProperty('--vote-image','url('+JSON.stringify(src)+')');card.classList.add(immediate?'dpc-bg-instant':'dpc-bg-ready');return;}catch{}}})();
                                 }
                             }
                         }
-                        const observer=new IntersectionObserver(records=>{if(records.some(x=>x.isIntersecting)){observer.disconnect();checkSubmission().catch(()=>{});}},{rootMargin:'300px'});observer.observe(card);
+                        card.style.visibility='hidden';
+                        submissionChecks.push(checkSubmission().catch(()=>{}).finally(()=>{card.style.visibility='';}));
                     }
                 }
                 grid.append(card);if(i>=limit){card.hidden=true;hidden.push(card);}
@@ -1805,7 +1810,7 @@ html.dpc-viewing body {
         if(votingSection.children.length===1)votingSection.append(make('p','dpc-home-meta','No challenges open for voting.'));
         let resultsSection=null;
         const entrySection=section('Open for','entries');
-        if(entries.length)cards(entries,entrySection,false,Infinity);
+        if(entries.length){cards(entries,entrySection,false,Infinity);const grid=entrySection.querySelector('.dpc-entry-grid');if(grid){grid.style.visibility='hidden';Promise.allSettled(submissionChecks).then(()=>{grid.style.visibility='';});}}
         else if(entryHead){const area=region(entryHead,a=>!!safe(a));if(area)entrySection.append(area.cloneNode(true));}
         if(entrySection.children.length===1)entrySection.append(make('p','dpc-home-meta','No challenges open for entries.'));
         const winnerLinks=originalLinks.filter(a=>/\/image\.php\?/i.test(safe(a))&&a.querySelector('img'));
