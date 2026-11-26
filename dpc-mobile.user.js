@@ -2,7 +2,7 @@
 // ==UserScript==
 // @name DPChallenge Mobile — Editorial Gallery
 // @namespace dpc-mobile
-// @version 5.12
+// @version 5.13
 // @updateURL https://raw.githubusercontent.com/Konador/dpc-mobile-restyle/main/dpc-mobile.user.js
 // @downloadURL https://raw.githubusercontent.com/Konador/dpc-mobile-restyle/main/dpc-mobile.user.js
 // @match *://*.dpchallenge.com/challenge_vote_image.php*
@@ -1134,6 +1134,7 @@ html.dpc-viewing body {
     style.textContent += "#dpc-app .dpc-submit-page .dpc-local-preview-ready #file_selection img{display:none!important}#dpc-app .dpc-submit-page .dpc-local-preview-ready #file_selection{padding:4px 8px!important;margin:4px 0!important;background:transparent!important}";
     style.textContent += "#dpc-app .dpc-submit-page #upload_file>.dpc-legacy-upload-prompt{display:none!important}#dpc-app .dpc-submit-page #upload_file{min-height:64px!important;padding:14px 8px!important;gap:0!important}#dpc-app .dpc-submit-page #upload_file>.dpc-upload-caption{gap:8px!important}#dpc-app .dpc-submit-page .dpc-upload-hint:empty{display:none!important}#dpc-app .dpc-submit-page .dpc-local-preview-ready #upload_file{min-height:0!important;padding:8px!important}";
     style.textContent += "#dpc-app .dpc-submit-page #file_selection .dpc-numeric-filename{display:none!important}";
+    style.textContent += "#dpc-app .dpc-entry-editor form{margin:0}#dpc-app .dpc-entry-editor [hidden],#dpc-app .dpc-upload-warnings[hidden]{display:none!important}#dpc-app .dpc-entry-preview{display:block;width:100%;max-height:55vh;object-fit:contain;border-radius:6px;margin-bottom:12px}#dpc-app .dpc-entry-status,#dpc-app .dpc-entry-help{font:12px/1.5 system-ui;color:var(--muted)}#dpc-app .dpc-entry-links{display:flex;flex-wrap:wrap;gap:12px;margin:12px 0}#dpc-app .dpc-entry-editor a{font-size:12px}#dpc-app .dpc-entry-link[href*=unsubmit]{color:#e67c7c!important}#dpc-app .dpc-entry-editor h2:not(:first-child){margin-top:20px}#dpc-app .dpc-entry-fields{display:grid;gap:12px}#dpc-app .dpc-entry-field{display:grid;gap:5px;min-width:0}#dpc-app .dpc-entry-field label,#dpc-app .dpc-entry-label{font:600 12px system-ui;color:var(--muted)}#dpc-app .dpc-entry-field input:not([type=file]),#dpc-app .dpc-entry-field select,#dpc-app .dpc-entry-field textarea{box-sizing:border-box;width:100%;min-width:0;max-width:100%;padding:10px;border:1px solid var(--line);border-radius:6px;background:transparent;color:inherit;font:14px system-ui;min-height:40px}#dpc-app .dpc-entry-field select option{color:#16161b;background:#fff}#dpc-app .dpc-entry-field textarea{resize:vertical;min-height:120px}#dpc-app .dpc-entry-date,#dpc-app .dpc-entry-exposure{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}#dpc-app .dpc-entry-date label{font-size:10px}#dpc-app .dpc-entry-toolbar{display:flex;gap:8px;flex-wrap:wrap;align-items:center}#dpc-app .dpc-entry-toolbar img{width:18px;height:auto}#dpc-app .dpc-entry-critique{display:flex;gap:8px;align-items:flex-start;font:12px/1.5 system-ui}#dpc-app .dpc-entry-critique input{accent-color:var(--accent);width:18px;height:18px;flex:none}#dpc-app .dpc-entry-editor .dpc-upload-actions input{width:100%;min-width:0;padding:12px 8px;border:1px solid var(--line);border-radius:6px;color:inherit;background:transparent;font:600 13px system-ui}#dpc-app .dpc-entry-editor input[name=SubmitUpdate]{background:var(--accent);color:#111115}#dpc-app .dpc-upload-warnings{margin:8px 0;padding:10px 12px;border:1px solid #d49b55;border-radius:6px;color:#d49b55;font:12px/1.5 system-ui}#dpc-app .dpc-upload-warnings p{margin:0 0 5px}#dpc-app .dpc-upload-warnings p:last-child{margin:0}#dpc-app .dpc-submit-page #file_selection table,#dpc-app .dpc-submit-page #file_selection tbody,#dpc-app .dpc-submit-page #file_selection tr,#dpc-app .dpc-submit-page #file_selection td{display:block;width:100%;box-sizing:border-box}#dpc-app .dpc-submit-page #upload_progress{width:100%!important;float:none!important;text-align:left;font:12px/1.5 system-ui}#dpc-app .dpc-submit-page #upload_progress .progress_bar{height:8px;border:0;background:#80808030;border-radius:8px;margin:8px 0}#dpc-app .dpc-submit-page #upload_size_progress_bar{height:8px;background-image:none!important;border-radius:8px;transition:width .15s linear}#dpc-app .dpc-submit-page #upload_progress div[style*=\"font-style: italic\"]{height:auto!important;width:100%!important;overflow:visible!important;font-style:normal!important}#dpc-app .dpc-submit-page #upload_size_progress_total{font-size:11px!important;color:var(--muted)!important}";
     document.head.append(style);
 
     const header = `
@@ -2935,13 +2936,56 @@ html.dpc-viewing body {
         for(const [key,label] of [['Challenge Type','Type'],['Challenge Rules','Editing rules'],['Submission Deadline','Deadline'],['Voting Dates','Voting'],['Extra Rules','Extra rules']]){
             const cell=fields.get(key);if(!cell)continue;const dt=make('dt','',label),dd=make('dd');const a=cell.querySelector('a[href]');if(a){const link=make('a','',a.textContent.trim());link.href=a.href;dd.append(link);}else dd.textContent=cell.textContent.trim();meta.append(dt,dd);
         }
+        const entryForm=document.querySelector('form[name="frmSubmit"]');
+        const submitted=fields.get('Your Submission');
+        if(entryForm&&entryForm.elements.namedItem('SubmitUpdate')){
+            const card=make('section','dpc-profile-card dpc-submit-card dpc-entry-editor');body.append(card);
+            const heading=make('h2','','Your entry');card.append(heading);
+            const thumb=document.querySelector('a[href*="challenge_submit_preview.php"] img');
+            if(thumb){const image=make('img','dpc-entry-preview');const url=new URL(thumb.src,location.href);url.searchParams.delete('TYPE');image.src=url.href;image.alt='Current entry';image.onerror=()=>{image.onerror=null;image.src=thumb.src;};card.append(image);}
+            if(submitted){
+                card.append(make('p','dpc-entry-status','Entry received. You can edit it until the deadline.'));
+                const links=make('div','dpc-entry-links');
+                for(const link of submitted.querySelectorAll('a[href]')){link.classList.add('dpc-entry-link');links.append(link);}
+                card.append(links);
+            }
+            const originalLink=document.querySelector('a[href*="challenge_submit_original.php"]');
+            if(originalLink){const link=originalLink.cloneNode(true);link.textContent='Submit original photo';card.append(link);}
+            const heading2=make('h2','','Entry details');card.append(heading2);
+            const originalTables=[...entryForm.children].filter(n=>n.tagName==='TABLE');
+            // Keep every actual field, hidden input and the original form submission/validation.
+            const layout=make('div','dpc-entry-fields');
+            const field=(name,label,parent=layout)=>{
+                const control=entryForm.elements.namedItem(name);if(!control)return;
+                const wrap=make('div','dpc-entry-field');const lab=make('label','',label);
+                if(!control.id)control.id='dpc-entry-'+name;lab.htmlFor=control.id;wrap.append(lab);
+                if(name==='DETAILS'){
+                    const toolbar=make('div','dpc-entry-toolbar');
+                    for(const a of [...control.parentElement.querySelectorAll('a[onclick],a[id],input[type=file]')]){
+                        if(a.tagName==='A'){const label=a.querySelector('img')?.title||a.textContent.trim();a.title=label;a.setAttribute('aria-label',label);}
+                        toolbar.append(a);
+                    }
+                    wrap.append(toolbar);
+                }
+                wrap.append(control);parent.append(wrap);
+            };
+            field('TITLE','Title');field('DETAILS','Details');
+            const date=make('div','dpc-entry-field');date.append(make('span','dpc-entry-label','Exposure date'));const dates=make('div','dpc-entry-date');field('day','Day',dates);field('month','Month',dates);field('year','Year',dates);date.append(dates);layout.append(date);
+            field('EXPOSURE_LOCATION','Location');field('KEYWORDS','Keywords');field('CAMERA_ID','Camera');field('LENS_ID','Lens');
+            const exposure=make('div','dpc-entry-exposure');field('APERTURE','Aperture',exposure);field('ISO','ISO',exposure);field('SHUTTER','Shutter speed',exposure);layout.append(exposure);
+            const critique=entryForm.elements.namedItem('chkCritique');if(critique){const label=make('label','dpc-entry-critique');label.append(critique,make('span','','I would like an in-depth critique on my submission.'));layout.append(label);layout.append(make('p','dpc-entry-help','For an in-depth critique, complete the exposure settings and location, and provide at least 50 characters of details.'));}
+            const actions=make('div','dpc-upload-actions');const update=entryForm.elements.namedItem('SubmitUpdate'),cancel=entryForm.elements.namedItem('Cancel');update.value='Update entry';actions.append(update);if(cancel)actions.append(cancel);layout.append(actions);
+            const faq=entryForm.querySelector('a[href*="#exif"]');if(faq){faq.textContent='Help with exposure settings';layout.append(faq);}
+            for(const table of originalTables)table.hidden=true;
+            entryForm.append(layout);card.append(entryForm);
+        }
         if(rules){const ruleCard=make('section','dpc-profile-card dpc-submit-card');body.append(ruleCard);const h=make('h2');h.append('Before you ',make('em','','upload'));ruleCard.append(h);
             const grid=make('div','dpc-submit-rule-grid');ruleCard.append(grid);
             for(const li of rules.querySelectorAll('li')){const cell=make('div');const label=li.querySelector('b')?.textContent||'';cell.append(make('strong','',label.replace(/:$/,'')),make('span','',li.textContent.replace(label,'').trim()));grid.append(cell);}
             const a=[...rules.querySelectorAll('a')].find(a=>/challenge_rules\.php/.test(a.href));if(a){const link=make('a','dpc-submit-rules-link','Read the full challenge rules →');link.href=a.href;link.target='_blank';link.rel='noopener';ruleCard.append(link);}
         }
         const uploadCard=make('section','dpc-profile-card dpc-submit-card dpc-upload-card');body.append(uploadCard);
-        const h=make('h2');h.append('Upload your ',make('em','','entry'));uploadCard.append(h);
+        const h=make('h2');h.append(entryForm?'Replace your ':'Upload your ',make('em','','entry'));uploadCard.append(h);
         // Move the original live DOM, never clone or recreate the uploader, hidden inputs, or consent.
         uploadCard.append(uploadSection);
         uploadSection.classList.add('dpc-native-upload');
@@ -2959,13 +3003,29 @@ html.dpc-viewing body {
         const selection=uploadSection.querySelector('#file_selection');
         // Leave native selection and progress markup visible. A local preview is cosmetic only.
         const caption=drop?.querySelector('.dpc-upload-caption');
+        const warnings=make('div','dpc-upload-warnings');warnings.hidden=true;warnings.setAttribute('role','status');drop?.after(warnings);
+        const ruleItems=[...(rules?.querySelectorAll('li')||[])];
+        const sizeRule=ruleItems.find(li=>/File Size/i.test(li.textContent))?.textContent||'';
+        const sizeMatch=sizeRule.match(/([\d,.]+)\s*(kb|mb|bytes)/i);
+        const maxBytes=sizeMatch?Number(sizeMatch[1].replace(/,/g,''))*({kb:1024,mb:1048576,bytes:1}[sizeMatch[2].toLowerCase()]):null;
+        const dimensionRule=ruleItems.find(li=>/Dimension/i.test(li.textContent))?.textContent||'';
+        const dimensions=[...dimensionRule.matchAll(/(\d+)\s*pixels/gi)].map(m=>Number(m[1]));
+        let selectedFile=null;
+        function checkFile(image){
+            const messages=[];if(selectedFile){
+                if(maxBytes&&selectedFile.size>maxBytes)messages.push('File is '+(selectedFile.size/1024).toFixed(0)+' kB; the challenge limit is '+sizeMatch[1]+' '+sizeMatch[2]+'. Resize or compress it before uploading.');
+                if(!/\.jpe?g$/i.test(selectedFile.name)&&selectedFile.type!=='image/jpeg')messages.push('This challenge requires a JPEG image.');
+                if(image&&dimensions.length===2&&(Math.min(image.naturalWidth,image.naturalHeight)<dimensions[0]||Math.max(image.naturalWidth,image.naturalHeight)>dimensions[1]))messages.push('Image dimensions are '+image.naturalWidth+' × '+image.naturalHeight+' px. Allowed range: '+dimensions[0]+'–'+dimensions[1]+' px per side.');
+            }
+            warnings.replaceChildren(...messages.map(message=>make('p','',message)));warnings.hidden=!messages.length;
+        }
         let localURL=null;
         const localPreview=make('img','dpc-local-entry-preview');localPreview.alt='Selected photo';localPreview.hidden=true;
         if(caption)caption.prepend(localPreview);
         document.addEventListener('change',event=>{
             const input=event.target;
-            if(!input?.matches?.('input[type=file]')||!uploadCard.isConnected)return;
-            const file=input.files?.[0];if(!file)return;
+            if(!input?.matches?.('input[type=file]')||!upload.contains(input)||!uploadCard.isConnected)return;
+            const file=input.files?.[0];if(!file)return;selectedFile=file;checkFile();
             if(localURL)URL.revokeObjectURL(localURL);
             localPreview.hidden=true;localURL=null;uploadCard.classList.remove('dpc-local-preview-ready');
             if(file.type.startsWith('image/')||file.name.toLowerCase().endsWith('.jpg')||file.name.toLowerCase().endsWith('.jpeg')){
@@ -2973,7 +3033,7 @@ html.dpc-viewing body {
             }
             if(caption){caption.hidden=false;caption.querySelector('strong').textContent='Choose a different photo';caption.querySelector('.dpc-upload-hint').textContent='';}
         },true);
-        localPreview.addEventListener('load',()=>{localPreview.hidden=false;uploadCard.classList.add('dpc-local-preview-ready');});
+        localPreview.addEventListener('load',()=>{localPreview.hidden=false;uploadCard.classList.add('dpc-local-preview-ready');checkFile(localPreview);});
         localPreview.addEventListener('error',()=>{localPreview.hidden=true;uploadCard.classList.remove('dpc-local-preview-ready');});
         if(selection){
             selection.classList.add('dpc-upload-selection');
