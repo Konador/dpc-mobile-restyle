@@ -2,7 +2,7 @@
 // ==UserScript==
 // @name DPChallenge Mobile — Editorial Gallery
 // @namespace dpc-mobile
-// @version 5.38
+// @version 5.39
 // @updateURL https://raw.githubusercontent.com/Konador/dpc-mobile-restyle/main/dpc-mobile.user.js
 // @downloadURL https://raw.githubusercontent.com/Konador/dpc-mobile-restyle/main/dpc-mobile.user.js
 // @match *://*.dpchallenge.com/challenge_vote_image.php*
@@ -1141,6 +1141,7 @@ html.dpc-viewing body {
     style.textContent += "#dpc-app.dpc-sticky-site-header{--dpc-sticky-header-height:54px}html:not(.dpc-menu-open) #dpc-app.dpc-sticky-site-header>.dpc-header{position:sticky;top:0;z-index:1002}#dpc-app.dpc-sticky-site-header .dpc-home-main-tabs{position:sticky;top:var(--dpc-sticky-header-height);z-index:90;background:#111115;padding-top:4px;isolation:isolate}html.dpc-light #dpc-app.dpc-sticky-site-header .dpc-home-main-tabs{background:#f5f6f8}html.dpc-menu-open #dpc-app.dpc-sticky-site-header .dpc-home-main-tabs{z-index:90}#dpc-app.dpc-sticky-site-header .dpc-home-main-tabs:before{content:\"\";position:absolute;inset:0 -18px;z-index:-1;background:inherit;pointer-events:none}";
     style.textContent += "#dpc-app .dpc-gallery-context-label{font:400 10px/1.4 system-ui;color:var(--muted);text-align:center;margin:0 0 8px}";
     style.textContent += "#dpc-app>.dpc-gallery-context-label{height:30px;min-height:30px;display:flex;align-items:center;justify-content:center;margin:0!important;padding:0 12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;box-sizing:border-box}#dpc-app .dpc-profile-section>h2,#dpc-app .dpc-detail-section>h2,#dpc-app .dpc-detail-photographer>h2{position:relative;padding-left:12px!important}#dpc-app .dpc-profile-section>h2:before,#dpc-app .dpc-detail-section>h2:before,#dpc-app .dpc-detail-photographer>h2:before{content:\"\";position:absolute;left:0;top:.16em;width:3px;height:.86em;background:var(--accent)}";
+    style.textContent += "#dpc-app a.dpc-link-pressed,#dpc-app a.dpc-link-loading{opacity:.72;text-decoration:underline!important;text-decoration-thickness:1px!important;text-underline-offset:3px}#dpc-app a.dpc-link-loading{animation:dpc-link-feedback 1.2s ease-in-out infinite alternate}#dpc-app a.dpc-link-pressed:has(img),#dpc-app a.dpc-link-loading:has(img){text-decoration:none!important}#dpc-app a.dpc-link-pressed:has(img) img,#dpc-app a.dpc-link-loading:has(img) img{filter:brightness(.83)}@keyframes dpc-link-feedback{from{opacity:.72}to{opacity:1}}@media(prefers-reduced-motion:reduce){#dpc-app a.dpc-link-loading{animation:none}}";
     document.head.append(style);
 
     const header = `
@@ -1395,6 +1396,16 @@ html.dpc-viewing body {
         buildSharedMenu();
         document.body.append(app);
         root.classList.add('dpc-mobile');
+        let pressedLink=null,loadingLink=null,feedbackTimer=null,pressPoint=null;
+        const linkFrom=e=>{const a=e.target.closest?.('a[href]');if(!a||!app.contains(a)||a.matches('.dpc-brand,.dpc-home-hero'))return null;const u=new URL(a.href,location.href);return /^https?:$/.test(u.protocol)?a:null;};
+        function releaseLink(){pressedLink?.classList.remove('dpc-link-pressed');pressedLink=null;pressPoint=null;}
+        function clearLinkFeedback(){releaseLink();loadingLink?.classList.remove('dpc-link-loading');loadingLink=null;clearTimeout(feedbackTimer);}
+        app.addEventListener('pointerdown',e=>{releaseLink();if(!e.isPrimary||e.button!==0)return;const a=linkFrom(e);if(a){pressedLink=a;pressPoint={x:e.clientX,y:e.clientY};a.classList.add('dpc-link-pressed');}},true);
+        app.addEventListener('pointermove',e=>{if(pressPoint&&Math.hypot(e.clientX-pressPoint.x,e.clientY-pressPoint.y)>9)releaseLink();},true);
+        for(const event of ['pointerup','pointercancel','lostpointercapture'])app.addEventListener(event,releaseLink,true);
+        app.addEventListener('click',e=>{const a=linkFrom(e);if(!a||e.button!==0||e.metaKey||e.ctrlKey||e.shiftKey||e.altKey||a.target==='_blank'||a.hasAttribute('download'))return;queueMicrotask(()=>{if(e.defaultPrevented||!a.isConnected)return;clearLinkFeedback();loadingLink=a;a.classList.add('dpc-link-loading');feedbackTimer=setTimeout(clearLinkFeedback,10000);});});
+        addEventListener('pageshow',clearLinkFeedback);
+
         if(!/\/challenge_vote_image\.php$/i.test(location.pathname)){
             app.classList.add('dpc-sticky-site-header');
             const stickyHeader=app.querySelector('.dpc-header');
