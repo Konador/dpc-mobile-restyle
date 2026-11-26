@@ -2,7 +2,7 @@
 // ==UserScript==
 // @name DPChallenge Mobile — Editorial Gallery
 // @namespace dpc-mobile
-// @version 5.32
+// @version 5.33
 // @updateURL https://raw.githubusercontent.com/Konador/dpc-mobile-restyle/main/dpc-mobile.user.js
 // @downloadURL https://raw.githubusercontent.com/Konador/dpc-mobile-restyle/main/dpc-mobile.user.js
 // @match *://*.dpchallenge.com/challenge_vote_image.php*
@@ -1172,6 +1172,7 @@ html.dpc-viewing body {
     style.textContent += "#dpc-app .dpc-home-carousel{width:100%;overflow:hidden;touch-action:pan-y pinch-zoom;position:relative}#dpc-app .dpc-home-carousel-track{display:flex;width:100%;align-items:flex-start;will-change:transform}#dpc-app .dpc-home-carousel-track>section{flex:0 0 100%;width:100%;min-width:0;box-sizing:border-box;margin:0!important;display:flow-root}#dpc-app .dpc-home-carousel-track>section[aria-hidden=true]{pointer-events:none}#dpc-app .dpc-home-carousel-track>section>h2[hidden]{display:none!important}";
     style.textContent += "#dpc-app .dpc-home-carousel{max-width:100%;min-width:0;padding:0!important;box-sizing:border-box}#dpc-app .dpc-home-carousel-track{max-width:none!important;min-width:0;gap:0!important;padding:0!important;margin:0!important;box-sizing:border-box}#dpc-app .dpc-home-carousel-track>section{flex-shrink:0!important;flex-grow:0!important;overflow:hidden;box-sizing:border-box;padding:0!important;margin:0!important;border:0!important}#dpc-app .dpc-home-carousel-track>section .dpc-results-feature{margin-left:0;margin-right:0}";
     style.textContent += "#dpc-app .dpc-home-main-tabs .dpc-home-challenge-tab{font-size:clamp(16px,4.7vw,25px);min-width:0;padding-left:0;padding-right:0}";
+    style.textContent += "#dpc-app #dpc-home-challenge-panel-1 .dpc-vote-bg-reveal.dpc-bg-instant:after{transition:none!important;opacity:1}#dpc-app #dpc-home-challenge-panel-1 .dpc-vote-bg-reveal.dpc-bg-instant:before{opacity:0!important;transition:none!important}";
     const progressMarkup = `
 <div class="dpc-progress">
     <div class="dpc-progress-label">
@@ -1687,24 +1688,51 @@ html.dpc-viewing body {
                 if(item.progress){const bar=make('div','dpc-home-progress'),fill=make('i','dpc-home-rated-fill'),comments=make('i','dpc-home-comment-fill');fill.style.width=Math.min(100,100*+item.progress[1]/Math.max(1,+item.progress[2]))+'%';comments.style.width='0%';bar.append(fill,comments);card.append(bar);}
                 if(voting){
                     card.classList.add('dpc-home-vote-card');
-                    const voteKey='dpc-vote-bg-v3-'+(new URL(safe(item.a)).searchParams.get('CHALLENGE_ID')||safe(item.action));
-                    const set=(src,base)=>{if(!src)return;try{const u=new URL(src,base);if(!/^https?:$/.test(u.protocol))return;card.style.setProperty('--vote-image','url('+JSON.stringify(u.href)+')');return u.href;}catch{}};
-                    let voteCached=null;try{voteCached=JSON.parse(sessionStorage.getItem(voteKey)||'null');}catch{}
+                    const voteKey='dpc-vote-bg-v4-'+(new URL(safe(item.a)).searchParams.get('CHALLENGE_ID')||safe(item.action));
+                    let saved={pool:[],images:{},last:null};try{const data=JSON.parse(sessionStorage.getItem(voteKey)||'null');if(data&&Array.isArray(data.pool)&&data.images)saved=data;}catch{}
+                    const persist=()=>{try{sessionStorage.setItem(voteKey,JSON.stringify(saved));}catch{}};
                     card.classList.add('dpc-vote-bg-reveal');
+                    const set=(src,base)=>{if(!src)return;try{const u=new URL(src,base);if(u.origin!==location.origin)return;card.style.setProperty('--vote-image','url('+JSON.stringify(u.href)+')');return u.href;}catch{}};
                     async function showBlur(src){
                         try{const im=new Image();im.src=src;await im.decode();card.style.setProperty('--vote-blur','url('+JSON.stringify(src)+')');card.classList.add('dpc-bg-preview');}catch{}
                     }
-                    async function revealBg(src,thumb){
-                        if(thumb)await showBlur(thumb);
-                        const im=new Image();im.src=src;await im.decode();
+                    async function revealBg(src,known=false){
+                        const im=new Image();im.src=src;
+                        const immediate=known||(im.complete&&im.naturalWidth>0);
+                        await im.decode();
+                        if(!set(src,safe(item.action)))throw Error('Invalid background');
+                        if(immediate){card.classList.add('dpc-bg-instant','dpc-bg-ready');return;}
                         if(!card.classList.contains('dpc-bg-preview')){card.style.setProperty('--vote-blur','url('+JSON.stringify(src)+')');card.classList.add('dpc-bg-preview');}
-                        set(src,safe(item.action));
                         await new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve)));
                         if(!reducedMotion.matches)await sleep(100);
                         card.classList.add('dpc-bg-ready');
                     }
-                    if(voteCached?.src)revealBg(voteCached.src,voteCached.thumb).catch(()=>{});
-                    function saveVote(src,thumb){if(src)try{sessionStorage.setItem(voteKey,JSON.stringify({src,thumb,time:Date.now()}));}catch{}}
+                    let picked=false;
+                    async function pickBackground(pool){
+                        if(picked||!pool.length)return;
+                        picked=true;
+                        const alternatives=pool.filter(x=>x.thumb!==saved.last);
+                        const choices=alternatives.length?alternatives:pool;
+                        const photo=choices[Math.floor(Math.random()*choices.length)];
+                        saved.last=photo.thumb;persist();
+                        if(saved.images[photo.thumb]){
+                            try{await revealBg(saved.images[photo.thumb],true);return;}catch{delete saved.images[photo.thumb];persist();}
+                        }
+                        const blurred=showBlur(photo.thumb);
+                        let candidate=photo.thumb;
+                        if(photo.entry)try{
+                            const full=await interactiveFetch(photo.entry,{credentials:'same-origin'});
+                            if(full.ok){
+                                const doc=new DOMParser().parseFromString(await full.text(),'text/html');
+                                const img=doc.querySelector('.dpc-vote-primary-image');
+                                if(img?.getAttribute('src'))candidate=new URL(img.getAttribute('src'),full.url).href;
+                            }
+                        }catch{}
+                        for(const url of new Set([candidate,photo.thumb])){
+                            try{await blurred;await revealBg(url);saved.images[photo.thumb]=url;persist();break;}catch{}
+                        }
+                    }
+                    if(saved.pool.length)pickBackground(saved.pool).catch(()=>{});
                     async function loadVoteImage(){
                         const response=await interactiveFetch(safe(item.action),{credentials:'same-origin'});if(!response.ok)return;
                         const doc=new DOMParser().parseFromString(await response.text(),'text/html');
@@ -1715,31 +1743,18 @@ html.dpc-viewing body {
                             if(completed){const action=card.querySelector('.dpc-home-action');if(action)action.textContent=n===0?'Start commenting':'Continue commenting';}
                             const fill=card.querySelector('.dpc-home-comment-fill');if(fill)fill.style.width=(100*n/+item.progress[2])+'%';
                         }).catch(()=>{});
-                        if(voteCached?.src)return;
-                        const images=[...doc.querySelectorAll('.dpc-vote-thumbnail-image img,.dpc-vote-primary-image,.dpc-vote-thumbnail-cell img[src],a[href*="challenge_vote_image.php"] img[src]')].filter(im=>{const src=im.getAttribute('src')||'';return src&&!/spacer|pixel|pix\.gif|logo|ribbon|removed\.png/i.test(src);});
+                        const images=[...doc.querySelectorAll('.dpc-vote-thumbnail-image img,.dpc-vote-primary-image,.dpc-vote-thumbnail-cell img[src],a[href*="challenge_vote_image.php"] img[src]')].filter(im=>{const src=im.getAttribute('src')||'';return src&&!/spacer|pixel|pix\\.gif|logo|ribbon|removed\\.png/i.test(src);});
                         if(!images.length)return;
                         const ranked=images.map(image=>({image,rating:Number(image.closest('.dpc-vote-thumbnail-cell')?.querySelector('a.vs')?.textContent.trim())||0})).filter(x=>x.rating>0).sort((a,b)=>b.rating-a.rating).slice(0,10);
                         const pool=ranked.length?ranked.map(x=>x.image):images;
-                        const image=pool[Math.floor(Math.random()*pool.length)];
-                        // Pick one photograph and reveal only one decoded background.
-                        const thumb=new URL(image.getAttribute('src'),response.url).href;
-                        const blurred=showBlur(thumb);
-                        let candidate=thumb;
-                        if(!image.matches('.dpc-vote-primary-image')){
-                            const entry=image.closest('a[href*="challenge_vote_image.php"]')||image.closest('.dpc-vote-thumbnail-cell')?.querySelector('a[href*="challenge_vote_image.php"]');
-                            if(entry)try{
-                                const target=new URL(entry.getAttribute('href'),response.url);
-                                const full=await interactiveFetch(target.href,{credentials:'same-origin'});
-                                if(full.ok){
-                                    const photoDoc=new DOMParser().parseFromString(await full.text(),'text/html');
-                                    const photo=photoDoc.querySelector('.dpc-vote-primary-image');
-                                    if(photo?.getAttribute('src'))candidate=new URL(photo.getAttribute('src'),full.url).href;
-                                }
-                            }catch{}
+                        const unique=new Map();
+                        for(const image of pool){
+                            const thumb=new URL(image.getAttribute('src'),response.url).href;
+                            const entry=image.matches('.dpc-vote-primary-image')?null:image.closest('a[href*="challenge_vote_image.php"]')||image.closest('.dpc-vote-thumbnail-cell')?.querySelector('a[href*="challenge_vote_image.php"]');
+                            unique.set(thumb,{thumb,entry:entry?new URL(entry.getAttribute('href'),response.url).href:null});
                         }
-                        for(const url of new Set([candidate,thumb])){
-                            try{await blurred;await revealBg(url);saveVote(url,thumb);break;}catch{}
-                        }
+                        saved.pool=[...unique.values()];persist();
+                        await pickBackground(saved.pool);
                     }
                     const voteObserver=new IntersectionObserver(items=>{if(items.some(x=>x.isIntersecting)){voteObserver.disconnect();loadVoteImage().catch(()=>{});}},{rootMargin:'300px'});voteObserver.observe(card);
                 }
