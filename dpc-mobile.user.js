@@ -2,7 +2,7 @@
 // ==UserScript==
 // @name DPChallenge Mobile — Editorial Gallery
 // @namespace dpc-mobile
-// @version 5.20
+// @version 5.21
 // @updateURL https://raw.githubusercontent.com/Konador/dpc-mobile-restyle/main/dpc-mobile.user.js
 // @downloadURL https://raw.githubusercontent.com/Konador/dpc-mobile-restyle/main/dpc-mobile.user.js
 // @match *://*.dpchallenge.com/challenge_vote_image.php*
@@ -1161,6 +1161,7 @@ html.dpc-viewing body {
     style.textContent += "#dpc-app.dpc-entry-preview-mode .dpc-navigation,#dpc-app.dpc-entry-preview-mode .dpc-actions{display:none!important}#dpc-app.dpc-entry-preview-mode .dpc-overview{font:600 20px system-ui}";
     style.textContent += "#dpc-app .dpc-home-vote-status{display:flex;flex-wrap:wrap;gap:6px 12px}#dpc-app .dpc-home-comment-status{font-size:inherit}#dpc-app .dpc-home-progress[hidden]{display:none!important}";
     style.textContent += "#dpc-app .dpc-home-vote-card .dpc-home-progress{position:relative;overflow:hidden}#dpc-app .dpc-home-vote-card .dpc-home-progress i{position:absolute;left:0;top:0;height:100%;transition:width .25s ease}#dpc-app .dpc-home-vote-card .dpc-home-progress .dpc-home-comment-fill{background:#d4ac58;z-index:1}";
+    style.textContent += "#dpc-app .dpc-auto-continue{display:flex;align-items:center;justify-content:center;gap:6px;margin:10px 0 2px;font:400 11px/1.4 system-ui;color:var(--muted);cursor:pointer}#dpc-app .dpc-auto-continue input{width:14px;height:14px;margin:0;accent-color:var(--accent)}#dpc-app .dpc-auto-continue[hidden]{display:none!important}";
     const progressMarkup = `
 <div class="dpc-progress">
     <div class="dpc-progress-label">
@@ -3400,6 +3401,7 @@ html.dpc-viewing body {
             <span>Poor</span>
             <span>Exceptional</span>
         </div>
+        <label class="dpc-auto-continue"><input type="checkbox" id="dpc-auto-continue"> Auto-continue</label>
     </div>
 
     <div class="dpc-panel" id="comment-panel">
@@ -3449,6 +3451,14 @@ html.dpc-viewing body {
     const slides = [...track.children];
     const scores = [...app.querySelectorAll('.dpc-score')];
     const input = $('#dpc-comment-input');
+    const autoContinue=$('#dpc-auto-continue');
+    function syncAutoContinue(){
+        const preference=localStorage.getItem('dpc-auto-continue');
+        autoContinue.checked=preference===null?!current.selected:preference==='1';
+    }
+    autoContinue.onchange=()=>localStorage.setItem('dpc-auto-continue',autoContinue.checked?'1':'0');
+    if(isPreview)autoContinue.closest('label').hidden=true;
+
     if(isPreview){app.classList.add('dpc-entry-preview-mode');$('.dpc-overview').innerHTML='←';$('.dpc-overview').setAttribute('aria-label','Back to entry');$('.dpc-navigation').hidden=true;$('.dpc-actions').hidden=true;$('#dpc-submit-comment').textContent='Preview only';}
 
     function status(s='') {
@@ -3721,6 +3731,7 @@ html.dpc-viewing body {
             : 'Comments unavailable';
 
         showStats(current);
+        syncAutoContinue();
         favourite();
 
         $('#dpc-report').hidden=!current.report;
@@ -4088,7 +4099,7 @@ html.dpc-viewing body {
             nativeAction(link,{
                 direction:1,
                 score:Number(b.dataset.score),
-                stay:!!current.selected
+                stay:!autoContinue.checked
             });
         };
     });
