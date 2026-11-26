@@ -2,7 +2,7 @@
 // ==UserScript==
 // @name DPChallenge Mobile — Editorial Gallery
 // @namespace dpc-mobile
-// @version 5.14
+// @version 5.15
 // @updateURL https://raw.githubusercontent.com/Konador/dpc-mobile-restyle/main/dpc-mobile.user.js
 // @downloadURL https://raw.githubusercontent.com/Konador/dpc-mobile-restyle/main/dpc-mobile.user.js
 // @match *://*.dpchallenge.com/challenge_vote_image.php*
@@ -14,6 +14,7 @@
 // @match *://*.dpchallenge.com/challenge_results.php*
 // @match *://*.dpchallenge.com/challenge_index.php*
 // @match *://*.dpchallenge.com/challenge_submit.php*
+// @match *://*.dpchallenge.com/challenge_submit_preview.php*
 // @grant none
 // @run-at document-start
 // @noframes
@@ -163,6 +164,7 @@ const isHome = location.pathname === '/' || location.pathname === '/index.php';
 const isPhotoDetail = location.pathname === '/image.php';
 const isProfile = location.pathname === '/profile.php';
 const isSubmit = location.pathname === '/challenge_submit.php';
+const isPreview = location.pathname === '/challenge_submit_preview.php';
 const isChallengeIndex = location.pathname === '/challenge_index.php';
 const isResults = location.pathname === '/challenge_results.php';
 const isList = location.pathname.includes('challenge_vote_list.php');
@@ -1156,6 +1158,7 @@ html.dpc-viewing body {
     </button>
 </footer>`;
 
+    style.textContent += "#dpc-app.dpc-entry-preview-mode .dpc-navigation,#dpc-app.dpc-entry-preview-mode .dpc-actions{display:none!important}#dpc-app.dpc-entry-preview-mode .dpc-overview{font:600 20px system-ui}";
     const progressMarkup = `
 <div class="dpc-progress">
     <div class="dpc-progress-label">
@@ -3265,10 +3268,19 @@ html.dpc-viewing body {
         };
     }
 
-    let current = read(document,window);
+    function readPreview(){
+        const photo=document.querySelector('#img_container img');
+        if(!photo)return null;
+        const title=document.querySelector('.imagetitle');
+        const challenge=document.querySelector('a[title="Return to the Main Voting Screen"]');
+        const edition=[...document.querySelectorAll('a')].find(a=>/Editing$/.test(a.textContent.trim()));
+        const challengeId=new URL(location.href).searchParams.get('CHALLENGE_ID');
+        return {source:photo.currentSrc||photo.src,title:title?.textContent.trim()||'Your entry',challenge:challenge?.textContent.trim()||'Challenge',edition:edition?.textContent.trim()||'',challengeId,id:'preview',index:NaN,ratings:[],comment:document.getElementById('COMMENT'),prev:null,next:null,progress:null,average:null};
+    }
+    let current = isPreview?readPreview():read(document,window);
     if (!current) return;
 
-    let mode = localStorage.getItem('dpc-mode') === 'comment'
+    let mode = !isPreview && localStorage.getItem('dpc-mode') === 'comment'
         ? 'comment' : 'vote';
 
     let busy=false,dirty=false,generation=0;
@@ -3382,6 +3394,7 @@ html.dpc-viewing body {
     const slides = [...track.children];
     const scores = [...app.querySelectorAll('.dpc-score')];
     const input = $('#dpc-comment-input');
+    if(isPreview){app.classList.add('dpc-entry-preview-mode');$('.dpc-overview').innerHTML='←';$('.dpc-overview').setAttribute('aria-label','Back to entry');$('.dpc-navigation').hidden=true;$('.dpc-actions').hidden=true;$('#dpc-submit-comment').textContent='Preview only';}
 
     function status(s='') {
         $('.dpc-gallery-status').textContent = s;
@@ -3416,7 +3429,7 @@ html.dpc-viewing body {
     for (const b of app.querySelectorAll('.dpc-tab')) {
         b.onclick=()=>{
             mode=b.dataset.mode;
-            localStorage.setItem('dpc-mode',mode);
+            if(!isPreview)localStorage.setItem('dpc-mode',mode);
             tabs();
         };
     }
@@ -3616,12 +3629,12 @@ html.dpc-viewing body {
                     (current.progress?' / '+current.progress[2]:'')
                 : '';
 
-        $('.dpc-challenge').textContent=current.challenge;
+        $('.dpc-challenge').textContent=isPreview?'Entry preview · '+current.edition:current.challenge;
 
         typeset(direction);
 
         if (current.challengeId) {
-            $('.dpc-challenge').href=listURL(current.challengeId);
+            $('.dpc-challenge').href=isPreview?new URL('/challenge_submit.php?CHALLENGE_ID='+encodeURIComponent(current.challengeId),location.origin).href:listURL(current.challengeId);
         }
 
         $('.dpc-current-score').textContent=current.selected
@@ -3681,7 +3694,7 @@ html.dpc-viewing body {
         $('#dpc-submit-comment').disabled=busy||!current.comment||!(current.next||current.prev);
 
         $('.dpc-comment-hint').textContent=
-            'Unsaved comment';
+            isPreview?'Preview only — nothing is submitted':'Unsaved comment';
     };
 
     function commit(p,direction=0) {
@@ -3995,6 +4008,13 @@ html.dpc-viewing body {
 
     scores.forEach(b=>{
         b.onclick=()=>{
+            if(isPreview){
+                current.selected=b.dataset.score;
+                scores.forEach(score=>{const selected=score===b;score.classList.toggle('selected',selected);score.setAttribute('aria-pressed',String(selected));});
+                $('.dpc-current-score').textContent=current.selected+' / 10';
+                $('.dpc-comment-score').textContent='Rated '+current.selected+'/10';
+                return;
+            }
             const link=current.ratings.find(a=>
                 a.textContent.trim()===b.dataset.score
             );
@@ -4021,6 +4041,7 @@ html.dpc-viewing body {
 
     $('.dpc-overview').onclick=e=>{
         e.stopPropagation();
+        if(isPreview){location.href=$('.dpc-challenge').href;return;}
 
         if (busy||!current.challengeId) return;
 
@@ -4459,7 +4480,7 @@ html.dpc-viewing body {
     position();
     slide(1,current);
     update();
-    neighbours();
+    if(!isPreview)neighbours();
     scrollTo(0,0);
 }
 
