@@ -2,7 +2,7 @@
 // ==UserScript==
 // @name DPChallenge Mobile — Editorial Gallery
 // @namespace dpc-mobile
-// @version 5.25
+// @version 5.26
 // @updateURL https://raw.githubusercontent.com/Konador/dpc-mobile-restyle/main/dpc-mobile.user.js
 // @downloadURL https://raw.githubusercontent.com/Konador/dpc-mobile-restyle/main/dpc-mobile.user.js
 // @match *://*.dpchallenge.com/challenge_vote_image.php*
@@ -1165,6 +1165,7 @@ html.dpc-viewing body {
     style.textContent += "@property --dpc-save-angle{syntax:\"<angle>\";initial-value:0deg;inherits:false}@keyframes dpc-saving-gradient{to{--dpc-save-angle:360deg}}#dpc-app .dpc-score.dpc-saving-button,#dpc-app #dpc-submit-comment.dpc-saving-button:disabled{opacity:1!important;background:linear-gradient(var(--dpc-save-angle),#8fa7df 0%,#c5d3f3 48%,#91a8df 100%)!important;color:#102537!important;border-color:#b4c5ed!important;animation:dpc-saving-gradient 1.8s linear infinite}#dpc-app .dpc-score.pressed.dpc-saving-button{animation:dpc-vote-press .32s ease-out both,dpc-saving-gradient 1.8s linear infinite}@media(prefers-reduced-motion:reduce){#dpc-app .dpc-score.dpc-saving-button,#dpc-app .dpc-score.pressed.dpc-saving-button,#dpc-app #dpc-submit-comment.dpc-saving-button:disabled{animation:none!important}}";
     style.textContent += "#dpc-app .dpc-entry-grid .dpc-home-submitted-card{grid-column:1/-1;min-height:160px;isolation:isolate;overflow:hidden;position:relative}#dpc-app .dpc-entry-grid .dpc-home-submitted-card:before{content:\"\";position:absolute;inset:0;z-index:-1;background-size:cover;background-position:center right;background-repeat:no-repeat}#dpc-app .dpc-entry-grid .dpc-home-submitted-card .dpc-home-meta{max-width:72%;margin:0 0 10px;opacity:1}#dpc-app .dpc-entry-grid .dpc-home-submitted-card .dpc-home-detail{display:flex;flex-direction:row;flex-wrap:wrap;gap:6px 10px;margin:0;padding-top:0;border:0}#dpc-app .dpc-entry-grid .dpc-home-submitted-status{font:600 12px/1.4 system-ui;color:var(--accent);margin-top:10px}#dpc-app .dpc-entry-grid .dpc-home-submitted-card .dpc-home-action{margin-top:8px;align-self:flex-start}";
     style.textContent += "#dpc-app .dpc-home-main-tabs{gap:0;justify-content:space-between}#dpc-app .dpc-home-main-tabs .dpc-home-challenge-tab{flex:1;text-align:center;font-size:clamp(19px,5.5vw,29px)}#dpc-app [id^=dpc-home-challenge-panel-][hidden]{display:none!important}";
+    style.textContent += "#dpc-app .dpc-home-main-tabs .dpc-home-challenge-tab.active em{font-style:normal}#dpc-app #dpc-home-challenge-panel-1 .dpc-home-vote-card{padding:13px 12px!important;min-height:142px;border-radius:6px}#dpc-app #dpc-home-challenge-panel-1 .dpc-home-vote-card h3,#dpc-app #dpc-home-challenge-panel-1 .dpc-home-vote-card h3 a{font:500 23px/1.08 var(--serif)!important;letter-spacing:inherit}#dpc-app #dpc-home-challenge-panel-1 .dpc-home-vote-card .dpc-home-meta{font:400 13px/1.45 system-ui!important;margin:0 0 12px;opacity:.86}#dpc-app #dpc-home-challenge-panel-1 .dpc-home-vote-card .dpc-home-detail{font:400 11px/1.3 system-ui;gap:5px 8px}#dpc-app #dpc-home-challenge-panel-1 .dpc-home-vote-status{font:500 11px/1.4 system-ui}#dpc-app #dpc-home-challenge-panel-1 .dpc-home-action{font:500 11px/1.4 system-ui;padding:7px 8px}#dpc-app #dpc-home-challenge-panel-1 .dpc-home-vote-card:before{transition:none!important}";
     const progressMarkup = `
 <div class="dpc-progress">
     <div class="dpc-progress-label">
@@ -1671,7 +1672,7 @@ html.dpc-viewing body {
                 if(item.progress){const bar=make('div','dpc-home-progress'),fill=make('i','dpc-home-rated-fill'),comments=make('i','dpc-home-comment-fill');fill.style.width=Math.min(100,100*+item.progress[1]/Math.max(1,+item.progress[2]))+'%';comments.style.width='0%';bar.append(fill,comments);card.append(bar);}
                 if(voting){
                     card.classList.add('dpc-home-vote-card');
-                    const voteKey='dpc-vote-bg-v2-'+safe(item.action);
+                    const voteKey='dpc-vote-bg-v3-'+(new URL(safe(item.a)).searchParams.get('CHALLENGE_ID')||safe(item.action));
                     const set=(src,base)=>{if(!src)return;try{const u=new URL(src,base);if(!/^https?:$/.test(u.protocol))return;card.style.setProperty('--vote-image','url('+JSON.stringify(u.href)+')');return u.href;}catch{}};
                     let voteCached=null;try{voteCached=JSON.parse(sessionStorage.getItem(voteKey)||'null');}catch{}
                     if(voteCached?.src)set(voteCached.src,safe(item.action));
@@ -1686,22 +1687,30 @@ html.dpc-viewing body {
                             if(completed){const action=card.querySelector('.dpc-home-action');if(action)action.textContent=n===0?'Start commenting':'Continue commenting';}
                             const fill=card.querySelector('.dpc-home-comment-fill');if(fill)fill.style.width=(100*n/+item.progress[2])+'%';
                         }).catch(()=>{});
-                        if(voteCached&&Date.now()-voteCached.time<3600000)return;
+                        if(voteCached?.src)return;
                         const images=[...doc.querySelectorAll('.dpc-vote-thumbnail-image img,.dpc-vote-primary-image,.dpc-vote-thumbnail-cell img[src],a[href*="challenge_vote_image.php"] img[src]')].filter(im=>{const src=im.getAttribute('src')||'';return src&&!/spacer|pixel|pix\.gif|logo|ribbon|removed\.png/i.test(src);});
                         if(!images.length)return;
                         const ranked=images.map(image=>({image,rating:Number(image.closest('.dpc-vote-thumbnail-cell')?.querySelector('a.vs')?.textContent.trim())||0})).filter(x=>x.rating>0).sort((a,b)=>b.rating-a.rating).slice(0,10);
                         const pool=ranked.length?ranked.map(x=>x.image):images;
                         const image=pool[Math.floor(Math.random()*pool.length)];
-                        // Show the thumbnail immediately, even if the full-size fetch fails.
-                        const thumb=set(image.getAttribute('src'),response.url);saveVote(thumb);
-                        if(image.matches('.dpc-vote-primary-image'))return;
-                        const entry=image.closest('a[href*="challenge_vote_image.php"]')||image.closest('.dpc-vote-thumbnail-cell')?.querySelector('a[href*="challenge_vote_image.php"]');
-                        if(!entry)return;
-                        const target=new URL(entry.getAttribute('href'),response.url);
-                        const full=await interactiveFetch(target.href,{credentials:'same-origin'});if(!full.ok)return;
-                        const photoDoc=new DOMParser().parseFromString(await full.text(),'text/html');
-                        const photo=photoDoc.querySelector('.dpc-vote-primary-image');
-                        if(photo){const src=set(photo.getAttribute('src'),full.url);saveVote(src);}
+                        // Pick one photograph and reveal only one decoded background.
+                        const thumb=new URL(image.getAttribute('src'),response.url).href;
+                        let candidate=thumb;
+                        if(!image.matches('.dpc-vote-primary-image')){
+                            const entry=image.closest('a[href*="challenge_vote_image.php"]')||image.closest('.dpc-vote-thumbnail-cell')?.querySelector('a[href*="challenge_vote_image.php"]');
+                            if(entry)try{
+                                const target=new URL(entry.getAttribute('href'),response.url);
+                                const full=await interactiveFetch(target.href,{credentials:'same-origin'});
+                                if(full.ok){
+                                    const photoDoc=new DOMParser().parseFromString(await full.text(),'text/html');
+                                    const photo=photoDoc.querySelector('.dpc-vote-primary-image');
+                                    if(photo?.getAttribute('src'))candidate=new URL(photo.getAttribute('src'),full.url).href;
+                                }
+                            }catch{}
+                        }
+                        for(const url of new Set([candidate,thumb])){
+                            try{const preload=new Image();preload.src=url;await preload.decode();saveVote(set(url,response.url));break;}catch{}
+                        }
                     }
                     const voteObserver=new IntersectionObserver(items=>{if(items.some(x=>x.isIntersecting)){voteObserver.disconnect();loadVoteImage().catch(()=>{});}},{rootMargin:'300px'});voteObserver.observe(card);
                 }
