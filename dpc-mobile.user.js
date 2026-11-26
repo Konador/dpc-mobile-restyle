@@ -2,7 +2,7 @@
 // ==UserScript==
 // @name DPChallenge Mobile — Editorial Gallery
 // @namespace dpc-mobile
-// @version 5.45
+// @version 5.46
 // @updateURL https://raw.githubusercontent.com/Konador/dpc-mobile-restyle/main/dpc-mobile.user.js
 // @downloadURL https://raw.githubusercontent.com/Konador/dpc-mobile-restyle/main/dpc-mobile.user.js
 // @match *://*.dpchallenge.com/challenge_vote_image.php*
@@ -3402,16 +3402,36 @@ html.dpc-viewing body {
         const forms=[...document.forms].filter(f=>f.querySelector('textarea')||/forum/i.test(f.action)&&f.querySelector('input[type=submit],button'));
         const postRows=doc=>{
             const result=[];
-            for(const message of doc.querySelectorAll('.dpc-forum-message .forum-post, .forum-post')){
-                if(message.querySelector('.forum-post')||message.closest('script,style'))continue;
-                let row=message.closest('tr');
-                while(row&&!row.querySelector('.dpc-forum-author-details')){
-                    const outer=row.parentElement?.closest('tr');if(!outer||outer.querySelectorAll('.forum-post').length!==1) {row=null;break;}row=outer;
+            const tables=[...doc.querySelectorAll('table.dpc-forum-thread, .dpc-forum-thread table')];
+            for(const table of tables){
+                let current=null;
+                for(const row of table.rows||[]){
+                    const author=row.querySelector('.dpc-forum-author-details');
+                    const message=row.querySelector('.dpc-forum-message .forum-post td,.dpc-forum-message .forum-post');
+                    if(author&&author.closest('table')!==table&&!row.querySelector('.dpc-forum-actions'))continue;
+                    if(author&&row.querySelectorAll('.dpc-forum-author-details').length===1){
+                        current={row,author,act:row.querySelector('.dpc-forum-actions'),message:null};
+                    }
+                    if(current&&message&&!current.message){
+                        current.message=message.matches('table')?message.querySelector('td'):message;
+                        if(current.message){result.push(current);current=null;}
+                    }
                 }
-                if(!row||row.querySelectorAll('.forum-post').length!==1||row.querySelectorAll('.dpc-forum-author-details').length!==1||result.includes(row))continue;
-                result.push(row);
+                if(result.length)return result;
             }
-            return result;
+            // Some forum pages omit the wrapper class. Match the author and message
+            // using the closest common table and consecutive direct rows.
+            for(const author of doc.querySelectorAll('.dpc-forum-author-details')){
+                for(let row=author.closest('tr');row;row=row.parentElement?.closest('tr')){
+                    if(row.querySelectorAll('.dpc-forum-author-details').length!==1)break;
+                    const act=row.querySelector('.dpc-forum-actions');
+                    if(!act)continue;
+                    const selector='.dpc-forum-message .forum-post td,.dpc-forum-message .forum-post,.dpc-forum-message';
+                    const message=row.querySelector(selector)||row.nextElementSibling?.querySelector(selector);
+                    if(message&&!message.contains(author)){result.push({row,author,act,message:message.matches('table')?message.querySelector('td'):message});break;}
+                }
+            }
+            return result.filter(p=>p.message);
         };
         const initialPosts=postRows(document);
         // Never mistake a thread's layout tables for a forum index.
@@ -3437,10 +3457,9 @@ html.dpc-viewing body {
         const known=new Set();let firstUnread=null;
         function renderPosts(doc,base){
             let count=0;
-            for(const row of postRows(doc)){
-                const author=row.querySelector('.dpc-forum-author-details'),post=row.querySelector('.forum-post'),message=post?.matches('table')?post.querySelector('td'):post;
+            for(const {row,author,message,act} of postRows(doc)){
                 if(!message)continue;
-                const nativeAnchor=row.querySelector('a[name],a[id]'),act=row.querySelector('.dpc-forum-actions');
+                const nativeAnchor=row.querySelector('a[name],a[id]');
                 const key=nativeAnchor?.name||nativeAnchor?.id||[clean(author),clean(act),clean(message)].join('|');
                 if(known.has(key))continue;known.add(key);count++;
                 const card=make('article','dpc-forum-card');if(nativeAnchor&&(nativeAnchor.name||nativeAnchor.id))card.id=nativeAnchor.name||nativeAnchor.id;
