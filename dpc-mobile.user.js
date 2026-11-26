@@ -2,7 +2,7 @@
 // ==UserScript==
 // @name DPChallenge Mobile — Editorial Gallery
 // @namespace dpc-mobile
-// @version 5.00
+// @version 5.01
 // @updateURL https://raw.githubusercontent.com/Konador/dpc-mobile-restyle/main/dpc-mobile.user.js
 // @downloadURL https://raw.githubusercontent.com/Konador/dpc-mobile-restyle/main/dpc-mobile.user.js
 // @match *://*.dpchallenge.com/challenge_vote_image.php*
@@ -13,6 +13,7 @@
 // @match *://*.dpchallenge.com/profile.php*
 // @match *://*.dpchallenge.com/challenge_results.php*
 // @match *://*.dpchallenge.com/challenge_index.php*
+// @match *://*.dpchallenge.com/challenge_submit.php*
 // @grant none
 // @run-at document-start
 // @noframes
@@ -161,6 +162,7 @@ let root = document.documentElement;
 const isHome = location.pathname === '/' || location.pathname === '/index.php';
 const isPhotoDetail = location.pathname === '/image.php';
 const isProfile = location.pathname === '/profile.php';
+const isSubmit = location.pathname === '/challenge_submit.php';
 const isChallengeIndex = location.pathname === '/challenge_index.php';
 const isResults = location.pathname === '/challenge_results.php';
 const isList = location.pathname.includes('challenge_vote_list.php');
@@ -1121,6 +1123,7 @@ html.dpc-viewing body {
     style.textContent += "#dpc-app .dpc-native-menu-group>summary.dpc-split-summary:after{display:none}#dpc-app .dpc-split-summary>.dpc-expand-hit{display:flex;align-items:center;flex:1;min-width:0;width:auto;padding:8px 0;cursor:pointer}#dpc-app .dpc-split-summary>a.dpc-parent-link{flex:0 0 44px;width:44px;justify-content:center;padding:0;color:var(--accent)}#dpc-app .dpc-split-summary>.dpc-restyle-mark{flex:none;margin-right:5px}#dpc-app .dpc-native-menu-children .dpc-split-summary>a.dpc-parent-link{padding:0;min-height:34px}#dpc-app .dpc-native-menu-children .dpc-split-summary>.dpc-expand-hit{padding:7px 0}";
     style.textContent += "#dpc-app .dpc-split-summary>a.dpc-restyle-badge-link{display:flex;align-items:center;justify-content:center;flex:none;padding:0 5px;border:0;align-self:stretch}#dpc-app .dpc-restyle-badge-link .dpc-restyle-mark{margin:0}";
     style.textContent += "#dpc-app .dpc-challenge-index .dpc-home-challenge-tabs{gap:clamp(8px,3vw,22px);overflow-x:auto;scrollbar-width:none}#dpc-app .dpc-challenge-index .dpc-home-challenge-tab{font-size:clamp(15px,4.5vw,24px)}#dpc-app .dpc-index-panel[hidden]{display:none!important}#dpc-app .dpc-challenge-index .dpc-entry-grid{margin-top:0}#dpc-app .dpc-index-extra{font-size:11px;color:var(--muted);margin-bottom:12px}#dpc-app .dpc-index-type{grid-column:1/-1;color:var(--muted);font-size:10px}#dpc-app .dpc-challenge-index .dpc-home-detail{grid-template-columns:1fr}#dpc-app .dpc-challenge-index .dpc-home-detail>*{grid-column:1/-1;text-align:left}";
+    style.textContent += "#dpc-app .dpc-submit-page{max-width:680px;padding:16px 12px 32px}#dpc-app .dpc-submit-back{display:inline-block;font-size:13px;margin:0 0 14px;color:var(--accent)}#dpc-app .dpc-submit-card{padding:16px;margin:0 0 14px}#dpc-app .dpc-submit-kicker{font:600 10px system-ui;letter-spacing:.12em;text-transform:uppercase;color:var(--accent);margin-bottom:8px}#dpc-app .dpc-submit-title{font:500 clamp(36px,10vw,58px)/1.02 var(--serif),Georgia,serif;letter-spacing:-.045em;margin:0 0 12px;overflow-wrap:anywhere}#dpc-app .dpc-submit-description{font-size:14px;line-height:1.55;margin:0 0 14px}#dpc-app .dpc-submit-meta{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.6fr);margin:0;font-size:12px}#dpc-app .dpc-submit-meta dt,#dpc-app .dpc-submit-meta dd{margin:0;padding:8px 0;border-top:1px solid var(--line)}#dpc-app .dpc-submit-meta dt{color:var(--muted)}#dpc-app .dpc-submit-meta dd{text-align:right;overflow-wrap:anywhere}#dpc-app .dpc-submit-card h2{font:500 28px/1.1 var(--serif),Georgia,serif;letter-spacing:-.035em;margin:0 0 14px;padding:0 0 10px;border-bottom:1px solid var(--line);color:inherit}#dpc-app .dpc-submit-card h2 em{color:inherit}#dpc-app .dpc-submit-rule-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}#dpc-app .dpc-submit-rule-grid>div{background:#80808013;border-radius:5px;padding:10px;font-size:12px;line-height:1.45}#dpc-app .dpc-submit-rule-grid strong{display:block;color:var(--accent);font-size:11px;margin-bottom:4px}#dpc-app .dpc-submit-rules-link{display:inline-block;margin-top:12px;font-size:12px}#dpc-app .dpc-native-upload{margin:0!important;padding:0!important;border:0!important;background:none!important;width:auto!important;color:inherit}#dpc-app #upload_container{display:flex;flex-direction:column;gap:10px;width:100%;position:relative}#dpc-app #upload_file{float:none!important;width:100%!important;box-sizing:border-box;min-height:160px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;background:#8080800b;border:1px dashed var(--accent)!important;border-radius:8px;padding:20px 8px!important;text-align:center}#dpc-app #upload_file>img,#dpc-app #upload_file>div>div{display:none!important}#dpc-app #upload_file>div{float:none!important;padding:0!important;color:var(--accent)!important;font:500 24px/1.2 var(--serif),Georgia,serif!important}#dpc-app .dpc-upload-graphic{width:48px;height:48px;color:var(--accent)}#dpc-app .dpc-upload-graphic svg{width:100%;height:100%}#dpc-app .dpc-upload-hint{font:12px system-ui;color:var(--muted)}#dpc-app .dpc-workshop-button{float:none!important;margin:0!important;border:1px solid var(--line)!important;border-radius:6px;padding:0!important;display:flex;align-items:center;justify-content:center;min-height:44px}#dpc-app .dpc-workshop-button>img{display:none}#dpc-app .dpc-workshop-picker{float:none!important;flex:1;text-align:center;padding:12px!important;color:var(--accent)!important;font:500 13px system-ui!important}#dpc-app #file_selection{margin:14px 0!important;padding:10px;background:#80808012;border-radius:6px;overflow:hidden}#dpc-app #file_selection table{width:100%;table-layout:fixed}#dpc-app #file_selection td{max-width:100%;overflow-wrap:anywhere}#dpc-app #file_selection img{width:auto!important;height:auto!important;max-width:100%;max-height:210px;object-fit:contain;border:0!important;border-radius:4px}#dpc-app #file_selection td>div{max-width:100%;white-space:normal;overflow-wrap:anywhere}#dpc-app #upload_progress{width:100%!important;font-size:11px}#dpc-app #upload_size_progress_bar{background:var(--accent)!important}#dpc-app .dpc-upload-agreement{width:100%!important;margin:14px 0;background:#8080800c;border:1px solid var(--line);border-radius:6px;padding:9px;border-spacing:6px;font-size:12px;line-height:1.55}#dpc-app .dpc-upload-agreement label{font:inherit;color:inherit}#dpc-app #agreement_check{width:20px;height:20px;accent-color:var(--accent);margin:2px 4px 0 0}#dpc-app .dpc-native-upload input[type=button],#dpc-app .dpc-classic-upload input[type=submit],#dpc-app .dpc-classic-upload input[type=button]{border:1px solid var(--line);background:transparent;color:inherit;font:600 14px system-ui;border-radius:6px;min-height:44px;padding:10px 16px;margin:0 6px 8px 0}#dpc-app #submit{background:var(--accent);color:#111115;border-color:var(--accent);min-width:55%}#dpc-app #submit:disabled{opacity:.4}#dpc-app .dpc-native-upload .textsm{font:12px/1.5 system-ui;color:var(--muted)}#dpc-app .dpc-native-upload .textsm span[onclick]{color:var(--accent);text-decoration:underline}#dpc-app .dpc-classic-upload .divider,#dpc-app .dpc-classic-upload .divider_container{background:none;color:inherit;border:0;margin:0;padding:0}#dpc-app .dpc-classic-upload input[type=file]{max-width:100%;margin:12px 0}html.dpc-submission.dpc-mobile body>.ui-dialog,html.dpc-submission.dpc-mobile body>.ui-widget-overlay,html.dpc-submission.dpc-mobile body>[id*=\"jqip\"],html.dpc-submission.dpc-mobile body>[class*=\"imagePicker\"]{display:block!important;max-width:100vw}";
     document.head.append(style);
 
     const header = `
@@ -1343,7 +1346,7 @@ html.dpc-viewing body {
         const welcome=(document.body.textContent||'').match(/Welcome back[^\r\n]{0,80}/i);
         if(welcome)menu.prepend(make('div','dpc-home-welcome',welcome[0].split(/\(\s*log out/i)[0].trim()));
         // Mark only destinations actually covered by the userscript's @match paths.
-        const supportedPaths=["/challenge_vote_image.php","/challenge_vote_list.php","/","/index.php","/image.php","/challenge_results.php","/profile.php","/challenge_index.php"];
+        const supportedPaths=["/challenge_vote_image.php","/challenge_vote_list.php","/","/index.php","/image.php","/challenge_results.php","/profile.php","/challenge_index.php","/challenge_submit.php"];
         let markerId=0;
         for(const a of menu.querySelectorAll('a[href]')){
             let u;try{u=new URL(a.href,location.href);}catch{continue;}
@@ -2868,6 +2871,58 @@ html.dpc-viewing body {
         select(readTab());addEventListener('hashchange',()=>select(readTab()));addEventListener('popstate',()=>select(readTab()));
         $('#dpc-original').onclick=()=>original();mount();
     }
+
+    function buildSubmission(){
+        const upload=document.getElementById('upload_container'),submit=document.getElementById('submit'),agreement=document.getElementById('agreement_check');
+        const uploadSection=upload?.closest('.divider_container');
+        const detailHeading=[...document.querySelectorAll('.divider')].find(n=>/^Challenge Details\b/i.test(n.textContent.trim()));
+        const detailSection=detailHeading?.nextElementSibling;
+        if(!uploadSection||!submit||!agreement||!detailSection)return; // Leave other submission states native until their markup is known.
+        const make=(tag,cls,txt)=>{const n=document.createElement(tag);if(cls)n.className=cls;if(txt!==undefined)n.textContent=txt;return n;};
+        const title=detailHeading.textContent.trim().replace(/^Challenge Details\s*[-–—]?\s*/i,'');
+        const fields=new Map();
+        for(const row of detailSection.querySelectorAll('tr'))if(row.cells.length===2)fields.set(row.cells[0].textContent.trim().replace(/:$/,''),row.cells[1]);
+        const rules=[...document.querySelectorAll('table')].find(t=>t.rows.length===2&&t.rows[0].textContent.trim()==='Rules at a Glance')?.rows[1].cells[0];
+        const classic=document.getElementById('classic');
+        app.innerHTML=header+'<main class="dpc-home dpc-submit-page"></main>'+footer;
+        const body=$('.dpc-submit-page');
+        const back=make('a','dpc-submit-back','← Open for entries');back.href='/challenge_index.php#submit';body.append(back);
+        const hero=make('section','dpc-profile-card dpc-submit-card');body.append(hero);
+        hero.append(make('div','dpc-submit-kicker','Challenge entry'),make('h1','dpc-submit-title',title));
+        const description=fields.get('Challenge Details');if(description)hero.append(make('p','dpc-submit-description',description.textContent.trim()));
+        const meta=make('dl','dpc-submit-meta');hero.append(meta);
+        for(const [key,label] of [['Challenge Type','Type'],['Challenge Rules','Editing rules'],['Submission Deadline','Deadline'],['Voting Dates','Voting'],['Extra Rules','Extra rules']]){
+            const cell=fields.get(key);if(!cell)continue;const dt=make('dt','',label),dd=make('dd');const a=cell.querySelector('a[href]');if(a){const link=make('a','',a.textContent.trim());link.href=a.href;dd.append(link);}else dd.textContent=cell.textContent.trim();meta.append(dt,dd);
+        }
+        if(rules){const ruleCard=make('section','dpc-profile-card dpc-submit-card');body.append(ruleCard);const h=make('h2');h.append('Before you ',make('em','','upload'));ruleCard.append(h);
+            const grid=make('div','dpc-submit-rule-grid');ruleCard.append(grid);
+            for(const li of rules.querySelectorAll('li')){const cell=make('div');const label=li.querySelector('b')?.textContent||'';cell.append(make('strong','',label.replace(/:$/,'')),make('span','',li.textContent.replace(label,'').trim()));grid.append(cell);}
+            const a=[...rules.querySelectorAll('a')].find(a=>/challenge_rules\.php/.test(a.href));if(a){const link=make('a','dpc-submit-rules-link','Read the full challenge rules →');link.href=a.href;link.target='_blank';link.rel='noopener';ruleCard.append(link);}
+        }
+        const uploadCard=make('section','dpc-profile-card dpc-submit-card dpc-upload-card');body.append(uploadCard);
+        const h=make('h2');h.append('Upload your ',make('em','','entry'));uploadCard.append(h);
+        // Move the original live DOM, never clone or recreate the uploader, hidden inputs, or consent.
+        uploadCard.append(uploadSection);
+        uploadSection.classList.add('dpc-native-upload');
+        const drop=document.getElementById('upload_file'),picker=document.getElementById('imagePicker');
+        if(drop){
+            const graphic=make('span','dpc-upload-graphic');graphic.innerHTML='<svg viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="7" y="9" width="34" height="30" rx="4"/><path d="m8 30 10-10 8 8 5-5 10 10"/><circle cx="32" cy="17" r="3"/><path d="M24 5v11m-5-5 5-6 5 6"/></svg>';
+            drop.prepend(graphic);drop.append(make('span','dpc-upload-hint','Choose a JPEG from your device'));drop.setAttribute('aria-label','Choose a photograph to upload');
+        }
+        if(picker){picker.classList.add('dpc-workshop-picker');picker.parentElement.classList.add('dpc-workshop-button');}
+        const agreementTable=agreement.closest('table');if(agreementTable)agreementTable.classList.add('dpc-upload-agreement');
+        const selection=document.getElementById('file_selection');if(selection)selection.classList.add('dpc-upload-selection');
+        const cancel=uploadSection.querySelector('input[type=button][value=Cancel]');if(cancel)cancel.onclick=()=>{location.href='/challenge_index.php#submit';};
+        if(classic){classic.classList.add('dpc-profile-card','dpc-submit-card','dpc-classic-upload');body.append(classic);}
+        // Picker plugins may append their overlay directly to body; keep those native nodes visible.
+        root.classList.add('dpc-submission');
+        $('#dpc-original').onclick=()=>original();
+        mount();
+        function refreshUploader(){try{window.uploader?.refresh();}catch{}}
+        requestAnimationFrame(refreshUploader);addEventListener('load',refreshUploader,{once:true});addEventListener('resize',refreshUploader);
+        if(drop&&window.ResizeObserver){const observer=new ResizeObserver(refreshUploader);observer.observe(drop);}
+    }
+    if (isSubmit) { buildSubmission(); return; }
     if (isChallengeIndex) { buildChallengeIndex(); return; }
     if (isProfile) { buildProfile(); return; }
     if (isResults) { buildChallengeResults(); return; }
