@@ -2,7 +2,7 @@
 // ==UserScript==
 // @name DPChallenge Mobile — Editorial Gallery
 // @namespace dpc-mobile
-// @version 4.98
+// @version 4.99
 // @updateURL https://raw.githubusercontent.com/Konador/dpc-mobile-restyle/main/dpc-mobile.user.js
 // @downloadURL https://raw.githubusercontent.com/Konador/dpc-mobile-restyle/main/dpc-mobile.user.js
 // @match *://*.dpchallenge.com/challenge_vote_image.php*
@@ -1117,6 +1117,7 @@ html.dpc-viewing body {
     style.textContent += "#dpc-app .dpc-profile-fields-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:0 16px}#dpc-app .dpc-profile-fields-grid .wide{grid-column:1/-1}#dpc-app .dpc-profile-fields-grid .dpc-profile-field{border-bottom:1px solid var(--line);padding:6px 0}#dpc-app .dpc-profile-fields-grid h3{margin:0 0 3px}#dpc-app .dpc-profile-fields-grid .dpc-profile-prose{margin:0}#dpc-app .dpc-profile-stat-grid{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:0;margin:0}#dpc-app .dpc-profile-stat-grid dt,#dpc-app .dpc-profile-stat-grid dd{padding:6px 0;border-bottom:1px solid var(--line);margin:0}#dpc-app .dpc-profile-stat-grid dt{color:var(--muted)}#dpc-app .dpc-profile-stat-grid dd{text-align:right;font-weight:500}#dpc-app .dpc-profile-stat-group{grid-column:1/-1;color:var(--accent);font-weight:600;margin-top:8px}";
     style.textContent += "#dpc-app .dpc-profile-photo-title .dpc-overlay-ribbon{position:static;display:inline-block;width:16px;height:22px;vertical-align:-4px;margin:0 6px 0 0;filter:none}";
     style.textContent += "#dpc-app .dpc-native-menu-group>summary.dpc-split-summary:after{display:none}#dpc-app .dpc-split-summary>.dpc-expand-hit{display:flex;align-items:center;flex:1;min-width:0;width:auto;padding:8px 0;cursor:pointer}#dpc-app .dpc-split-summary>a.dpc-parent-link{flex:0 0 44px;width:44px;justify-content:center;padding:0;color:var(--accent)}#dpc-app .dpc-split-summary>.dpc-restyle-mark{flex:none;margin-right:5px}#dpc-app .dpc-native-menu-children .dpc-split-summary>a.dpc-parent-link{padding:0;min-height:34px}#dpc-app .dpc-native-menu-children .dpc-split-summary>.dpc-expand-hit{padding:7px 0}";
+    style.textContent += "#dpc-app .dpc-split-summary>a.dpc-restyle-badge-link{display:flex;align-items:center;justify-content:center;flex:none;padding:0 5px;border:0;align-self:stretch}#dpc-app .dpc-restyle-badge-link .dpc-restyle-mark{margin:0}";
     document.head.append(style);
 
     const header = `
@@ -1346,7 +1347,7 @@ html.dpc-viewing body {
             badge.title='Restyled for mobile';badge.setAttribute('aria-label','Restyled for mobile');
             const id='dpc-re-shutter-'+(++markerId);
             badge.innerHTML='<svg viewBox="0 0 40 40" aria-hidden="true"><mask id="'+id+'"><circle cx="20" cy="20" r="18.5" fill="white"/><path d="M20 12 L26.928 16 L26.928 24 L20 28 L13.072 24 L13.072 16 Z" fill="black"/>'+[0,60,120,180,240,300].map(angle=>'<path d="M20 12 L41 24.124" stroke="black" stroke-width="2.4" transform="rotate('+angle+' 20 20)"/>').join('')+'</mask><circle cx="20" cy="20" r="18.5" fill="currentColor" mask="url(#'+id+')"/></svg><i aria-hidden="true">re</i>';
-            if(a.classList.contains('dpc-parent-link')){a.before(badge);}else{const name=make('span','dpc-restyle-link-label');while(a.firstChild)name.append(a.firstChild);a.append(name,badge);a.classList.add('dpc-restyled-link');}
+            if(a.classList.contains('dpc-parent-link')){const badgeLink=make('a','dpc-restyle-badge-link');badgeLink.href=a.href;badgeLink.setAttribute('aria-label',a.getAttribute('aria-label'));badgeLink.append(badge);badgeLink.addEventListener('click',e=>{e.stopPropagation();setMenu(false);});badgeLink.addEventListener('keydown',e=>{if(e.key==='Enter')e.stopPropagation();});a.before(badgeLink);}else{const name=make('span','dpc-restyle-link-label');while(a.firstChild)name.append(a.firstChild);a.append(name,badge);a.classList.add('dpc-restyled-link');}
         }
     }
 
