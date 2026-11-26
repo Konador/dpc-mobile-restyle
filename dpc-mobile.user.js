@@ -2,7 +2,7 @@
 // ==UserScript==
 // @name DPChallenge Mobile — Editorial Gallery
 // @namespace dpc-mobile
-// @version 5.19
+// @version 5.20
 // @updateURL https://raw.githubusercontent.com/Konador/dpc-mobile-restyle/main/dpc-mobile.user.js
 // @downloadURL https://raw.githubusercontent.com/Konador/dpc-mobile-restyle/main/dpc-mobile.user.js
 // @match *://*.dpchallenge.com/challenge_vote_image.php*
@@ -3774,7 +3774,8 @@ html.dpc-viewing body {
         const {
             direction=1,
             score=null,
-            after=null
+            after=null,
+            stay=false
         }=options;
 
         const p=current;
@@ -3842,7 +3843,7 @@ html.dpc-viewing body {
             if (!loaded) {
                 frame.remove();
 
-                if (after) {
+                if (after||stay) {
                     status('Could not save. Please try again.');
                     setBusy(false);
                     return;
@@ -3875,7 +3876,9 @@ html.dpc-viewing body {
 
         ++generation;
 
-        let done=false;
+        let done=false, returning=false;
+        const submittedComment=dirty?input.value:null;
+        const savedScroll=scrollY;
 
         function cleanup() {
             clearTimeout(timer);
@@ -3907,6 +3910,7 @@ html.dpc-viewing body {
                     responseURL.searchParams.get('CHALLENGE_ID')===
                         String(p.challengeId)
                 ) {
+                    if(stay&&!returning){returning=true;frame.src=imageURL(p.id);return;}
                     const cell=[...responseDoc.querySelectorAll(
                         '.dpc-vote-thumbnail-cell'
                     )].find(cell=>
@@ -3957,6 +3961,12 @@ html.dpc-viewing body {
                     updated.challengeId!==p.challengeId
                 ) return fail();
 
+                if(stay&&updated.id!==p.id&&!returning){returning=true;frame.src=imageURL(p.id);return;}
+                if(stay){
+                    if(updated.id!==p.id||(score!==null&&updated.selected!==String(score)))return fail();
+                    const saved=updated.comment?.defaultValue||'';
+                    if(submittedComment!==null&&saved.replace(/\r\n/g,'\n').trim()!==submittedComment.replace(/\r\n/g,'\n').trim()&&!(submittedComment.trim()===''&&/^Enter your comment here/i.test(saved)))return fail();
+                }
                 done=true;
                 cleanup();
 
@@ -3988,7 +3998,8 @@ html.dpc-viewing body {
                     promise:Promise.resolve(updated)
                 });
 
-                commit(updated,actualDirection);
+                if(stay){current=updated;position();slide(1,updated);update();status();neighbours();scrollTo(0,savedScroll);if(submittedComment!==null)$('.dpc-comment-hint').textContent='Comment saved';}
+                else commit(updated,actualDirection);
 
                 if (after) after();
 
@@ -4057,7 +4068,7 @@ html.dpc-viewing body {
     // Prevent focus loss from collapsing the keyboard layout before click.
     submitComment.addEventListener('pointerdown',e=>{if(!submitComment.disabled)e.preventDefault();});
     submitComment.addEventListener('mousedown',e=>{if(!submitComment.disabled)e.preventDefault();});
-    submitComment.onclick=()=>{if(!busy&&dirty&&!submitComment.disabled){navigate(current.next?1:-1);}};
+    submitComment.onclick=()=>{if(!busy&&dirty&&!submitComment.disabled){const direction=current.next?1:-1;const link=current.next||current.prev;if(link){input.blur();nativeAction(link,{direction,stay:true});}}};
     $('#dpc-prev').onclick=()=>navigate(-1);
     $('#dpc-next').onclick=()=>navigate(1);
 
@@ -4076,7 +4087,8 @@ html.dpc-viewing body {
 
             nativeAction(link,{
                 direction:1,
-                score:Number(b.dataset.score)
+                score:Number(b.dataset.score),
+                stay:!!current.selected
             });
         };
     });
