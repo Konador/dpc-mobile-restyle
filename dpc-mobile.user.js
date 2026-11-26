@@ -2,7 +2,7 @@
 // ==UserScript==
 // @name DPChallenge Mobile — Editorial Gallery
 // @namespace dpc-mobile
-// @version 5.37
+// @version 5.38
 // @updateURL https://raw.githubusercontent.com/Konador/dpc-mobile-restyle/main/dpc-mobile.user.js
 // @downloadURL https://raw.githubusercontent.com/Konador/dpc-mobile-restyle/main/dpc-mobile.user.js
 // @match *://*.dpchallenge.com/challenge_vote_image.php*
@@ -1140,6 +1140,7 @@ html.dpc-viewing body {
     style.textContent += "#dpc-app .dpc-submit-page .dpc-entry-editor .dpc-entry-status,#dpc-app .dpc-submit-page .dpc-entry-editor .dpc-entry-help{font:400 11px/1.5 system-ui!important;margin:8px 0!important;color:var(--muted)}#dpc-app .dpc-submit-page .dpc-entry-links{display:flex;gap:6px 12px;flex-wrap:wrap;margin:10px 0 0}#dpc-app .dpc-submit-page .dpc-entry-links a{font:600 11px/1.4 system-ui!important;padding:6px 0}#dpc-app .dpc-submit-page .dpc-entry-editor h2:not(:first-child){margin:18px 0 12px!important}#dpc-app .dpc-submit-page .dpc-entry-editor form{margin:0!important;padding:0!important}#dpc-app .dpc-submit-page .dpc-entry-fields{gap:10px}#dpc-app .dpc-submit-page .dpc-entry-field label,#dpc-app .dpc-submit-page .dpc-entry-label{font:600 11px/1.4 system-ui!important}#dpc-app .dpc-submit-page .dpc-entry-field input:not([type=file]),#dpc-app .dpc-submit-page .dpc-entry-field select,#dpc-app .dpc-submit-page .dpc-entry-field textarea{font:400 13px/1.4 system-ui!important;padding:8px!important;min-height:38px}#dpc-app .dpc-submit-page .dpc-entry-field textarea{min-height:100px}#dpc-app .dpc-submit-page .dpc-entry-toolbar{gap:4px}#dpc-app .dpc-submit-page .dpc-entry-toolbar a{display:inline-flex!important;align-items:center;justify-content:center;border:1px solid var(--line);border-radius:4px;padding:5px 7px;font:500 10px/1.2 system-ui!important;color:var(--accent)!important;text-decoration:none!important}#dpc-app .dpc-submit-page .dpc-entry-toolbar a:nth-child(1){font-weight:700!important}#dpc-app .dpc-submit-page .dpc-entry-toolbar a:nth-child(2){font-style:italic!important}#dpc-app .dpc-submit-page .dpc-entry-toolbar a:nth-child(3){text-decoration:underline!important}#dpc-app .dpc-submit-page .dpc-entry-toolbar a:nth-child(4){text-decoration:line-through!important}#dpc-app .dpc-submit-page .dpc-entry-date label{font-size:10px!important}#dpc-app .dpc-submit-page .dpc-entry-editor .dpc-entry-preview{width:100%;height:auto;max-height:55vh;object-fit:contain;margin:0 0 8px}#dpc-app .dpc-submit-page .dpc-entry-editor form>table[hidden]{display:none!important}";
     style.textContent += "#dpc-app.dpc-sticky-site-header{--dpc-sticky-header-height:54px}html:not(.dpc-menu-open) #dpc-app.dpc-sticky-site-header>.dpc-header{position:sticky;top:0;z-index:1002}#dpc-app.dpc-sticky-site-header .dpc-home-main-tabs{position:sticky;top:var(--dpc-sticky-header-height);z-index:90;background:#111115;padding-top:4px;isolation:isolate}html.dpc-light #dpc-app.dpc-sticky-site-header .dpc-home-main-tabs{background:#f5f6f8}html.dpc-menu-open #dpc-app.dpc-sticky-site-header .dpc-home-main-tabs{z-index:90}#dpc-app.dpc-sticky-site-header .dpc-home-main-tabs:before{content:\"\";position:absolute;inset:0 -18px;z-index:-1;background:inherit;pointer-events:none}";
     style.textContent += "#dpc-app .dpc-gallery-context-label{font:400 10px/1.4 system-ui;color:var(--muted);text-align:center;margin:0 0 8px}";
+    style.textContent += "#dpc-app>.dpc-gallery-context-label{height:30px;min-height:30px;display:flex;align-items:center;justify-content:center;margin:0!important;padding:0 12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;box-sizing:border-box}#dpc-app .dpc-profile-section>h2,#dpc-app .dpc-detail-section>h2,#dpc-app .dpc-detail-photographer>h2{position:relative;padding-left:12px!important}#dpc-app .dpc-profile-section>h2:before,#dpc-app .dpc-detail-section>h2:before,#dpc-app .dpc-detail-photographer>h2:before{content:\"\";position:absolute;left:0;top:.16em;width:3px;height:.86em;background:var(--accent)}";
     document.head.append(style);
 
     const header = `
@@ -2802,7 +2803,13 @@ html.dpc-viewing body {
         const swipeArea=make('div','dpc-detail-swipe-area');current.append(swipeArea);
         const challenge=info?.querySelector('a[href*="challenge_results.php"]');
         if(!mounted&&!previewRoot)activeGallery=loadGallery();
-        if(!previewRoot&&activeGallery){const index=activeGallery.entries.findIndex(e=>photoCacheId(e.href)===photoCacheId(location.href));if(index>=0){const indicator=make('div','dpc-gallery-context-label',activeGallery.label+' · '+(index+1)+' / '+activeGallery.entries.length+(activeGallery.queue?.length?'+':''));swipeArea.append(indicator);}}
+        if(!previewRoot){
+            let indicator=app.querySelector(':scope > .dpc-gallery-context-label');
+            if(!indicator){indicator=make('div','dpc-gallery-context-label');body.before(indicator);}
+            const index=activeGallery?.entries.findIndex(e=>photoCacheId(e.href)===photoCacheId(location.href))??-1;
+            const label=index>=0?activeGallery.label+' · '+(index+1)+' / '+activeGallery.entries.length+(activeGallery.queue?.length?'+':''):'Challenge photographs';
+            if(indicator.textContent!==label)indicator.textContent=label;
+        }
         const stage=make('div','dpc-detail-stage');const image=copy(photo);image.removeAttribute('style');image.removeAttribute('srcset');
         const fullSrc=incoming?.record?.src||photo.getAttribute('src');
         const width=Number(photo.getAttribute('width'))||incoming?.record?.probe?.naturalWidth||photo.naturalWidth;
