@@ -2,7 +2,7 @@
 // ==UserScript==
 // @name DPChallenge Mobile — Editorial Gallery
 // @namespace dpc-mobile
-// @version 5.39
+// @version 5.40
 // @updateURL https://raw.githubusercontent.com/Konador/dpc-mobile-restyle/main/dpc-mobile.user.js
 // @downloadURL https://raw.githubusercontent.com/Konador/dpc-mobile-restyle/main/dpc-mobile.user.js
 // @match *://*.dpchallenge.com/challenge_vote_image.php*
@@ -1142,6 +1142,7 @@ html.dpc-viewing body {
     style.textContent += "#dpc-app .dpc-gallery-context-label{font:400 10px/1.4 system-ui;color:var(--muted);text-align:center;margin:0 0 8px}";
     style.textContent += "#dpc-app>.dpc-gallery-context-label{height:30px;min-height:30px;display:flex;align-items:center;justify-content:center;margin:0!important;padding:0 12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;box-sizing:border-box}#dpc-app .dpc-profile-section>h2,#dpc-app .dpc-detail-section>h2,#dpc-app .dpc-detail-photographer>h2{position:relative;padding-left:12px!important}#dpc-app .dpc-profile-section>h2:before,#dpc-app .dpc-detail-section>h2:before,#dpc-app .dpc-detail-photographer>h2:before{content:\"\";position:absolute;left:0;top:.16em;width:3px;height:.86em;background:var(--accent)}";
     style.textContent += "#dpc-app a.dpc-link-pressed,#dpc-app a.dpc-link-loading{opacity:.72;text-decoration:underline!important;text-decoration-thickness:1px!important;text-underline-offset:3px}#dpc-app a.dpc-link-loading{animation:dpc-link-feedback 1.2s ease-in-out infinite alternate}#dpc-app a.dpc-link-pressed:has(img),#dpc-app a.dpc-link-loading:has(img){text-decoration:none!important}#dpc-app a.dpc-link-pressed:has(img) img,#dpc-app a.dpc-link-loading:has(img) img{filter:brightness(.83)}@keyframes dpc-link-feedback{from{opacity:.72}to{opacity:1}}@media(prefers-reduced-motion:reduce){#dpc-app a.dpc-link-loading{animation:none}}";
+    style.textContent += "#dpc-app>.dpc-gallery-context-label{height:27px;min-height:27px;font-size:10px;display:block;text-align:center;line-height:27px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}#dpc-app>.dpc-gallery-context-label+.dpc-photo-detail{padding-top:3px!important}";
     document.head.append(style);
 
     const header = `
@@ -1869,7 +1870,7 @@ html.dpc-viewing body {
                     }
                     return {a,img,author,title:clean(a)||img.alt||'',src:img.currentSrc||img.src,i};
                 });
-                registerGallery(grid,'Homepage results',()=>records.map(rec=>({href:safe(rec.a),src:rec.full||rec.src,title:rec.title})));
+                registerGallery(grid,'Homepage results',()=>records.map(rec=>({href:safe(rec.a),src:rec.full||rec.src,title:rec.title})),name);
                 records.forEach(cachedPhoto);
                 let serial=0,selected=-1,selectionToken=0;
                 const dimensions=()=>{const w=hero.clientWidth;if(!w)return;hero.style.setProperty('--hero-height',Math.min(innerHeight*.6,w)+'px');};
@@ -2607,7 +2608,7 @@ html.dpc-viewing body {
         try{restore=JSON.parse(sessionStorage.getItem(stateKey)||'null');sessionStorage.removeItem(stateKey);}catch{}
         function remember(){try{sessionStorage.setItem(stateKey,JSON.stringify({count:seen.size,y:scrollY}));}catch{}}
         const resultManifest=[];
-        registerGallery(grid,'Challenge results',()=>({entries:resultManifest,queue:queue.slice(),visited:[...visited]}));
+        registerGallery(grid,'Challenge results',()=>({entries:resultManifest,queue:queue.slice(),visited:[...visited]}),name);
         function saveManifest(){if(initial.searchParams.has('order_by_vote'))return;try{sessionStorage.setItem('dpc-detail-manifest-v1',JSON.stringify({time:Date.now(),entries:resultManifest.slice(0,500)}));}catch{}}
         function append(entries){
             const fragment=document.createDocumentFragment();
@@ -2721,7 +2722,7 @@ html.dpc-viewing body {
     // A gallery snapshot belongs to the exact photo click, not the photographer or challenge.
     const contextKey='dpc-gallery-context-v3',contextProviders=new WeakMap();
     let activeGallery=null;
-    function registerGallery(element,label,provider){contextProviders.set(element,{label,provider});}
+    function registerGallery(element,label,provider,subject=''){contextProviders.set(element,{label,provider,subject});}
     function galleryEntries(element){
         return [...element.querySelectorAll('a[href]')].filter(a=>photoCacheId(a.href)).map(a=>{
             const im=a.querySelector('img')||a.closest('article')?.querySelector('img');
@@ -2741,7 +2742,7 @@ html.dpc-viewing body {
         if(!def)return;
         const result=def.provider(),entries=normaliseGallery(Array.isArray(result)?result:result.entries);
         const id=photoCacheId(a.href);if(!entries.some(x=>photoCacheId(x.href)===id))return;
-        const context={time:Date.now(),token:Date.now().toString(36)+'-'+Math.random().toString(36).slice(2),origin:location.href,label:def.label,entries,queue:result.queue||[],visited:result.visited||[],entryId:id,y:scrollY};
+        const context={time:Date.now(),token:Date.now().toString(36)+'-'+Math.random().toString(36).slice(2),origin:location.href,label:def.label,subject:def.subject,entries,queue:result.queue||[],visited:result.visited||[],entryId:id,y:scrollY};
         storeGallery(context);
         // Carry an explicit context marker across the navigation, independent of referrer policy.
         const target=new URL(a.href);target.hash='dpc-gallery='+context.token;
@@ -2818,7 +2819,11 @@ html.dpc-viewing body {
             let indicator=app.querySelector(':scope > .dpc-gallery-context-label');
             if(!indicator){indicator=make('div','dpc-gallery-context-label');body.before(indicator);}
             const index=activeGallery?.entries.findIndex(e=>photoCacheId(e.href)===photoCacheId(location.href))??-1;
-            const label=index>=0?activeGallery.label+' · '+(index+1)+' / '+activeGallery.entries.length+(activeGallery.queue?.length?'+':''):'Challenge photographs';
+            const photographer=title.nextElementSibling?.matches('a')?title.nextElementSibling.textContent.trim().replace(/^by\s+/i,''):'';
+            const challengeName=challenge?.textContent.trim()||'';
+            const collection=index>=0?activeGallery.label:'Challenge photographs';
+            const subject=activeGallery?.subject||(/^(?:Challenge results|Homepage results|Challenge photographs)$/i.test(collection)?challengeName:photographer);
+            const label=(subject?subject+' · ':'')+collection+(index>=0?' · '+(index+1)+' / '+activeGallery.entries.length+(activeGallery.queue?.length?'+':''):'');
             if(indicator.textContent!==label)indicator.textContent=label;
         }
         const stage=make('div','dpc-detail-stage');const image=copy(photo);image.removeAttribute('style');image.removeAttribute('srcset');
@@ -3097,7 +3102,7 @@ html.dpc-viewing body {
                 const rank=Number(td.querySelector('img[alt*="Place"]')?.alt.match(/\d+/)?.[0])||photoRank.get(a.href)||0;const ribbon=detailRibbon(rank-1);card.append(link);const caption=make('div','dpc-profile-caption');const title=safeLink(a,im.alt||clean(td.querySelector('a[href*="image.php"]:not(:has(img))')));title.className='dpc-profile-photo-title';if(ribbon)title.prepend(ribbon);caption.append(title);
                 const ch=td.querySelector('a[href*="challenge_results.php"]');if(ch)caption.append(safeLink(ch));const avg=clean(td).match(/Average:\s*([\d.]+)/i);if(avg)caption.append(make('strong','dpc-profile-score',avg[1]+' avg'));card.append(caption);grid.append(card);
             }
-            registerGallery(grid,label,()=>galleryEntries(grid));
+            registerGallery(grid,label,()=>galleryEntries(grid),value('Username')||value('Name'));
             // Native profile highlights contain nine photos; supplement from the existing local dataset.
             const highest=source===originalGrids[0],def=nativeLists[highest?0:1];
             const existing=new Set([...grid.querySelectorAll('.dpc-profile-photo')].map(a=>photoCacheId(a.href)));
@@ -3130,7 +3135,7 @@ html.dpc-viewing body {
             const sort=make('select');sort.setAttribute('aria-label','Sort photographs');for(const [key,label] of [['recent','Newest first'],['old','Oldest first'],...(def.challenge?[['score','Highest score'],['place','Best place'],['percent','Highest percentile']]:[]),['faves','Most favourites'],['views','Most viewed'],['comments','Most comments'],['title','Title A–Z']]){const o=make('option','',label);o.value=key;sort.append(o);}controls.append(input,sort);
             const count=make('p','dpc-profile-meta'),grid=make('div','dpc-profile-list'),more=make('button','dpc-home-more','Load more photographs');more.type='button';parent.append(count,grid,more);
             let filtered=[],cursor=0;
-            registerGallery(grid,def.name,()=>({entries:filtered.filter(r=>!def.challenge||Number(r[13])===0&&Number(r[14])===1&&Number(r[15])!==1).map(r=>{const href=new URL('/image.php?IMAGE_ID='+r[0],location.origin).href;let src='';try{src=def.thumb(r)||'';}catch{}return {href,src,title:decode(r[1])};}),extra:{tab:panels.indexOf(parent),query:input.value,sort:sort.value,count:cursor}}));
+            registerGallery(grid,def.name,()=>({entries:filtered.filter(r=>!def.challenge||Number(r[13])===0&&Number(r[14])===1&&Number(r[15])!==1).map(r=>{const href=new URL('/image.php?IMAGE_ID='+r[0],location.origin).href;let src='';try{src=def.thumb(r)||'';}catch{}return {href,src,title:decode(r[1])};}),extra:{tab:panels.indexOf(parent),query:input.value,sort:sort.value,count:cursor}}),value('Username')||value('Name'));
             function decode(v){const t=document.createElement('textarea');t.innerHTML=String(v??'');return t.value;}
             function add(){
                 const batch=filtered.slice(cursor,cursor+16);cursor+=batch.length;
