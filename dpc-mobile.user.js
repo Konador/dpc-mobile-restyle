@@ -2,7 +2,7 @@
 // ==UserScript==
 // @name DPChallenge Mobile — Editorial Gallery
 // @namespace dpc-mobile
-// @version 5.46
+// @version 5.47
 // @updateURL https://raw.githubusercontent.com/Konador/dpc-mobile-restyle/main/dpc-mobile.user.js
 // @downloadURL https://raw.githubusercontent.com/Konador/dpc-mobile-restyle/main/dpc-mobile.user.js
 // @match *://*.dpchallenge.com/challenge_vote_image.php*
@@ -3395,43 +3395,25 @@ html.dpc-viewing body {
         const href=(a,base=location.href)=>{try{const u=new URL(a.getAttribute('href'),base);return /^https?:$/.test(u.protocol)?u.href:'';}catch{return '';}};
         const params=new URLSearchParams(location.search),tid=params.get('FORUM_THREAD_ID'),action=params.get('action')||'';
         const originalLinks=[...document.querySelectorAll('a[href]')];
-        const label=a=>clean(a)||a.title||a.querySelector('img')?.alt||a.querySelector('img')?.title||'';
+        const label=a=>{const im=a.querySelector('img');return clean(a)||a.title||im?.alt||im?.title||(/b-postreply/i.test(im?.getAttribute('src')||'')?'Post reply':/b-(?:newthread|postthread|newtopic|posttopic)/i.test(im?.getAttribute('src')||'')?'New thread':/\/next\./i.test(im?.getAttribute('src')||'')?'Next':/\/prev\./i.test(im?.getAttribute('src')||'')?'Previous':'');};
         const link=(a,txt,base)=>{const n=make('a','',txt||label(a));n.href=href(a,base);return n;};
         const isThread=a=>{const u=href(a);return /FORUM_THREAD_ID=/i.test(u)&&!/[?&](?:FORUM_POST_ID|action)=(?!view(?:thread)?(?:&|$))/i.test(u)&&!/^#?\d+$|^\(reverse\)$|^(?:next|previous|first|last)$/i.test(label(a));};
         const isSection=a=>/FORUM_SECTION_ID=/i.test(href(a))&&!isThread(a);
         const forms=[...document.forms].filter(f=>f.querySelector('textarea')||/forum/i.test(f.action)&&f.querySelector('input[type=submit],button'));
         const postRows=doc=>{
             const result=[];
-            const tables=[...doc.querySelectorAll('table.dpc-forum-thread, .dpc-forum-thread table')];
-            for(const table of tables){
-                let current=null;
-                for(const row of table.rows||[]){
-                    const author=row.querySelector('.dpc-forum-author-details');
-                    const message=row.querySelector('.dpc-forum-message .forum-post td,.dpc-forum-message .forum-post');
-                    if(author&&author.closest('table')!==table&&!row.querySelector('.dpc-forum-actions'))continue;
-                    if(author&&row.querySelectorAll('.dpc-forum-author-details').length===1){
-                        current={row,author,act:row.querySelector('.dpc-forum-actions'),message:null};
-                    }
-                    if(current&&message&&!current.message){
-                        current.message=message.matches('table')?message.querySelector('td'):message;
-                        if(current.message){result.push(current);current=null;}
-                    }
-                }
-                if(result.length)return result;
-            }
-            // Some forum pages omit the wrapper class. Match the author and message
-            // using the closest common table and consecutive direct rows.
-            for(const author of doc.querySelectorAll('.dpc-forum-author-details')){
-                for(let row=author.closest('tr');row;row=row.parentElement?.closest('tr')){
-                    if(row.querySelectorAll('.dpc-forum-author-details').length!==1)break;
-                    const act=row.querySelector('.dpc-forum-actions');
-                    if(!act)continue;
-                    const selector='.dpc-forum-message .forum-post td,.dpc-forum-message .forum-post,.dpc-forum-message';
-                    const message=row.querySelector(selector)||row.nextElementSibling?.querySelector(selector);
-                    if(message&&!message.contains(author)){result.push({row,author,act,message:message.matches('table')?message.querySelector('td'):message});break;}
+            for(const table of doc.querySelectorAll('table.dpc-forum-thread')){
+                for(const row of table.rows){
+                    const authorCell=[...row.cells].find(c=>c.classList.contains('dpc-forum-author'));
+                    const act=[...row.cells].find(c=>c.classList.contains('dpc-forum-actions'));
+                    const author=authorCell?.querySelector('.dpc-forum-author-details');
+                    const next=row.nextElementSibling;
+                    const messageCell=next&&[...next.cells].find(c=>c.classList.contains('dpc-forum-message'));
+                    const message=messageCell?.querySelector('table.forum-post')?.rows[0]?.cells[0];
+                    if(author&&act&&message)result.push({row,author,act,message,authorCell});
                 }
             }
-            return result.filter(p=>p.message);
+            return result;
         };
         const initialPosts=postRows(document);
         // Never mistake a thread's layout tables for a forum index.
@@ -3443,6 +3425,7 @@ html.dpc-viewing body {
         const css=make('style');css.textContent=
         '#dpc-app .dpc-home-thread a{text-decoration:none;color:inherit}#dpc-app .dpc-home-thread a.dpc-thread-category{color:var(--accent)}'+
         '#dpc-app .dpc-forum-page{max-width:800px;margin:auto;padding:14px 12px 30px;overflow-wrap:anywhere}#dpc-app .dpc-forum-page h1{font:600 23px/1.2 system-ui;margin:14px 0}#dpc-app .dpc-forum-page h2{font:600 13px/1.4 system-ui;border-left:3px solid var(--accent);padding-left:9px;margin:22px 0 9px}#dpc-app .dpc-forum-page a{color:var(--accent);text-decoration:none}#dpc-app .dpc-forum-nav{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin:8px 0 14px;font-size:12px}#dpc-app .dpc-forum-nav a,#dpc-app .dpc-forum-nav button,#dpc-app .dpc-forum-more{border:1px solid var(--line);background:transparent;color:var(--accent);padding:9px 12px;border-radius:5px;font:500 13px system-ui}#dpc-app .dpc-forum-card{background:#25262e;border:1px solid #ffffff20;border-radius:6px;padding:12px;margin:0 0 8px;min-width:0}html.dpc-light #dpc-app .dpc-forum-card{background:white;border-color:#cdd3df}#dpc-app .dpc-forum-card .dpc-forum-title{font:600 15px/1.35 system-ui;color:inherit;display:block}#dpc-app .dpc-forum-meta{font:400 11px/1.5 system-ui;color:var(--muted);margin-top:6px}#dpc-app .dpc-forum-prose{font:400 14px/1.65 system-ui;margin-top:12px;overflow-wrap:anywhere}#dpc-app .dpc-forum-prose img{max-width:100%;height:auto}#dpc-app .dpc-forum-prose table{max-width:100%;width:100%!important;table-layout:fixed}#dpc-app .dpc-forum-prose blockquote,#dpc-app .dpc-forum-prose .quote{margin:8px 0;padding:10px;border-left:2px solid var(--accent);background:var(--line)}#dpc-app .dpc-forum-page textarea,#dpc-app .dpc-forum-page input:not([type=hidden]):not([type=checkbox]):not([type=radio]),#dpc-app .dpc-forum-page select{font:inherit;max-width:100%;box-sizing:border-box}#dpc-app .dpc-forum-page textarea{width:100%!important;min-height:180px;background:transparent;color:inherit;border:1px solid var(--muted);border-radius:5px;padding:10px}#dpc-app .dpc-forum-page form table{width:100%!important;max-width:100%;table-layout:fixed}#dpc-app .dpc-forum-page form td{white-space:normal!important;overflow-wrap:anywhere}#dpc-app .dpc-forum-page input[type=submit],#dpc-app .dpc-forum-page button{padding:9px 12px;border-radius:5px;cursor:pointer}#dpc-app .dpc-forum-card{scroll-margin-top:90px}#dpc-app .dpc-forum-more{width:100%;margin:10px 0}';
+        css.textContent += '#dpc-app .dpc-forum-identity{display:flex;align-items:center;gap:10px}#dpc-app .dpc-forum-avatar{width:38px;height:38px;object-fit:cover;border-radius:5px;flex:none}#dpc-app .dpc-forum-who{min-width:0}#dpc-app .dpc-forum-who .dpc-forum-meta{margin-top:3px}#dpc-app .dpc-forum-card .dpc-forum-nav{margin:12px 0 0;padding-top:8px;border-top:1px solid var(--line)}#dpc-app .dpc-forum-card .dpc-forum-nav a{border:0;padding:4px 10px 4px 0;font-size:12px}#dpc-app .dpc-forum-prose{font:400 13px/1.6 system-ui,sans-serif}#dpc-app .dpc-forum-prose *{max-width:100%}';
         document.head.append(css);
         const nav=make('nav','dpc-forum-nav');const all=make('a','','All forums');all.href='/forum.php';nav.append(all);
         const section=originalLinks.find(a=>isSection(a)&&clean(a)&&!a.closest('.dpc-forum-message'));
@@ -3457,16 +3440,16 @@ html.dpc-viewing body {
         const known=new Set();let firstUnread=null;
         function renderPosts(doc,base){
             let count=0;
-            for(const {row,author,message,act} of postRows(doc)){
+            for(const {row,author,message,act,authorCell} of postRows(doc)){
                 if(!message)continue;
-                const nativeAnchor=row.querySelector('a[name],a[id]');
+                const nativeAnchor=authorCell.querySelector('a[name],a[id]');
                 const key=nativeAnchor?.name||nativeAnchor?.id||[clean(author),clean(act),clean(message)].join('|');
                 if(known.has(key))continue;known.add(key);count++;
                 const card=make('article','dpc-forum-card');if(nativeAnchor&&(nativeAnchor.name||nativeAnchor.id))card.id=nativeAnchor.name||nativeAnchor.id;
-                const person=author.querySelector('a[href*="profile.php"]');const head=person?link(person,clean(person),base):make('strong','',clean(author));head.className='dpc-forum-title';card.append(head);
-                if(act){const copy=act.cloneNode(true);copy.querySelectorAll('a,img,span').forEach(n=>n.remove());card.append(make('div','dpc-forum-meta',clean(copy)));}
+                const person=author.querySelector('a[href*="profile.php"]');const head=person?link(person,clean(person),base):make('strong','',clean(author));head.className='dpc-forum-title';const identity=make('div','dpc-forum-identity');const avatar=authorCell.querySelector('.forumpic img');if(avatar){const im=make('img','dpc-forum-avatar');im.src=new URL(avatar.getAttribute('src'),base).href;im.alt='';im.loading='lazy';identity.append(im);}const who=make('div','dpc-forum-who');who.append(head);identity.append(who);card.append(identity);
+                if(act){const copy=act.cloneNode(true);copy.querySelectorAll('.dpc-legacy-forum-actions,img').forEach(n=>n.remove());who.append(make('div','dpc-forum-meta',clean(copy)));}
                 const prose=make('div','dpc-forum-prose');for(const child of message.childNodes)prose.append(child.cloneNode(true));prose.querySelectorAll('script,style,noscript,iframe,object,embed').forEach(n=>n.remove());for(const n of prose.querySelectorAll('*'))for(const a of [...n.attributes])if(/^on/i.test(a.name))n.removeAttribute(a.name);stripGraphics(prose,base);card.append(prose);
-                const actions=make('div','dpc-forum-nav');for(const a of (act||row).querySelectorAll('a[href]')){const t=label(a);if(/reply|quote|edit|report|permalink/i.test(t)&&href(a,base))actions.append(link(a,t,base));}if(actions.children.length)card.append(actions);
+                const actions=make('div','dpc-forum-nav');for(const a of (act||row).querySelectorAll('a[href]')){const t=label(a);if(/reply|quote|edit|report|permalink/i.test(t)&&href(a,base))actions.append(link(a,/quote/i.test(t)?'Quote':/edit/i.test(t)?'Edit':t,base));}if(actions.children.length)card.append(actions);
                 if(!firstUnread&&[row,...row.querySelectorAll('img,a')].some(n=>/\bunread\b|new post/i.test([n.className,n.title,n.alt,n.getAttribute('name')].join(' '))))firstUnread=card;
                 feed.append(card);
             }return count;
@@ -3474,7 +3457,7 @@ html.dpc-viewing body {
         if(initialPosts.length){
             renderPosts(document,location.href);
             const unread=make('button','','Jump to unread');unread.type='button';nav.append(unread);
-            unread.onclick=()=>{if(firstUnread){firstUnread.scrollIntoView({block:'start'});return;}const a=originalLinks.find(a=>/unread|readrecent|firstnew/i.test(label(a)+' '+href(a)));if(a){location.href=href(a);return;}const u=new URL(location.href);u.searchParams.set('action','readrecent');u.hash='';if(u.href!==location.href)location.href=u.href;else feed.lastElementChild?.scrollIntoView({block:'start'});};
+            unread.onclick=()=>{if(firstUnread){firstUnread.scrollIntoView({block:'start'});return;}const a=originalLinks.find(a=>/unread|readrecent|firstnew/i.test(label(a)+' '+href(a)));if(a){location.href=href(a);return;}const target=feed.querySelector('[data-dpc-unread]');if(target){target.scrollIntoView({block:'start'});return;}unread.textContent='No unread marker available';};
         }else if(!tid&&!forms.some(f=>f.querySelector('textarea'))){
             let group='';
             for(const row of listRows){
@@ -3497,7 +3480,7 @@ html.dpc-viewing body {
         if(initialPosts.length){
             let next=nextPage(document,location.href),busy=false;const visited=new Set([location.href]);const more=make('button','dpc-forum-more','Load more posts');more.type='button';body.append(more);
             const nativePages=make('div','dpc-forum-nav');for(const a of originalLinks.filter(a=>isThread(a)&&/^(?:\d+|next|previous|first|last|[<>«»])$/i.test(label(a))))nativePages.append(link(a));if(nativePages.children.length)body.append(nativePages);
-            async function load(){if(busy||!next||visited.has(next))return;busy=true;more.disabled=true;more.textContent='Loading posts…';const url=next;try{const response=await backgroundFetch(url,{credentials:'same-origin'});if(!response.ok)throw Error('HTTP '+response.status);const doc=new DOMParser().parseFromString(await response.text(),'text/html');const count=renderPosts(doc,response.url||url);visited.add(url);next=count?nextPage(doc,response.url||url):'';if(visited.has(next))next='';more.textContent=next?'Load more posts':'End of thread';}catch{more.textContent='Retry loading posts';io?.unobserve(more);}finally{busy=false;more.disabled=!next;}}
+            async function load(){if(busy||!next||visited.has(next))return;busy=true;more.disabled=true;more.textContent='Loading posts…';const url=next;try{const response=await backgroundFetch(url,{credentials:'same-origin'});if(!response.ok)throw Error('HTTP '+response.status);const doc=new DOMParser().parseFromString(await response.text(),'text/html');const count=renderPosts(doc,response.url||url);visited.add(url);next=count?nextPage(doc,response.url||url):'';if(visited.has(next))next='';more.textContent=next?'Load more posts':'End of thread';if(next){io?.unobserve(more);io?.observe(more);}else io?.unobserve(more);}catch{more.textContent='Retry loading posts';io?.unobserve(more);}finally{busy=false;more.disabled=!next;}}
             more.onclick=load;more.hidden=!next;const io=typeof IntersectionObserver==='function'?new IntersectionObserver(entries=>{if(entries.some(e=>e.isIntersecting))load();},{rootMargin:'250px'}):null;if(next)io?.observe(more);
         }
         for(const form of forms){
