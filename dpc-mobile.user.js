@@ -2,7 +2,7 @@
 // ==UserScript==
 // @name DPChallenge Mobile — Editorial Gallery
 // @namespace dpc-mobile
-// @version 5.35
+// @version 5.36
 // @updateURL https://raw.githubusercontent.com/Konador/dpc-mobile-restyle/main/dpc-mobile.user.js
 // @downloadURL https://raw.githubusercontent.com/Konador/dpc-mobile-restyle/main/dpc-mobile.user.js
 // @match *://*.dpchallenge.com/challenge_vote_image.php*
@@ -1856,6 +1856,7 @@ html.dpc-viewing body {
                     }
                     return {a,img,author,title:clean(a)||img.alt||'',src:img.currentSrc||img.src,i};
                 });
+                registerGallery(grid,'Homepage results',()=>records.map(rec=>({href:safe(rec.a),src:rec.full||rec.src,title:rec.title})));
                 records.forEach(cachedPhoto);
                 let serial=0,selected=-1,selectionToken=0;
                 const dimensions=()=>{const w=hero.clientWidth;if(!w)return;hero.style.setProperty('--hero-height',Math.min(innerHeight*.6,w)+'px');};
@@ -2593,6 +2594,7 @@ html.dpc-viewing body {
         try{restore=JSON.parse(sessionStorage.getItem(stateKey)||'null');sessionStorage.removeItem(stateKey);}catch{}
         function remember(){try{sessionStorage.setItem(stateKey,JSON.stringify({count:seen.size,y:scrollY}));}catch{}}
         const resultManifest=[];
+        registerGallery(grid,'Challenge results',()=>({entries:resultManifest,queue:queue.slice(),visited:[...visited]}));
         function saveManifest(){if(initial.searchParams.has('order_by_vote'))return;try{sessionStorage.setItem('dpc-detail-manifest-v1',JSON.stringify({time:Date.now(),entries:resultManifest.slice(0,500)}));}catch{}}
         function append(entries){
             const fragment=document.createDocumentFragment();
@@ -2703,6 +2705,52 @@ html.dpc-viewing body {
                     featureAuthor.style.left=x+'px';featureAuthor.style.top=top+'px';credits.classList.add('tucked');
                 }
     // Retain a short window of parsed photo pages and decoded images across swipes.
+    // A gallery snapshot belongs to the exact photo click, not the photographer or challenge.
+    const contextKey='dpc-gallery-context-v2',contextProviders=new WeakMap();
+    let activeGallery=null;
+    function registerGallery(element,label,provider){contextProviders.set(element,{label,provider});}
+    function galleryEntries(element){
+        return [...element.querySelectorAll('a[href]')].filter(a=>photoCacheId(a.href)).map(a=>{
+            const im=a.querySelector('img')||a.closest('article')?.querySelector('img');
+            return {href:a.href,src:im?.dataset.src||im?.getAttribute('src')||'',title:im?.alt||a.textContent.trim()};
+        });
+    }
+    function normaliseGallery(entries){
+        const seen=new Set(),out=[];
+        for(const e of entries||[]){try{const u=new URL(e.href,location.href),id=photoCacheId(u.href);if(u.origin!==location.origin||!id||seen.has(id))continue;seen.add(id);out.push({href:u.href,src:e.src?new URL(e.src,location.href).href:'',title:String(e.title||'')});}catch{}}
+        return out;
+    }
+    function storeGallery(context){try{sessionStorage.setItem(contextKey,JSON.stringify(context));}catch{}}
+    function captureGallery(e){
+        if(e.defaultPrevented||e.button!==0||e.ctrlKey||e.metaKey||e.shiftKey||e.altKey)return;
+        const a=e.target.closest?.('a[href]');if(!a||!photoCacheId(a.href)||isPhotoDetail)return;
+        let scope=a,def=null;while(scope&&!def){def=contextProviders.get(scope);if(!def)scope=scope.parentElement;}
+        if(!def)return;
+        const result=def.provider(),entries=normaliseGallery(Array.isArray(result)?result:result.entries);
+        const id=photoCacheId(a.href);if(!entries.some(x=>photoCacheId(x.href)===id))return;
+        const context={time:Date.now(),origin:location.href,label:def.label,entries,queue:result.queue||[],visited:result.visited||[],entryId:id,y:scrollY};
+        storeGallery(context);
+        const token={...history.state,dpcGalleryReturn:{label:def.label,y:scrollY,extra:result.extra||null}};
+        history.replaceState(token,'',location.href);
+    }
+    function loadGallery(){
+        try{const saved=JSON.parse(sessionStorage.getItem(contextKey)||'null'),id=photoCacheId(location.href);
+            if(!saved||Date.now()-saved.time>12*3600000||!saved.entries.some(x=>photoCacheId(x.href)===id))return null;
+            if(history.state?.dpcGalleryOrigin!==saved.origin){
+                if(saved.entryId!==id||document.referrer&&new URL(document.referrer).href.split('#')[0]!==saved.origin.split('#')[0])return null;
+                history.replaceState({...history.state,dpcGalleryOrigin:saved.origin},'',location.href);
+            }
+            return saved;
+        }catch{return null;}
+    }
+    function contextualLinks(doc){
+        if(!activeGallery)return null;
+        const index=activeGallery.entries.findIndex(e=>photoCacheId(e.href)===photoCacheId(location.href));if(index<0)return null;
+        return [index-1,index+1].map(i=>{
+            const entry=activeGallery.entries[i];if(!entry)return null;
+            const a=document.createElement('a');a.href=entry.href;if(entry.src){const im=document.createElement('img');im.src=entry.src;im.alt=entry.title;a.append(im);}return a;
+        });
+    }
     const detailPageCache=new Map();
     function detailNeighbours(doc,base){
         const cells=doc.querySelectorAll('#image_challenge table tr:first-child > td');
@@ -2748,6 +2796,7 @@ html.dpc-viewing body {
         const current=make('div','dpc-detail-current');body.append(current);
         const swipeArea=make('div','dpc-detail-swipe-area');current.append(swipeArea);
         const challenge=info?.querySelector('a[href*="challenge_results.php"]');
+        if(!mounted&&!previewRoot)activeGallery=loadGallery();
         const stage=make('div','dpc-detail-stage');const image=copy(photo);image.removeAttribute('style');image.removeAttribute('srcset');
         const fullSrc=incoming?.record?.src||photo.getAttribute('src');
         const width=Number(photo.getAttribute('width'))||incoming?.record?.probe?.naturalWidth||photo.naturalWidth;
@@ -2764,9 +2813,9 @@ html.dpc-viewing body {
         const credit=make('div','dpc-detail-credit dpc-home-feature-author');const ribbon=title.querySelector('img[alt]');if(ribbon){const rank=parseInt(ribbon.alt,10);const badge=detailRibbon(rank-1);if(badge){badge.classList.add('dpc-caption-ribbon');credit.append(badge);}}
         const author=title.nextElementSibling;if(author?.matches('a')){const a=copy(author);a.textContent='by '+a.textContent.trim();credit.append(a);}caption.append(credit);
 
-        if(challenge&&!previewRoot){
+        if((challenge||activeGallery)&&!previewRoot){
             const cells=doc.querySelectorAll('#image_challenge table tr:first-child > td');
-            const links=[cells[0]?.querySelector('a[href*="image.php"]'),cells[cells.length-1]?.querySelector('a[href*="image.php"]')];
+            const links=contextualLinks(doc)||[cells[0]?.querySelector('a[href*="image.php"]'),cells[cells.length-1]?.querySelector('a[href*="image.php"]')];
             const slides=[null,null];let busy=false,drag=null,offset=0;
             const distance=()=>body.clientWidth||document.documentElement.clientWidth||innerWidth;
             const move=(x,animate=false)=>{
@@ -2810,22 +2859,38 @@ html.dpc-viewing body {
                 return rec;
             }
             prepare(0);prepare(1);move(0);
-            // The results list already knows the surrounding URLs: no sequential HTML discovery needed.
-            try{const saved=JSON.parse(sessionStorage.getItem('dpc-detail-manifest-v1')||'null');if(saved&&Date.now()-saved.time<3600000){const index=saved.entries.findIndex(e=>photoCacheId(e.href)===photoCacheId(location.href));if(index>=0){for(const step of [2,-2,3,-3,4,-4]){const entry=saved.entries[index+step];if(entry)detailRecord(entry.href);}}}}catch{}
-            // Follow each adjacent page's real links two more places, never guess IDs.
             const keep=new Set([location.href,...slides.filter(Boolean).map(rec=>rec.url)]);
-            async function lookAhead(rec,index){
-                if(!rec)return;
-                let page=await rec.promise,href=rec.url;
-                for(let depth=0;depth<2&&page&&current.isConnected;depth++){
-                    const next=detailNeighbours(page,href)[index];if(!next||keep.has(next))break;
-                    keep.add(next);href=next;page=await detailRecord(next).promise;
+            if(activeGallery){
+                const index=activeGallery.entries.findIndex(e=>photoCacheId(e.href)===photoCacheId(location.href));
+                for(const step of [2,-2,3,-3]){const entry=activeGallery.entries[index+step];if(entry){keep.add(entry.href);detailRecord(entry.href);}}
+            }else{
+                async function lookAhead(rec,index){
+                    if(!rec)return;let page=await rec.promise,href=rec.url;
+                    for(let depth=0;depth<2&&page&&current.isConnected;depth++){
+                        const next=detailNeighbours(page,href)[index];if(!next||keep.has(next))break;
+                        keep.add(next);href=next;page=await detailRecord(next).promise;
+                    }
                 }
+                Promise.all(slides.map(lookAhead)).catch(()=>{});
             }
-            Promise.all(slides.map(lookAhead)).then(()=>{
-                if(!current.isConnected)return;
-                while(detailPageCache.size>18){const href=[...detailPageCache.keys()].find(key=>!keep.has(key));if(!href)break;detailPageCache.delete(href);}
-            });
+            while(detailPageCache.size>18){const href=[...detailPageCache.keys()].find(key=>!keep.has(key));if(!href)break;detailPageCache.delete(href);}
+            // Extend challenge results with the actual next page, preserving its native sorting.
+            if(activeGallery&&activeGallery.queue?.length&&!links[1]){
+                const ctx=activeGallery;
+                (async()=>{
+                    const next=ctx.queue[0],response=await interactiveFetch(next,{credentials:'same-origin'},true);
+                    if(!response.ok||!current.isConnected||activeGallery!==ctx)return;
+                    const page=new DOMParser().parseFromString(await response.text(),'text/html');
+                    const added=[...page.querySelectorAll('table.dpc-challenge-results td.dpc-result-thumb')].map(cell=>({href:cell.querySelector('a[href*="image.php"]')?.getAttribute('href'),src:cell.querySelector('img[src]')?.getAttribute('src')})).filter(e=>e.href).map(e=>({href:new URL(e.href,response.url||next).href,src:e.src?new URL(e.src,response.url||next).href:''}));
+                    if(!added.length)return;
+                    ctx.entries=normaliseGallery([...ctx.entries,...added]);ctx.queue.shift();ctx.visited.push(next);
+                    const visited=new Set([...ctx.visited,...ctx.queue]);
+                    for(const a of page.querySelectorAll('a[href]')){const u=new URL(a.getAttribute('href'),next),origin=new URL(ctx.origin);u.hash='';u.searchParams.sort();if(u.origin!==origin.origin||u.pathname!==origin.pathname||u.searchParams.get('CHALLENGE_ID')!==origin.searchParams.get('CHALLENGE_ID')||!a.querySelector('img[src*="/images/page/"]')&&!/^\\d+$|next|previous|page\\s+\\d+/i.test(a.textContent.trim())||visited.has(u.href))continue;visited.add(u.href);ctx.queue.push(u.href);}
+                    const pageNo=url=>{const q=new URL(url).searchParams;return Number(q.get('page')||q.get('PAGE')||q.get('PAGE_ID')||q.get('page_id')||0);};
+                    ctx.queue.sort((a,b)=>pageNo(a)-pageNo(b));storeGallery(ctx);
+                    const nextLink=contextualLinks(doc)?.[1];if(nextLink&&!slides[1]&&current.isConnected){links[1]=nextLink;prepare(1);}
+                })().catch(()=>{});
+            }
             requestAnimationFrame(()=>{if(current.isConnected&&!drag&&!busy)move(0);});
             const resize=new ResizeObserver(()=>{if(!current.isConnected){resize.disconnect();return;}if(!drag&&!busy)move(0);});resize.observe(body);
             async function go(d){
@@ -3008,6 +3073,7 @@ html.dpc-viewing body {
                 const rank=Number(td.querySelector('img[alt*="Place"]')?.alt.match(/\d+/)?.[0])||photoRank.get(a.href)||0;const ribbon=detailRibbon(rank-1);card.append(link);const caption=make('div','dpc-profile-caption');const title=safeLink(a,im.alt||clean(td.querySelector('a[href*="image.php"]:not(:has(img))')));title.className='dpc-profile-photo-title';if(ribbon)title.prepend(ribbon);caption.append(title);
                 const ch=td.querySelector('a[href*="challenge_results.php"]');if(ch)caption.append(safeLink(ch));const avg=clean(td).match(/Average:\s*([\d.]+)/i);if(avg)caption.append(make('strong','dpc-profile-score',avg[1]+' avg'));card.append(caption);grid.append(card);
             }
+            registerGallery(grid,label,()=>galleryEntries(grid));
             // Native profile highlights contain nine photos; supplement from the existing local dataset.
             const highest=source===originalGrids[0],def=nativeLists[highest?0:1];
             const existing=new Set([...grid.querySelectorAll('.dpc-profile-photo')].map(a=>photoCacheId(a.href)));
@@ -3040,6 +3106,7 @@ html.dpc-viewing body {
             const sort=make('select');sort.setAttribute('aria-label','Sort photographs');for(const [key,label] of [['recent','Newest first'],['old','Oldest first'],...(def.challenge?[['score','Highest score'],['place','Best place'],['percent','Highest percentile']]:[]),['faves','Most favourites'],['views','Most viewed'],['comments','Most comments'],['title','Title A–Z']]){const o=make('option','',label);o.value=key;sort.append(o);}controls.append(input,sort);
             const count=make('p','dpc-profile-meta'),grid=make('div','dpc-profile-list'),more=make('button','dpc-home-more','Load more photographs');more.type='button';parent.append(count,grid,more);
             let filtered=[],cursor=0;
+            registerGallery(grid,def.name,()=>({entries:filtered.filter(r=>!def.challenge||Number(r[13])===0&&Number(r[14])===1&&Number(r[15])!==1).map(r=>{const href=new URL('/image.php?IMAGE_ID='+r[0],location.origin).href;let src='';try{src=def.thumb(r)||'';}catch{}return {href,src,title:decode(r[1])};}),extra:{tab:panels.indexOf(parent),query:input.value,sort:sort.value,count:cursor}}));
             function decode(v){const t=document.createElement('textarea');t.innerHTML=String(v??'');return t.value;}
             function add(){
                 const batch=filtered.slice(cursor,cursor+16);cursor+=batch.length;
@@ -3066,6 +3133,7 @@ html.dpc-viewing body {
         for(const [key,label] of [['Statistics','Full statistics'],['Favorites','Favourites']]){if(!side.has(key))continue;const sec=section(about,label),card=make('div','dpc-profile-card dpc-profile-info');const source=side.get(key);const table=make('dl','dpc-profile-stat-grid');let group='';for(const node of source.childNodes){if(node.nodeType===1&&node.tagName==='LI'){const txt=clean(node);const match=txt.match(/^([^:]+):\s*(.*)/);if(match){const dt=make('dt','',match[1]);const dd=make('dd');const link=node.querySelector('a');if(link)dd.append(safeLink(link));else dd.textContent=match[2];table.append(dt,dd);}}else if(node.nodeType===1&&node.tagName==='B'){const label=clean(node).replace(/:$/,'');const next=node.nextSibling;const val=next?.nodeType===3?next.textContent.replace(/^\s*:\s*/,'').trim():'';if(val){table.append(make('dt','',label),make('dd','',val));}else{table.append(make('div','dpc-profile-stat-group',label));}}}if(table.querySelector('dd')&&key==='Statistics'){card.append(table);const full=make('details','dpc-profile-fold');full.append(make('summary','','Original breakdown'));content(full,source);card.append(full);}else content(card,source);sec.append(card);}
         if(forum?.matches('table')){const sec=section(about,'Recent forum activity');for(const row of forum.rows){const a=row.querySelector('a[href*="FORUM_THREAD_ID"]');if(!a)continue;const link=safeLink(a);link.className='dpc-home-thread';link.append(make('small','',[clean(row.cells[1]),clean(row.cells[2])].join(' · ')));sec.append(link);}}
         select(0);$('#dpc-original').onclick=()=>original();mount();
+        const back=history.state?.dpcGalleryReturn;if(back){const extra=back.extra;if(extra&&Number.isInteger(extra.tab)&&panels[extra.tab]){select(extra.tab);const p=panels[extra.tab],q=p.querySelector('input[type=search]'),sort=p.querySelector('select');if(q)q.value=extra.query||'';if(sort){sort.value=extra.sort||'recent';sort.dispatchEvent(new Event('change'));}const more=p.querySelector('.dpc-home-more');for(let i=16;i<(extra.count||16)&&more&&!more.hidden;i+=16)more.click();}requestAnimationFrame(()=>scrollTo(0,back.y||0));}
     }
 
 
@@ -3283,6 +3351,7 @@ html.dpc-viewing body {
     if (isChallengeIndex) { buildChallengeIndex(); return; }
     if (isProfile) { buildProfile(); return; }
     if (isResults) { buildChallengeResults(); return; }
+    document.addEventListener('click',captureGallery,true);
     if (isPhotoDetail) { buildPhotoDetail(); return; }
     if (isHome) { buildHome(); return; }
     if (isList) {
