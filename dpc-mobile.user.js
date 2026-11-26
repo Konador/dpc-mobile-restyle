@@ -2,7 +2,7 @@
 // ==UserScript==
 // @name DPChallenge Mobile — Editorial Gallery
 // @namespace dpc-mobile
-// @version 4.91
+// @version 4.92
 // @updateURL https://raw.githubusercontent.com/Konador/dpc-mobile-restyle/main/dpc-mobile.user.js
 // @downloadURL https://raw.githubusercontent.com/Konador/dpc-mobile-restyle/main/dpc-mobile.user.js
 // @match *://*.dpchallenge.com/challenge_vote_image.php*
@@ -1677,7 +1677,7 @@ html.dpc-viewing body {
                 });
                 records.forEach(cachedPhoto);
                 let serial=0,selected=-1,selectionToken=0;
-                const dimensions=()=>{const w=hero.clientWidth;if(!w)return;const ratios=records.map(rec=>rec.ratio||((rec.img.naturalWidth&&rec.img.naturalHeight)?rec.img.naturalHeight/rec.img.naturalWidth:1));hero.style.setProperty('--hero-height',Math.min(innerHeight*.6,w*Math.min(1,Math.max(...ratios)))+'px');};
+                const dimensions=()=>{const w=hero.clientWidth;if(!w)return;hero.style.setProperty('--hero-height',Math.min(innerHeight*.6,w)+'px');};
                 function ribbon(i){
                     if(i>2)return null;
                     const icon=document.createElementNS('http://www.w3.org/2000/svg','svg');
@@ -1706,7 +1706,7 @@ html.dpc-viewing body {
                         const picks=preferred?[preferred]:same.length?same:candidates.filter(x=>/\/(?:image|images|photo|photos)\//i.test(x.getAttribute('src')||'')&&(+x.getAttribute('width')>=400||+x.getAttribute('height')>=400));
                         await Promise.all(picks.slice(0,4).map(candidate=>new Promise(resolve=>{
                             const url=new URL(candidate.getAttribute('src'),safe(rec.a)).href;const probe=new Image();
-                            probe.onload=()=>{const area=probe.naturalWidth*probe.naturalHeight;if(photoFilename(url)===file&&area>Math.max(rec.area||0,40000)){rec.area=area;rec.full=url;rec.ratio=probe.naturalHeight/probe.naturalWidth;savePhoto(rec);}resolve();};probe.onerror=resolve;probe.src=url;
+                            probe.onload=()=>{const area=probe.naturalWidth*probe.naturalHeight;if(photoFilename(url)===file&&area>Math.max(rec.area||0,40000)){rec.area=area;rec.full=url;rec.probe=probe;rec.ratio=probe.naturalHeight/probe.naturalWidth;savePhoto(rec);}resolve();};probe.onerror=resolve;probe.src=url;
                         })));
                     }).catch(()=>{});
                     return rec.promise;
@@ -1717,7 +1717,7 @@ html.dpc-viewing body {
                     const token=++selectionToken,rec=records[i],direction=selected<0?0:Math.sign(i-selected);
                     // Commit the swipe immediately using the already available thumbnail; upgrade asynchronously.
                     if(token!==selectionToken)return;
-                    selected=i;hero.href=safe(rec.a);heroImg.src=rec.full||rec.src;heroImg.alt=rec.title;heroImg.onerror=()=>{if(selected===i&&heroImg.src!==rec.src){heroImg.src=rec.src;preload(rec).then(()=>{if(selected===i&&rec.full)heroImg.src=rec.full;});}};
+                    selected=i;hero.href=safe(rec.a);heroImg.src=rec.probe?.complete&&rec.probe.naturalWidth&&rec.full?rec.full:rec.src;heroImg.alt=rec.title;heroImg.onerror=()=>{if(selected===i&&heroImg.src!==rec.src){heroImg.src=rec.src;preload(rec).then(()=>{if(selected===i&&rec.full)heroImg.src=rec.full;});}};
                     centre.querySelector('svg')?.remove();refreshAdjacent();
                     featureTitle.href=hero.href;editorialTypeset(featureTitle,rec.title,direction,false);
                     featureAuthor.hidden=!rec.author;if(rec.author){featureAuthor.href=safe(rec.author);featureAuthor.textContent='by '+clean(rec.author);const award=ribbon(i);if(award){award.classList.add('dpc-caption-ribbon');featureAuthor.prepend(award);}}
@@ -1726,12 +1726,12 @@ html.dpc-viewing body {
                     if(!reducedMotion.matches)featureAuthor.animate([{opacity:0,transform:'translateY(5px)'},{opacity:1,transform:'translateY(0)'}],{duration:420,delay:140,fill:'both'});
                     [...strip.children].forEach((b,j)=>b.setAttribute('aria-pressed',String(j===i)));
                     
-                    preload(rec).then(()=>{if(selected===i&&rec.full)heroImg.src=rec.full;});
+                    preload(rec).then(()=>{if(selected===i&&rec.full&&heroImg.src!==rec.full)heroImg.src=rec.full;});
                 }
                 function refreshAdjacent(){
                     [[before,selected-1],[after,selected+1]].forEach(([slide,i])=>{
                         slide.replaceChildren();const rec=records[i];if(!rec)return;
-                        const img=make('img');img.src=rec.full||rec.src;img.alt=rec.title;img.draggable=false;slide.append(img);
+                        const img=make('img');img.src=rec.probe?.complete&&rec.probe.naturalWidth&&rec.full?rec.full:rec.src;img.alt=rec.title;img.draggable=false;slide.append(img);
                         preload(rec).then(()=>{if(slide.contains(img)&&rec.full)img.src=rec.full;});
                     });
                 }
@@ -1758,11 +1758,11 @@ html.dpc-viewing body {
                 hero.addEventListener('pointercancel',e=>finish(e,true));
                 hero.addEventListener('click',e=>{if(Date.now()<suppressClick||settling)e.preventDefault();});
                 heroImg.draggable=false;
-                const init=()=>{dimensions();editorialTypeset(featureTitle,records[selected<0?0:selected].title,0,false);composeCredit();};
-                const ro=new ResizeObserver(init);ro.observe(hero);
-                document.fonts?.ready.then(init);
+                let fittedWidth=0;const init=(force=false)=>{const w=hero.clientWidth;if(!w)return;dimensions();if(!force&&w===fittedWidth)return;fittedWidth=w;editorialTypeset(featureTitle,records[selected<0?0:selected].title,0,false);composeCredit();};
+                const ro=new ResizeObserver(()=>init());ro.observe(hero);
+                document.fonts?.ready.then(()=>init(true));
                 records.forEach(rec=>{if(!rec.img.complete)rec.img.addEventListener('load',dimensions,{once:true});});
-                const io=new IntersectionObserver(entries=>{if(entries.some(e=>e.isIntersecting)){io.disconnect();Promise.all(records.map(preload)).then(()=>{dimensions();refreshAdjacent();});}},{rootMargin:'700px'});io.observe(card);
+                const io=new IntersectionObserver(entries=>{if(entries.some(e=>e.isIntersecting)){io.disconnect();records.forEach(preload);}},{rootMargin:'700px'});io.observe(card);
                 records.forEach((rec,i)=>{const button=make('button');button.type='button';button.setAttribute('aria-label',rec.title+(rec.author?' by '+clean(rec.author):''));const img=make('img');img.src=rec.src;img.alt=rec.title;img.loading='lazy';button.append(img);button.onclick=()=>select(i);strip.append(button);});
                 select(0);
                 card.append(grid);
@@ -2353,10 +2353,12 @@ html.dpc-viewing body {
         let loading=false,failed=false,restore=null;
         try{restore=JSON.parse(sessionStorage.getItem(stateKey)||'null');sessionStorage.removeItem(stateKey);}catch{}
         function remember(){try{sessionStorage.setItem(stateKey,JSON.stringify({count:seen.size,y:scrollY}));}catch{}}
+        const resultManifest=[];
+        function saveManifest(){if(initial.searchParams.has('order_by_vote'))return;try{sessionStorage.setItem('dpc-detail-manifest-v1',JSON.stringify({time:Date.now(),entries:resultManifest.slice(0,500)}));}catch{}}
         function append(entries){
             const fragment=document.createDocumentFragment();
             for(const entry of entries){
-                if(seen.has(entry.id))continue;seen.add(entry.id);
+                if(seen.has(entry.id))continue;seen.add(entry.id);resultManifest.push({href:entry.href,src:entry.src,title:entry.title});
                 const card=make('article','dpc-result-photo-card');const photoLink=make('a','dpc-result-photo-link');photoLink.href=entry.href;photoLink.onclick=remember;
                 const image=make('img');image.loading='lazy';image.decoding='async';image.alt=entry.title;image.src=entry.src;image.dpcResultEntry=entry;photoLink.append(image);card.append(photoLink);fullObserver.observe(image);
                 const caption=make('div','dpc-result-photo-caption');card.append(caption);
@@ -2370,7 +2372,7 @@ html.dpc-viewing body {
                 if(entry.comment&&entry.comment!=='N/A'){const comment=make('div','dpc-result-own-comment');comment.append(make('span','','Your comment'),make('p','',entry.comment));caption.append(comment);}
                 fragment.append(card);
             }
-            grid.append(fragment);count.textContent=total?total+' photographs':'Challenge photographs';
+            grid.append(fragment);saveManifest();count.textContent=total?total+' photographs':'Challenge photographs';
         }
         function status(){sentinel.hidden=!queue.length&&!loading&&!failed;sentinel.disabled=loading;sentinel.textContent=loading?'Loading more photographs…':failed?'Retry loading photographs':'Load more photographs';}
         async function more(){
@@ -2466,7 +2468,7 @@ html.dpc-viewing body {
         return [cells[0],cells[cells.length-1]].map(cell=>{const a=cell?.querySelector('a[href*="image.php"]');if(!a)return null;const href=new URL(a.getAttribute('href'),base).href;return href===base?null:href;});
     }
     function detailRecord(href,priority=false){
-        if(detailPageCache.has(href))return detailPageCache.get(href);
+        if(detailPageCache.has(href)){const hit=detailPageCache.get(href);detailPageCache.delete(href);detailPageCache.set(href,hit);return hit;}
         const rec={href,doc:null,decoded:null,probe:null};detailPageCache.set(href,rec);
         rec.promise=interactiveFetch(href,{credentials:'same-origin'},priority).then(async response=>{
             if(!response.ok)throw Error('Photo unavailable');
@@ -2509,7 +2511,7 @@ html.dpc-viewing body {
         const fullSrc=incoming?.record?.src||photo.getAttribute('src');
         const width=Number(photo.getAttribute('width'))||incoming?.record?.probe?.naturalWidth||photo.naturalWidth;
         const height=Number(photo.getAttribute('height'))||incoming?.record?.probe?.naturalHeight||photo.naturalHeight;
-        const ratio=width>0&&height>0?width/height:incoming?.ratio;
+        const ratio=incoming?.ratio||(width>0&&height>0?width/height:null);
         if(ratio>0){stage.style.aspectRatio=String(ratio);stage.classList.add('dpc-fixed-photo-stage');}
         if(incoming?.thumb&&!incoming.record?.ready&&ratio>0){
             image.src=incoming.thumb;
@@ -2541,6 +2543,7 @@ html.dpc-viewing body {
             function fallback(rec){
                 if(rec.doc||rec.root.childNodes.length)return;
                 const shell=current.cloneNode(true);
+                shell.querySelectorAll('.dpc-photo-caption,.dpc-detail-photographer,.dpc-detail-section').forEach(el=>el.style.visibility='hidden');
                 shell.querySelectorAll('[id]').forEach(el=>el.removeAttribute('id'));
                 const old=shell.querySelector('.dpc-detail-stage');
                 if(old){old.replaceChildren(rec.preview.cloneNode(true));const w=rec.preview.naturalWidth,h=rec.preview.naturalHeight;if(w&&h){old.style.aspectRatio=String(w/h);old.classList.add('dpc-fixed-photo-stage');}}
@@ -2550,7 +2553,7 @@ html.dpc-viewing body {
                 const link=links[i];if(!link)return null;
                 const url=new URL(link.getAttribute('href'),location.href).href;
                 const thumb=link.querySelector('img');
-                const preview=make('img');if(thumb)preview.src=new URL(thumb.getAttribute('src'),location.href).href;
+                const preview=make('img');if(thumb){preview.src=new URL(thumb.getAttribute('src'),location.href).href;const w=Number(thumb.getAttribute('width'))||thumb.naturalWidth,h=Number(thumb.getAttribute('height'))||thumb.naturalHeight;if(w&&h){preview.width=w;preview.height=h;}}
                 const root=make('div','dpc-photo-detail dpc-detail-preview');root.inert=true;root.style.opacity='0';root.setAttribute('aria-hidden','true');body.append(root);
                 const record=detailRecord(url,true);
                 const rec={url,preview,root,record};slides[i]=rec;move(offset);
@@ -2558,7 +2561,7 @@ html.dpc-viewing body {
                     if(!page)return null;
                     rec.doc=page;
                     if(root.isConnected){
-                        const ratio=preview.naturalWidth&&preview.naturalHeight?preview.naturalWidth/preview.naturalHeight:null;
+                        const ratio=preview.naturalWidth&&preview.naturalHeight?preview.naturalWidth/preview.naturalHeight:preview.width&&preview.height?preview.width/preview.height:null;
                         buildPhotoDetail(page,true,0,root,{record,thumb:preview.src||null,ratio});
                     }
                     return page;
@@ -2566,6 +2569,8 @@ html.dpc-viewing body {
                 return rec;
             }
             prepare(0);prepare(1);move(0);
+            // The results list already knows the surrounding URLs: no sequential HTML discovery needed.
+            try{const saved=JSON.parse(sessionStorage.getItem('dpc-detail-manifest-v1')||'null');if(saved&&Date.now()-saved.time<3600000){const index=saved.entries.findIndex(e=>photoCacheId(e.href)===photoCacheId(location.href));if(index>=0){for(const step of [2,-2,3,-3,4,-4]){const entry=saved.entries[index+step];if(entry)detailRecord(entry.href);}}}}catch{}
             // Follow each adjacent page's real links two more places, never guess IDs.
             const keep=new Set([location.href,...slides.filter(Boolean).map(rec=>rec.url)]);
             async function lookAhead(rec,index){
@@ -2578,7 +2583,7 @@ html.dpc-viewing body {
             }
             Promise.all(slides.map(lookAhead)).then(()=>{
                 if(!current.isConnected)return;
-                for(const [href,record] of detailPageCache){if(!keep.has(href)&&record.doc)detailPageCache.delete(href);}
+                while(detailPageCache.size>18){const href=[...detailPageCache.keys()].find(key=>!keep.has(key));if(!href)break;detailPageCache.delete(href);}
             });
             requestAnimationFrame(()=>{if(current.isConnected&&!drag&&!busy)move(0);});
             const resize=new ResizeObserver(()=>{if(!current.isConnected){resize.disconnect();return;}if(!drag&&!busy)move(0);});resize.observe(body);
@@ -2588,7 +2593,7 @@ html.dpc-viewing body {
                 const [page]=await Promise.all([rec.promise,new Promise(resolve=>setTimeout(resolve,reducedMotion.matches?0:270))]);
                 if(!page){move(0,true);busy=false;location.href=rec.url;return;}
                 if(!current.isConnected)return;
-                const ratio=rec.preview.naturalWidth&&rec.preview.naturalHeight?rec.preview.naturalWidth/rec.preview.naturalHeight:null;
+                const ratio=rec.preview.naturalWidth&&rec.preview.naturalHeight?rec.preview.naturalWidth/rec.preview.naturalHeight:rec.preview.width&&rec.preview.height?rec.preview.width/rec.preview.height:null;
                 history.replaceState(history.state,'',rec.url);buildPhotoDetail(page,true,d,null,{record:rec.record,thumb:rec.preview.src||null,ratio});
             }
             swipeArea.addEventListener('pointerdown',e=>{if(busy||!e.isPrimary||e.button!==0)return;drag={id:e.pointerId,x:e.clientX,y:e.clientY,axis:null};});
