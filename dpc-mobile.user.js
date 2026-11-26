@@ -2,7 +2,7 @@
 // ==UserScript==
 // @name DPChallenge Mobile — Editorial Gallery
 // @namespace dpc-mobile
-// @version 5.36
+// @version 5.37
 // @updateURL https://raw.githubusercontent.com/Konador/dpc-mobile-restyle/main/dpc-mobile.user.js
 // @downloadURL https://raw.githubusercontent.com/Konador/dpc-mobile-restyle/main/dpc-mobile.user.js
 // @match *://*.dpchallenge.com/challenge_vote_image.php*
@@ -1139,6 +1139,7 @@ html.dpc-viewing body {
     style.textContent += "#dpc-app .dpc-entry-editor form{margin:0}#dpc-app .dpc-entry-editor [hidden],#dpc-app .dpc-upload-warnings[hidden]{display:none!important}#dpc-app .dpc-entry-preview{display:block;width:100%;max-height:55vh;object-fit:contain;border-radius:6px;margin-bottom:12px}#dpc-app .dpc-entry-status,#dpc-app .dpc-entry-help{font:12px/1.5 system-ui;color:var(--muted)}#dpc-app .dpc-entry-links{display:flex;flex-wrap:wrap;gap:12px;margin:12px 0}#dpc-app .dpc-entry-editor a{font-size:12px}#dpc-app .dpc-entry-link[href*=unsubmit]{color:#e67c7c!important}#dpc-app .dpc-entry-editor h2:not(:first-child){margin-top:20px}#dpc-app .dpc-entry-fields{display:grid;gap:12px}#dpc-app .dpc-entry-field{display:grid;gap:5px;min-width:0}#dpc-app .dpc-entry-field label,#dpc-app .dpc-entry-label{font:600 12px system-ui;color:var(--muted)}#dpc-app .dpc-entry-field input:not([type=file]),#dpc-app .dpc-entry-field select,#dpc-app .dpc-entry-field textarea{box-sizing:border-box;width:100%;min-width:0;max-width:100%;padding:10px;border:1px solid var(--line);border-radius:6px;background:transparent;color:inherit;font:14px system-ui;min-height:40px}#dpc-app .dpc-entry-field select option{color:#16161b;background:#fff}#dpc-app .dpc-entry-field textarea{resize:vertical;min-height:120px}#dpc-app .dpc-entry-date,#dpc-app .dpc-entry-exposure{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}#dpc-app .dpc-entry-date label{font-size:10px}#dpc-app .dpc-entry-toolbar{display:flex;gap:8px;flex-wrap:wrap;align-items:center}#dpc-app .dpc-entry-toolbar img{width:18px;height:auto}#dpc-app .dpc-entry-critique{display:flex;gap:8px;align-items:flex-start;font:12px/1.5 system-ui}#dpc-app .dpc-entry-critique input{accent-color:var(--accent);width:18px;height:18px;flex:none}#dpc-app .dpc-entry-editor .dpc-upload-actions input{width:100%;min-width:0;padding:12px 8px;border:1px solid var(--line);border-radius:6px;color:inherit;background:transparent;font:600 13px system-ui}#dpc-app .dpc-entry-editor input[name=SubmitUpdate]{background:var(--accent);color:#111115}#dpc-app .dpc-upload-warnings{margin:8px 0;padding:10px 12px;border:1px solid #d49b55;border-radius:6px;color:#d49b55;font:12px/1.5 system-ui}#dpc-app .dpc-upload-warnings p{margin:0 0 5px}#dpc-app .dpc-upload-warnings p:last-child{margin:0}#dpc-app .dpc-submit-page #file_selection table,#dpc-app .dpc-submit-page #file_selection tbody,#dpc-app .dpc-submit-page #file_selection tr,#dpc-app .dpc-submit-page #file_selection td{display:block;width:100%;box-sizing:border-box}#dpc-app .dpc-submit-page #upload_progress{width:100%!important;float:none!important;text-align:left;font:12px/1.5 system-ui}#dpc-app .dpc-submit-page #upload_progress .progress_bar{height:8px;border:0;background:#80808030;border-radius:8px;margin:8px 0}#dpc-app .dpc-submit-page #upload_size_progress_bar{height:8px;background-image:none!important;border-radius:8px;transition:width .15s linear}#dpc-app .dpc-submit-page #upload_progress div[style*=\"font-style: italic\"]{height:auto!important;width:100%!important;overflow:visible!important;font-style:normal!important}#dpc-app .dpc-submit-page #upload_size_progress_total{font-size:11px!important;color:var(--muted)!important}";
     style.textContent += "#dpc-app .dpc-submit-page .dpc-entry-editor .dpc-entry-status,#dpc-app .dpc-submit-page .dpc-entry-editor .dpc-entry-help{font:400 11px/1.5 system-ui!important;margin:8px 0!important;color:var(--muted)}#dpc-app .dpc-submit-page .dpc-entry-links{display:flex;gap:6px 12px;flex-wrap:wrap;margin:10px 0 0}#dpc-app .dpc-submit-page .dpc-entry-links a{font:600 11px/1.4 system-ui!important;padding:6px 0}#dpc-app .dpc-submit-page .dpc-entry-editor h2:not(:first-child){margin:18px 0 12px!important}#dpc-app .dpc-submit-page .dpc-entry-editor form{margin:0!important;padding:0!important}#dpc-app .dpc-submit-page .dpc-entry-fields{gap:10px}#dpc-app .dpc-submit-page .dpc-entry-field label,#dpc-app .dpc-submit-page .dpc-entry-label{font:600 11px/1.4 system-ui!important}#dpc-app .dpc-submit-page .dpc-entry-field input:not([type=file]),#dpc-app .dpc-submit-page .dpc-entry-field select,#dpc-app .dpc-submit-page .dpc-entry-field textarea{font:400 13px/1.4 system-ui!important;padding:8px!important;min-height:38px}#dpc-app .dpc-submit-page .dpc-entry-field textarea{min-height:100px}#dpc-app .dpc-submit-page .dpc-entry-toolbar{gap:4px}#dpc-app .dpc-submit-page .dpc-entry-toolbar a{display:inline-flex!important;align-items:center;justify-content:center;border:1px solid var(--line);border-radius:4px;padding:5px 7px;font:500 10px/1.2 system-ui!important;color:var(--accent)!important;text-decoration:none!important}#dpc-app .dpc-submit-page .dpc-entry-toolbar a:nth-child(1){font-weight:700!important}#dpc-app .dpc-submit-page .dpc-entry-toolbar a:nth-child(2){font-style:italic!important}#dpc-app .dpc-submit-page .dpc-entry-toolbar a:nth-child(3){text-decoration:underline!important}#dpc-app .dpc-submit-page .dpc-entry-toolbar a:nth-child(4){text-decoration:line-through!important}#dpc-app .dpc-submit-page .dpc-entry-date label{font-size:10px!important}#dpc-app .dpc-submit-page .dpc-entry-editor .dpc-entry-preview{width:100%;height:auto;max-height:55vh;object-fit:contain;margin:0 0 8px}#dpc-app .dpc-submit-page .dpc-entry-editor form>table[hidden]{display:none!important}";
     style.textContent += "#dpc-app.dpc-sticky-site-header{--dpc-sticky-header-height:54px}html:not(.dpc-menu-open) #dpc-app.dpc-sticky-site-header>.dpc-header{position:sticky;top:0;z-index:1002}#dpc-app.dpc-sticky-site-header .dpc-home-main-tabs{position:sticky;top:var(--dpc-sticky-header-height);z-index:90;background:#111115;padding-top:4px;isolation:isolate}html.dpc-light #dpc-app.dpc-sticky-site-header .dpc-home-main-tabs{background:#f5f6f8}html.dpc-menu-open #dpc-app.dpc-sticky-site-header .dpc-home-main-tabs{z-index:90}#dpc-app.dpc-sticky-site-header .dpc-home-main-tabs:before{content:\"\";position:absolute;inset:0 -18px;z-index:-1;background:inherit;pointer-events:none}";
+    style.textContent += "#dpc-app .dpc-gallery-context-label{font:400 10px/1.4 system-ui;color:var(--muted);text-align:center;margin:0 0 8px}";
     document.head.append(style);
 
     const header = `
@@ -2706,7 +2707,7 @@ html.dpc-viewing body {
                 }
     // Retain a short window of parsed photo pages and decoded images across swipes.
     // A gallery snapshot belongs to the exact photo click, not the photographer or challenge.
-    const contextKey='dpc-gallery-context-v2',contextProviders=new WeakMap();
+    const contextKey='dpc-gallery-context-v3',contextProviders=new WeakMap();
     let activeGallery=null;
     function registerGallery(element,label,provider){contextProviders.set(element,{label,provider});}
     function galleryEntries(element){
@@ -2728,17 +2729,21 @@ html.dpc-viewing body {
         if(!def)return;
         const result=def.provider(),entries=normaliseGallery(Array.isArray(result)?result:result.entries);
         const id=photoCacheId(a.href);if(!entries.some(x=>photoCacheId(x.href)===id))return;
-        const context={time:Date.now(),origin:location.href,label:def.label,entries,queue:result.queue||[],visited:result.visited||[],entryId:id,y:scrollY};
+        const context={time:Date.now(),token:Date.now().toString(36)+'-'+Math.random().toString(36).slice(2),origin:location.href,label:def.label,entries,queue:result.queue||[],visited:result.visited||[],entryId:id,y:scrollY};
         storeGallery(context);
+        // Carry an explicit context marker across the navigation, independent of referrer policy.
+        const target=new URL(a.href);target.hash='dpc-gallery='+context.token;
+        a.href=target.href;
         const token={...history.state,dpcGalleryReturn:{label:def.label,y:scrollY,extra:result.extra||null}};
         history.replaceState(token,'',location.href);
     }
     function loadGallery(){
         try{const saved=JSON.parse(sessionStorage.getItem(contextKey)||'null'),id=photoCacheId(location.href);
             if(!saved||Date.now()-saved.time>12*3600000||!saved.entries.some(x=>photoCacheId(x.href)===id))return null;
-            if(history.state?.dpcGalleryOrigin!==saved.origin){
-                if(saved.entryId!==id||document.referrer&&new URL(document.referrer).href.split('#')[0]!==saved.origin.split('#')[0])return null;
-                history.replaceState({...history.state,dpcGalleryOrigin:saved.origin},'',location.href);
+            if(history.state?.dpcGalleryToken!==saved.token){
+                if(saved.entryId!==id||location.hash!=='#dpc-gallery='+saved.token)return null;
+                const clean=new URL(location.href);clean.hash='';
+                history.replaceState({...history.state,dpcGalleryOrigin:saved.origin,dpcGalleryToken:saved.token},'',clean.href);
             }
             return saved;
         }catch{return null;}
@@ -2797,6 +2802,7 @@ html.dpc-viewing body {
         const swipeArea=make('div','dpc-detail-swipe-area');current.append(swipeArea);
         const challenge=info?.querySelector('a[href*="challenge_results.php"]');
         if(!mounted&&!previewRoot)activeGallery=loadGallery();
+        if(!previewRoot&&activeGallery){const index=activeGallery.entries.findIndex(e=>photoCacheId(e.href)===photoCacheId(location.href));if(index>=0){const indicator=make('div','dpc-gallery-context-label',activeGallery.label+' · '+(index+1)+' / '+activeGallery.entries.length+(activeGallery.queue?.length?'+':''));swipeArea.append(indicator);}}
         const stage=make('div','dpc-detail-stage');const image=copy(photo);image.removeAttribute('style');image.removeAttribute('srcset');
         const fullSrc=incoming?.record?.src||photo.getAttribute('src');
         const width=Number(photo.getAttribute('width'))||incoming?.record?.probe?.naturalWidth||photo.naturalWidth;
@@ -3347,11 +3353,11 @@ html.dpc-viewing body {
         requestAnimationFrame(refreshUploader);addEventListener('load',refreshUploader,{once:true});addEventListener('resize',refreshUploader);
         if(drop&&window.ResizeObserver){const observer=new ResizeObserver(refreshUploader);observer.observe(drop);}
     }
+    document.addEventListener('click',captureGallery,true);
     if (isSubmit) { buildSubmission(); return; }
     if (isChallengeIndex) { buildChallengeIndex(); return; }
     if (isProfile) { buildProfile(); return; }
     if (isResults) { buildChallengeResults(); return; }
-    document.addEventListener('click',captureGallery,true);
     if (isPhotoDetail) { buildPhotoDetail(); return; }
     if (isHome) { buildHome(); return; }
     if (isList) {
