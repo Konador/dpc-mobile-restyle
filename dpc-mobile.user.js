@@ -2,7 +2,7 @@
 // ==UserScript==
 // @name DPChallenge Mobile — Editorial Gallery
 // @namespace dpc-mobile
-// @version 5.44
+// @version 5.45
 // @updateURL https://raw.githubusercontent.com/Konador/dpc-mobile-restyle/main/dpc-mobile.user.js
 // @downloadURL https://raw.githubusercontent.com/Konador/dpc-mobile-restyle/main/dpc-mobile.user.js
 // @match *://*.dpchallenge.com/challenge_vote_image.php*
@@ -3397,12 +3397,26 @@ html.dpc-viewing body {
         const originalLinks=[...document.querySelectorAll('a[href]')];
         const label=a=>clean(a)||a.title||a.querySelector('img')?.alt||a.querySelector('img')?.title||'';
         const link=(a,txt,base)=>{const n=make('a','',txt||label(a));n.href=href(a,base);return n;};
-        const isThread=a=>/FORUM_THREAD_ID=/i.test(href(a));
+        const isThread=a=>{const u=href(a);return /FORUM_THREAD_ID=/i.test(u)&&!/[?&](?:FORUM_POST_ID|action)=(?!view(?:thread)?(?:&|$))/i.test(u)&&!/^#?\d+$|^\(reverse\)$|^(?:next|previous|first|last)$/i.test(label(a));};
         const isSection=a=>/FORUM_SECTION_ID=/i.test(href(a))&&!isThread(a);
         const forms=[...document.forms].filter(f=>f.querySelector('textarea')||/forum/i.test(f.action)&&f.querySelector('input[type=submit],button'));
-        const postRows=doc=>[...doc.querySelectorAll('.dpc-forum-author-details')].map(n=>n.closest('tr')).filter((r,i,a)=>r&&a.indexOf(r)===i&&r.querySelector('.dpc-forum-message,.forum-post'));
+        const postRows=doc=>{
+            const result=[];
+            for(const message of doc.querySelectorAll('.dpc-forum-message .forum-post, .forum-post')){
+                if(message.querySelector('.forum-post')||message.closest('script,style'))continue;
+                let row=message.closest('tr');
+                while(row&&!row.querySelector('.dpc-forum-author-details')){
+                    const outer=row.parentElement?.closest('tr');if(!outer||outer.querySelectorAll('.forum-post').length!==1) {row=null;break;}row=outer;
+                }
+                if(!row||row.querySelectorAll('.forum-post').length!==1||row.querySelectorAll('.dpc-forum-author-details').length!==1||result.includes(row))continue;
+                result.push(row);
+            }
+            return result;
+        };
         const initialPosts=postRows(document);
-        const listRows=[...document.querySelectorAll('tr')].filter(r=>[...r.cells].some(c=>[...c.querySelectorAll('a[href]')].some(a=>a.closest('tr')===r&&(isThread(a)||isSection(a))&&clean(a))));
+        // Never mistake a thread's layout tables for a forum index.
+        if(tid&&!initialPosts.length&&!forms.some(f=>f.querySelector('textarea')))return;
+        const listRows=[...document.querySelectorAll('tr')].filter(r=>!r.querySelector('tr')&&[...r.cells].some(c=>[...c.querySelectorAll('a[href]')].some(a=>a.closest('tr')===r&&(isThread(a)||isSection(a))&&clean(a))));
         if(!initialPosts.length&&!listRows.length&&!forms.length)return;
         app.innerHTML=header+'<div class="dpc-forum-page"></div>'+footer;
         const body=$('.dpc-forum-page');
@@ -3424,7 +3438,7 @@ html.dpc-viewing body {
         function renderPosts(doc,base){
             let count=0;
             for(const row of postRows(doc)){
-                const author=row.querySelector('.dpc-forum-author-details'),message=row.querySelector('.dpc-forum-message .forum-post td,.dpc-forum-message .forum-post,.dpc-forum-message');
+                const author=row.querySelector('.dpc-forum-author-details'),post=row.querySelector('.forum-post'),message=post?.matches('table')?post.querySelector('td'):post;
                 if(!message)continue;
                 const nativeAnchor=row.querySelector('a[name],a[id]'),act=row.querySelector('.dpc-forum-actions');
                 const key=nativeAnchor?.name||nativeAnchor?.id||[clean(author),clean(act),clean(message)].join('|');
@@ -3432,7 +3446,7 @@ html.dpc-viewing body {
                 const card=make('article','dpc-forum-card');if(nativeAnchor&&(nativeAnchor.name||nativeAnchor.id))card.id=nativeAnchor.name||nativeAnchor.id;
                 const person=author.querySelector('a[href*="profile.php"]');const head=person?link(person,clean(person),base):make('strong','',clean(author));head.className='dpc-forum-title';card.append(head);
                 if(act){const copy=act.cloneNode(true);copy.querySelectorAll('a,img,span').forEach(n=>n.remove());card.append(make('div','dpc-forum-meta',clean(copy)));}
-                const prose=make('div','dpc-forum-prose');for(const child of message.childNodes)prose.append(child.cloneNode(true));stripGraphics(prose,base);card.append(prose);
+                const prose=make('div','dpc-forum-prose');for(const child of message.childNodes)prose.append(child.cloneNode(true));prose.querySelectorAll('script,style,noscript,iframe,object,embed').forEach(n=>n.remove());for(const n of prose.querySelectorAll('*'))for(const a of [...n.attributes])if(/^on/i.test(a.name))n.removeAttribute(a.name);stripGraphics(prose,base);card.append(prose);
                 const actions=make('div','dpc-forum-nav');for(const a of (act||row).querySelectorAll('a[href]')){const t=label(a);if(/reply|quote|edit|report|permalink/i.test(t)&&href(a,base))actions.append(link(a,t,base));}if(actions.children.length)card.append(actions);
                 if(!firstUnread&&[row,...row.querySelectorAll('img,a')].some(n=>/\bunread\b|new post/i.test([n.className,n.title,n.alt,n.getAttribute('name')].join(' '))))firstUnread=card;
                 feed.append(card);
@@ -3442,7 +3456,7 @@ html.dpc-viewing body {
             renderPosts(document,location.href);
             const unread=make('button','','Jump to unread');unread.type='button';nav.append(unread);
             unread.onclick=()=>{if(firstUnread){firstUnread.scrollIntoView({block:'start'});return;}const a=originalLinks.find(a=>/unread|readrecent|firstnew/i.test(label(a)+' '+href(a)));if(a){location.href=href(a);return;}const u=new URL(location.href);u.searchParams.set('action','readrecent');u.hash='';if(u.href!==location.href)location.href=u.href;else feed.lastElementChild?.scrollIntoView({block:'start'});};
-        }else if(!forms.some(f=>f.querySelector('textarea'))){
+        }else if(!tid&&!forms.some(f=>f.querySelector('textarea'))){
             let group='';
             for(const row of listRows){
                 const anchors=[...row.querySelectorAll('a[href]')].filter(a=>a.closest('tr')===row&&clean(a));
