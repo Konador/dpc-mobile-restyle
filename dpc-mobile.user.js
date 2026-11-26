@@ -2,7 +2,7 @@
 // ==UserScript==
 // @name DPChallenge Mobile — Editorial Gallery
 // @namespace dpc-mobile
-// @version 5.15
+// @version 5.16
 // @updateURL https://raw.githubusercontent.com/Konador/dpc-mobile-restyle/main/dpc-mobile.user.js
 // @downloadURL https://raw.githubusercontent.com/Konador/dpc-mobile-restyle/main/dpc-mobile.user.js
 // @match *://*.dpchallenge.com/challenge_vote_image.php*
@@ -1159,6 +1159,7 @@ html.dpc-viewing body {
 </footer>`;
 
     style.textContent += "#dpc-app.dpc-entry-preview-mode .dpc-navigation,#dpc-app.dpc-entry-preview-mode .dpc-actions{display:none!important}#dpc-app.dpc-entry-preview-mode .dpc-overview{font:600 20px system-ui}";
+    style.textContent += "#dpc-app .dpc-home-vote-status{display:flex;flex-wrap:wrap;gap:6px 12px}#dpc-app .dpc-home-comment-status{font-size:inherit}#dpc-app .dpc-home-progress[hidden]{display:none!important}";
     const progressMarkup = `
 <div class="dpc-progress">
     <div class="dpc-progress-label">
@@ -1597,6 +1598,40 @@ html.dpc-viewing body {
             return [...items.values()].sort((a,b)=>voting?Number(!!a.progress&&+a.progress[1]>=+a.progress[2])-Number(!!b.progress&&+b.progress[1]>=+b.progress[2]):0);
         }
         const votes=challenges(voteHead,true),entries=challenges(entryHead,false);
+        const allVoted=votes.length>0&&votes.every(item=>item.progress&&+item.progress[2]>0&&+item.progress[1]>=+item.progress[2]);
+        const voteSectionLabel=allVoted?'Open for comments':'Open for voting';
+        async function countHomeComments(doc,base,id,total){
+            const seen=new Map(),visited=new Set(),queue=[];
+            const first=new URL('/challenge_vote_list.php?CHALLENGE_ID='+encodeURIComponent(id),location.origin).href;
+            function collect(page,url){
+                visited.add(url);
+                for(const cell of page.querySelectorAll('.dpc-vote-thumbnail-cell')){
+                    const link=cell.querySelector('a[href*="challenge_vote_image.php?IMAGE_ID="]');
+                    if(!link||!cell.querySelector('.dpc-vote-thumbnail-image img'))continue;
+                    const imageId=new URL(link.getAttribute('href'),url).searchParams.get('IMAGE_ID');
+                    if(!imageId)continue;
+                    seen.set(imageId,!!cell.querySelector('a[href*="challenge_vote_list_comment.php"] img[src$="/comment.gif"]'));
+                }
+                for(const link of page.querySelectorAll('a[href]')){
+                    if(!link.querySelector('img[src*="/images/page/"]'))continue;
+                    const u=new URL(link.getAttribute('href'),url);
+                    if(u.origin!==location.origin||u.pathname!=='/challenge_vote_list.php'||u.searchParams.get('CHALLENGE_ID')!==id)continue;
+                    u.searchParams.delete('filter');u.hash='';
+                    if(!visited.has(u.href)&&!queue.includes(u.href))queue.push(u.href);
+                }
+            }
+            const initial=new URL(base);
+            if(initial.pathname==='/challenge_vote_list.php'&&initial.searchParams.get('CHALLENGE_ID')===id&&!initial.searchParams.get('filter'))collect(doc,initial.href);
+            else queue.push(first);
+            while(queue.length&&seen.size<total){
+                const url=queue.shift();if(visited.has(url))continue;
+                const response=await backgroundFetch(url,{credentials:'same-origin'});if(!response.ok)throw Error('Comment count unavailable');
+                collect(new DOMParser().parseFromString(await response.text(),'text/html'),response.url||url);
+            }
+            if(seen.size!==total||!total)return null;
+            return [...seen.values()].filter(Boolean).length;
+        }
+
         if(!votes.length&&!entries.length)console.warn('DPC homepage: challenge markup not recognised');
         app.innerHTML=header+'<div class="dpc-home"></div>'+footer;
         const body=$('.dpc-home');
@@ -1625,8 +1660,10 @@ html.dpc-viewing body {
                 if(deadline)details.append(make('span','dpc-entry-deadline',deadline[0]));
                 if(!voting&&count)details.append(make('span','dpc-entry-count',count[1]+' '+(+count[1]===1?'entry':'entries')));
                 if(details.childNodes.length)card.append(details);
-                if(item.progress)card.append(make('div','dpc-home-vote-status',item.progress[1]+' of '+item.progress[2]+' rated'));
-                if(item.progress){const bar=make('div','dpc-home-progress'),fill=make('i');fill.style.width=Math.min(100,100*+item.progress[1]/Math.max(1,+item.progress[2]))+'%';bar.append(fill);card.append(bar);}
+                const completed=!!item.progress&&+item.progress[2]>0&&+item.progress[1]>=+item.progress[2];
+                const commentStatus=make('span','dpc-home-comment-status','Comments —');
+                if(item.progress){const status=make('div','dpc-home-vote-status');if(!completed)status.append(make('span','',item.progress[1]+'/'+item.progress[2]+' rated'));status.append(commentStatus);card.append(status);}
+                if(item.progress){const bar=make('div','dpc-home-progress'),fill=make('i');fill.style.width=(completed?0:Math.min(100,100*+item.progress[1]/Math.max(1,+item.progress[2])))+'%';bar.hidden=completed;bar.append(fill);card.append(bar);}
                 if(voting){
                     card.classList.add('dpc-home-vote-card');
                     const voteKey='dpc-vote-bg-v2-'+safe(item.action);
@@ -1635,9 +1672,15 @@ html.dpc-viewing body {
                     if(voteCached?.src)set(voteCached.src,safe(item.action));
                     function saveVote(src){if(src)try{sessionStorage.setItem(voteKey,JSON.stringify({src,time:Date.now()}));}catch{}}
                     async function loadVoteImage(){
-                        if(voteCached&&Date.now()-voteCached.time<3600000)return;
                         const response=await interactiveFetch(safe(item.action),{credentials:'same-origin'});if(!response.ok)return;
                         const doc=new DOMParser().parseFromString(await response.text(),'text/html');
+                        const id=new URL(safe(item.a)).searchParams.get('CHALLENGE_ID')||new URL(safe(item.action)).searchParams.get('CHALLENGE_ID');
+                        if(id&&item.progress)countHomeComments(doc,response.url||safe(item.action),id,+item.progress[2]).then(n=>{
+                            if(n===null)return;
+                            commentStatus.textContent=n+'/'+item.progress[2]+' commented';
+                            if(completed){const bar=card.querySelector('.dpc-home-progress');bar.hidden=false;bar.firstElementChild.style.width=(100*n/+item.progress[2])+'%';}
+                        }).catch(()=>{});
+                        if(voteCached&&Date.now()-voteCached.time<3600000)return;
                         const images=[...doc.querySelectorAll('.dpc-vote-thumbnail-image img,.dpc-vote-primary-image,.dpc-vote-thumbnail-cell img[src],a[href*="challenge_vote_image.php"] img[src]')].filter(im=>{const src=im.getAttribute('src')||'';return src&&!/spacer|pixel|pix\.gif|logo|ribbon|removed\.png/i.test(src);});
                         if(!images.length)return;
                         const ranked=images.map(image=>({image,rating:Number(image.closest('.dpc-vote-thumbnail-cell')?.querySelector('a.vs')?.textContent.trim())||0})).filter(x=>x.rating>0).sort((a,b)=>b.rating-a.rating).slice(0,10);
@@ -1656,12 +1699,12 @@ html.dpc-viewing body {
                     }
                     const voteObserver=new IntersectionObserver(items=>{if(items.some(x=>x.isIntersecting)){voteObserver.disconnect();loadVoteImage().catch(()=>{});}},{rootMargin:'300px'});voteObserver.observe(card);
                 }
-                if(voting)card.append(link(item.action,'dpc-home-action',item.progress&&+item.progress[1]>=+item.progress[2]?'Review votes':'Continue voting'));
+                if(voting)card.append(link(item.action,'dpc-home-action',completed?'Continue commenting':'Continue voting'));
                 grid.append(card);if(i>=limit){card.hidden=true;hidden.push(card);}
             });
             if(hidden.length){const b=make('button','dpc-home-more','View all '+items.length);b.onclick=()=>{hidden.forEach(c=>c.hidden=false);b.remove();};sec.append(b);}
         }
-        const votingSection=section('Open for','voting');
+        const votingSection=section('Open for',allVoted?'comments':'voting');
         if(votes.length)cards(votes,votingSection,true,Infinity);
         else if(voteHead){const area=region(voteHead,a=>!!safe(a));if(area)votingSection.append(area.cloneNode(true));}
         if(votingSection.children.length===1)votingSection.append(make('p','dpc-home-meta','No challenges open for voting.'));
@@ -1811,7 +1854,7 @@ html.dpc-viewing body {
         const tabs=make('div','dpc-home-challenge-tabs');tabs.setAttribute('role','tablist');tabs.setAttribute('aria-label','Challenges');
         body.prepend(tabs,resultsSection,votingSection);
         const panels=[resultsSection,votingSection],buttons=[];
-        const labels=['Recent results','Open for voting'];
+        const labels=['Recent results',voteSectionLabel];
         panels.forEach((panel,i)=>{
             panel.id='dpc-home-challenge-panel-'+i;panel.setAttribute('role','tabpanel');
             const button=make('button','dpc-home-challenge-tab');const words=labels[i].split(' ');button.append(words.slice(0,-1).join(' ')+' ',make('em','',words.at(-1)));button.type='button';button.id='dpc-home-challenge-tab-'+i;button.setAttribute('role','tab');button.setAttribute('aria-controls',panel.id);panel.setAttribute('aria-labelledby',button.id);panel.firstElementChild.hidden=true;
