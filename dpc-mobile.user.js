@@ -2,7 +2,7 @@
 // ==UserScript==
 // @name DPChallenge Mobile — Editorial Gallery
 // @namespace dpc-mobile
-// @version 5.29
+// @version 5.30
 // @updateURL https://raw.githubusercontent.com/Konador/dpc-mobile-restyle/main/dpc-mobile.user.js
 // @downloadURL https://raw.githubusercontent.com/Konador/dpc-mobile-restyle/main/dpc-mobile.user.js
 // @match *://*.dpchallenge.com/challenge_vote_image.php*
@@ -1169,6 +1169,7 @@ html.dpc-viewing body {
     style.textContent += "#dpc-app #dpc-home-challenge-panel-1 .dpc-vote-bg-reveal:before{background-image:linear-gradient(90deg,#111115fa 0%,#111115ed 40%,#111115b0 70%,#11111545 100%),var(--vote-blur,none);filter:blur(13px);transform:scale(1.08);opacity:0;transition:opacity .35s ease!important}#dpc-app #dpc-home-challenge-panel-1 .dpc-vote-bg-reveal.dpc-bg-preview:before{opacity:1}#dpc-app #dpc-home-challenge-panel-1 .dpc-vote-bg-reveal:after{content:\"\";position:absolute;inset:0;z-index:-1;pointer-events:none;background-image:linear-gradient(90deg,#111115fa 0%,#111115ed 40%,#111115b0 70%,#11111545 100%),var(--vote-image,none);background-size:cover;background-position:center,right center;opacity:0;transition:opacity .65s ease}#dpc-app #dpc-home-challenge-panel-1 .dpc-vote-bg-reveal.dpc-bg-ready:after{opacity:1}html.dpc-light #dpc-app #dpc-home-challenge-panel-1 .dpc-vote-bg-reveal:before{background-image:linear-gradient(90deg,#f5f6f8fa 0%,#f5f6f8ed 40%,#f5f6f8b0 70%,#f5f6f845 100%),var(--vote-blur,none)}html.dpc-light #dpc-app #dpc-home-challenge-panel-1 .dpc-vote-bg-reveal:after{background-image:linear-gradient(90deg,#f5f6f8fa 0%,#f5f6f8ed 40%,#f5f6f8b0 70%,#f5f6f845 100%),var(--vote-image,none)}@media(prefers-reduced-motion:reduce){#dpc-app #dpc-home-challenge-panel-1 .dpc-vote-bg-reveal:before,#dpc-app #dpc-home-challenge-panel-1 .dpc-vote-bg-reveal:after{transition:none!important}}";
     style.textContent += "#dpc-app .dpc-home-carousel section .dpc-home-vote-card:not(.dpc-home-submitted-card) h3,#dpc-app .dpc-home-carousel section .dpc-home-vote-card:not(.dpc-home-submitted-card) h3 a{font-size:19px!important;line-height:1.12!important}#dpc-app .dpc-home-carousel section .dpc-home-vote-card:not(.dpc-home-submitted-card) .dpc-home-meta{font-size:12px!important;line-height:1.4!important;max-width:85%;margin:0 0 9px;-webkit-text-size-adjust:none;text-size-adjust:none}#dpc-app .dpc-home-carousel section .dpc-home-vote-card:not(.dpc-home-submitted-card){-webkit-text-size-adjust:none;text-size-adjust:none}#dpc-app .dpc-home-carousel section .dpc-home-vote-card:not(.dpc-home-submitted-card) .dpc-home-vote-status{font-size:10px!important}#dpc-app .dpc-home-carousel section .dpc-home-vote-card:not(.dpc-home-submitted-card) .dpc-entry-deadline{font-size:11px!important}#dpc-app .dpc-home-carousel section .dpc-home-vote-card:not(.dpc-home-submitted-card) .dpc-home-action{font-size:10px!important;padding:6px 8px}";
     style.textContent += "#dpc-app .dpc-home-carousel{width:100%;overflow:hidden;touch-action:pan-y pinch-zoom;position:relative}#dpc-app .dpc-home-carousel-track{display:flex;width:100%;align-items:flex-start;will-change:transform}#dpc-app .dpc-home-carousel-track>section{flex:0 0 100%;width:100%;min-width:0;box-sizing:border-box;margin:0!important;display:flow-root}#dpc-app .dpc-home-carousel-track>section[aria-hidden=true]{pointer-events:none}#dpc-app .dpc-home-carousel-track>section>h2[hidden]{display:none!important}";
+    style.textContent += "#dpc-app .dpc-home-carousel{max-width:100%;min-width:0;padding:0!important;box-sizing:border-box}#dpc-app .dpc-home-carousel-track{max-width:none!important;min-width:0;gap:0!important;padding:0!important;margin:0!important;box-sizing:border-box}#dpc-app .dpc-home-carousel-track>section{flex-shrink:0!important;flex-grow:0!important;overflow:hidden;box-sizing:border-box;padding:0!important;margin:0!important;border:0!important}#dpc-app .dpc-home-carousel-track>section .dpc-results-feature{margin-left:0;margin-right:0}";
     const progressMarkup = `
 <div class="dpc-progress">
     <div class="dpc-progress-label">
@@ -1944,7 +1945,11 @@ html.dpc-viewing body {
         }
         function positionHome(dx=0,animate=false){
             track.style.transition=animate&&!motion.matches?'transform 280ms cubic-bezier(.22,.75,.25,1)':'none';
-            track.style.transform='translate3d(calc('+(-selectedTab*100)+'% + '+dx+'px),0,0)';
+            const w=viewport.clientWidth;
+            if(!w)return;
+            track.style.width=(w*panels.length)+'px';
+            panels.forEach(panel=>{panel.style.width=w+'px';panel.style.minWidth=w+'px';panel.style.maxWidth=w+'px';panel.style.flexBasis=w+'px';});
+            track.style.transform='translate3d('+(-selectedTab*w+dx)+'px,0,0)';
         }
         function selectHomeTab(index,animate=true){
             clearTimeout(settleTimer);gesture=null;
@@ -1982,7 +1987,11 @@ html.dpc-viewing body {
         viewport.addEventListener('touchend',()=>finishHomeSwipe(),{passive:true});
         viewport.addEventListener('touchcancel',()=>finishHomeSwipe(true),{passive:true});
         viewport.addEventListener('click',e=>{if(performance.now()<suppressClickUntil){e.preventDefault();e.stopImmediatePropagation();} },true);
-        const homeResize=new ResizeObserver(()=>fitHeight(!!gesture&&gesture.axis==='x'));panels.forEach(p=>homeResize.observe(p));homeResize.observe(viewport);
+        let lastHomeWidth=0;
+        const homeResize=new ResizeObserver(()=>{
+            if(viewport.clientWidth!==lastHomeWidth){lastHomeWidth=viewport.clientWidth;positionHome(gesture?.axis==='x'?gesture.dx:0);}
+            fitHeight(!!gesture&&gesture.axis==='x');
+        });panels.forEach(p=>homeResize.observe(p));homeResize.observe(viewport);
         selectHomeTab(selectedTab,false);
         requestAnimationFrame(()=>fitHeight());
         const forum=region(forumHead,a=>/forum.*(?:THREAD_ID|thread)/i.test(safe(a)));
