@@ -2,7 +2,7 @@
 // ==UserScript==
 // @name DPChallenge Mobile — Editorial Gallery
 // @namespace dpc-mobile
-// @version 5.47
+// @version 5.48
 // @updateURL https://raw.githubusercontent.com/Konador/dpc-mobile-restyle/main/dpc-mobile.user.js
 // @downloadURL https://raw.githubusercontent.com/Konador/dpc-mobile-restyle/main/dpc-mobile.user.js
 // @match *://*.dpchallenge.com/challenge_vote_image.php*
@@ -3397,8 +3397,8 @@ html.dpc-viewing body {
         const originalLinks=[...document.querySelectorAll('a[href]')];
         const label=a=>{const im=a.querySelector('img');return clean(a)||a.title||im?.alt||im?.title||(/b-postreply/i.test(im?.getAttribute('src')||'')?'Post reply':/b-(?:newthread|postthread|newtopic|posttopic)/i.test(im?.getAttribute('src')||'')?'New thread':/\/next\./i.test(im?.getAttribute('src')||'')?'Next':/\/prev\./i.test(im?.getAttribute('src')||'')?'Previous':'');};
         const link=(a,txt,base)=>{const n=make('a','',txt||label(a));n.href=href(a,base);return n;};
-        const isThread=a=>{const u=href(a);return /FORUM_THREAD_ID=/i.test(u)&&!/[?&](?:FORUM_POST_ID|action)=(?!view(?:thread)?(?:&|$))/i.test(u)&&!/^#?\d+$|^\(reverse\)$|^(?:next|previous|first|last)$/i.test(label(a));};
-        const isSection=a=>/FORUM_SECTION_ID=/i.test(href(a))&&!isThread(a);
+        const isThread=a=>{try{const u=new URL(href(a));return !!u.searchParams.get('FORUM_THREAD_ID')&&['read','view','viewthread',''].includes(u.searchParams.get('action')||'')&&!u.searchParams.get('FORUM_POST_ID')&&!!clean(a)&&!u.searchParams.has('page')&&!u.searchParams.has('theme')&&!/^\[?\d+\]?$|^\(reverse\)$/i.test(clean(a));}catch{return false;}};
+        const isSection=a=>{try{const u=new URL(href(a));return !!u.searchParams.get('FORUM_SECTION_ID')&&!u.searchParams.get('FORUM_THREAD_ID')&&u.searchParams.get('action')==='list'&&!u.searchParams.has('page')&&!u.searchParams.has('theme')&&!!clean(a);}catch{return false;}};
         const forms=[...document.forms].filter(f=>f.querySelector('textarea')||/forum/i.test(f.action)&&f.querySelector('input[type=submit],button'));
         const postRows=doc=>{
             const result=[];
@@ -3418,7 +3418,12 @@ html.dpc-viewing body {
         const initialPosts=postRows(document);
         // Never mistake a thread's layout tables for a forum index.
         if(tid&&!initialPosts.length&&!forms.some(f=>f.querySelector('textarea')))return;
-        const listRows=[...document.querySelectorAll('tr')].filter(r=>!r.querySelector('tr')&&[...r.cells].some(c=>[...c.querySelectorAll('a[href]')].some(a=>a.closest('tr')===r&&(isThread(a)||isSection(a))&&clean(a))));
+        const sid=params.get('FORUM_SECTION_ID');
+        function topicRows(doc){
+            const table=[...doc.querySelectorAll('tr.forum-heading')].find(r=>[...r.cells].map(clean).includes('Subject')&&[...r.cells].map(clean).includes('Replies'))?.closest('table');
+            return table?[...table.rows].filter(r=>r.cells.length>=6&&[...r.cells[1].querySelectorAll('a[href]')].some(isThread)):[];
+        }
+        const listRows=sid&&action==='list'?topicRows(document):[...document.querySelectorAll('tr')].filter(r=>!r.querySelector('tr')&&[...r.cells].some(c=>[...c.querySelectorAll('a[href]')].some(a=>a.closest('tr')===r&&(isThread(a)||isSection(a))&&clean(a))));
         if(!initialPosts.length&&!listRows.length&&!forms.length)return;
         app.innerHTML=header+'<div class="dpc-forum-page"></div>'+footer;
         const body=$('.dpc-forum-page');
@@ -3426,18 +3431,47 @@ html.dpc-viewing body {
         '#dpc-app .dpc-home-thread a{text-decoration:none;color:inherit}#dpc-app .dpc-home-thread a.dpc-thread-category{color:var(--accent)}'+
         '#dpc-app .dpc-forum-page{max-width:800px;margin:auto;padding:14px 12px 30px;overflow-wrap:anywhere}#dpc-app .dpc-forum-page h1{font:600 23px/1.2 system-ui;margin:14px 0}#dpc-app .dpc-forum-page h2{font:600 13px/1.4 system-ui;border-left:3px solid var(--accent);padding-left:9px;margin:22px 0 9px}#dpc-app .dpc-forum-page a{color:var(--accent);text-decoration:none}#dpc-app .dpc-forum-nav{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin:8px 0 14px;font-size:12px}#dpc-app .dpc-forum-nav a,#dpc-app .dpc-forum-nav button,#dpc-app .dpc-forum-more{border:1px solid var(--line);background:transparent;color:var(--accent);padding:9px 12px;border-radius:5px;font:500 13px system-ui}#dpc-app .dpc-forum-card{background:#25262e;border:1px solid #ffffff20;border-radius:6px;padding:12px;margin:0 0 8px;min-width:0}html.dpc-light #dpc-app .dpc-forum-card{background:white;border-color:#cdd3df}#dpc-app .dpc-forum-card .dpc-forum-title{font:600 15px/1.35 system-ui;color:inherit;display:block}#dpc-app .dpc-forum-meta{font:400 11px/1.5 system-ui;color:var(--muted);margin-top:6px}#dpc-app .dpc-forum-prose{font:400 14px/1.65 system-ui;margin-top:12px;overflow-wrap:anywhere}#dpc-app .dpc-forum-prose img{max-width:100%;height:auto}#dpc-app .dpc-forum-prose table{max-width:100%;width:100%!important;table-layout:fixed}#dpc-app .dpc-forum-prose blockquote,#dpc-app .dpc-forum-prose .quote{margin:8px 0;padding:10px;border-left:2px solid var(--accent);background:var(--line)}#dpc-app .dpc-forum-page textarea,#dpc-app .dpc-forum-page input:not([type=hidden]):not([type=checkbox]):not([type=radio]),#dpc-app .dpc-forum-page select{font:inherit;max-width:100%;box-sizing:border-box}#dpc-app .dpc-forum-page textarea{width:100%!important;min-height:180px;background:transparent;color:inherit;border:1px solid var(--muted);border-radius:5px;padding:10px}#dpc-app .dpc-forum-page form table{width:100%!important;max-width:100%;table-layout:fixed}#dpc-app .dpc-forum-page form td{white-space:normal!important;overflow-wrap:anywhere}#dpc-app .dpc-forum-page input[type=submit],#dpc-app .dpc-forum-page button{padding:9px 12px;border-radius:5px;cursor:pointer}#dpc-app .dpc-forum-card{scroll-margin-top:90px}#dpc-app .dpc-forum-more{width:100%;margin:10px 0}';
         css.textContent += '#dpc-app .dpc-forum-identity{display:flex;align-items:center;gap:10px}#dpc-app .dpc-forum-avatar{width:38px;height:38px;object-fit:cover;border-radius:5px;flex:none}#dpc-app .dpc-forum-who{min-width:0}#dpc-app .dpc-forum-who .dpc-forum-meta{margin-top:3px}#dpc-app .dpc-forum-card .dpc-forum-nav{margin:12px 0 0;padding-top:8px;border-top:1px solid var(--line)}#dpc-app .dpc-forum-card .dpc-forum-nav a{border:0;padding:4px 10px 4px 0;font-size:12px}#dpc-app .dpc-forum-prose{font:400 13px/1.6 system-ui,sans-serif}#dpc-app .dpc-forum-prose *{max-width:100%}';
+        css.textContent += '#dpc-app .dpc-forum-search{display:flex;gap:6px;margin:0 0 14px}#dpc-app .dpc-forum-search input[type=search]{flex:1;min-width:0;padding:9px 10px;border:1px solid var(--line);border-radius:5px;background:transparent;color:inherit}#dpc-app .dpc-forum-search button{border:1px solid var(--line);background:transparent;color:var(--accent)}#dpc-app .dpc-forum-topic{padding:11px 12px;cursor:pointer}#dpc-app .dpc-forum-topic.unread{border-left:3px solid var(--accent)}#dpc-app .dpc-forum-tags{display:flex;gap:8px;color:var(--muted);font:500 10px system-ui;margin-bottom:5px}#dpc-app .dpc-forum-new{color:var(--accent)}#dpc-app .dpc-forum-topic-last{display:flex;justify-content:space-between;align-items:baseline;gap:8px;border-top:1px solid var(--line);margin-top:8px;padding-top:6px}#dpc-app .dpc-forum-topic-last .dpc-forum-meta{margin:0;font-size:10px}#dpc-app .dpc-forum-jump{font:500 11px system-ui;white-space:nowrap}';
         document.head.append(css);
         const nav=make('nav','dpc-forum-nav');const all=make('a','','All forums');all.href='/forum.php';nav.append(all);
         const section=originalLinks.find(a=>isSection(a)&&clean(a)&&!a.closest('.dpc-forum-message'));
         if(tid&&section)nav.append(link(section));
         const heading=make('h1','',document.title.replace(/\s*-\s*DPChallenge Forums.*$/i,'').replace(/^DPChallenge Forums$/i,'Forums'));
         body.append(heading,nav);
-        const controls=make('div','dpc-forum-nav');body.append(controls);
+        const controls=nav;
         const actionLinks=originalLinks.filter(a=>/^(?:new (?:thread|topic|post)|create (?:thread|topic)|post (?:a )?reply|reply|subscribe|unsubscribe|search forums|forum search|mark.*read)$/i.test(label(a)));
         const seenActions=new Set();for(const a of actionLinks){const u=href(a);if(!u||seenActions.has(u)||a.closest('.dpc-forum-message'))continue;seenActions.add(u);controls.append(link(a));}
+        if(sid&&action==='list'){
+            const search=make('form','dpc-forum-search');search.method='get';search.action='/forum.php';
+            for(const [name,value] of [['action','advsearch'],['FORUM_SECTION_ID',sid]]){const input=make('input');input.type='hidden';input.name=name;input.value=value;search.append(input);}
+            const q=make('input');q.type='search';q.name='q';q.placeholder='Search this forum';q.maxLength=40;q.setAttribute('aria-label','Search this forum');const go=make('button','','Search');go.type='submit';search.append(q,go);body.append(search);
+        }
         const feed=make('div','dpc-forum-feed');body.append(feed);
         const stripGraphics=(node,base)=>{for(const im of [...node.querySelectorAll('img')]){const src=im.getAttribute('src')||'';if(/(?:^|\/)(?:images|include|icons)\/|(?:pix|spacer|folder|button|arrow|smil|emoticon|icon)[^/]*\.(?:gif|png)$/i.test(src)&&!/\/(?:image|photo|profile)[^/]*\//i.test(src)){const t=im.alt||im.title||'';im.replaceWith(document.createTextNode(t));}else{try{im.src=new URL(src,base).href;}catch{}im.loading='lazy';im.removeAttribute('width');im.removeAttribute('height');}}for(const el of node.querySelectorAll('[background]'))el.removeAttribute('background');for(const a of node.querySelectorAll('a[href]')){const u=href(a,base);if(u)a.href=u;}};
         const known=new Set();let firstUnread=null;
+        function renderTopics(doc,base){
+            let count=0;
+            for(const row of topicRows(doc)){
+                const c=row.cells,a=[...c[1].querySelectorAll('a[href]')].find(isThread);if(!a)continue;
+                const url=href(a,base),id=new URL(url).searchParams.get('FORUM_THREAD_ID');if(known.has(id))continue;known.add(id);count++;
+                const card=make('article','dpc-forum-card dpc-forum-topic');
+                const status=c[0].querySelector('img')?.getAttribute('src')||'';
+                const recent=[...c[1].querySelectorAll('a[href]')].find(a=>/action=readrecent/i.test(href(a,base)));
+                const unread=/folder_new|yellow-arrow/i.test(status+' '+(recent?.querySelector('img')?.getAttribute('src')||''));
+                const tags=make('div','dpc-forum-tags');
+                if(/sticky/i.test(status))tags.append(make('span','','Pinned'));
+                if(/locked/i.test(status))tags.append(make('span','','Locked'));
+                if(unread){card.classList.add('unread');tags.append(make('span','dpc-forum-new','New posts'));}
+                if(tags.children.length)card.append(tags);
+                const title=link(a,clean(a),base);title.className='dpc-forum-title';card.append(title);
+                const info=make('div','dpc-forum-meta dpc-forum-topic-info');
+                const creator=c[2].querySelector('a[href]');info.append(document.createTextNode('Started by '));if(creator)info.append(link(creator,clean(creator),base));else info.append(document.createTextNode(clean(c[2])));
+                info.append(document.createTextNode(' · '+clean(c[3])+' replies'));card.append(info);
+                const last=make('div','dpc-forum-topic-last');last.append(make('span','dpc-forum-meta',clean(c[5])));
+                if(recent){const jump=link(recent,unread?'Unread →':'Last post →',base);jump.className='dpc-forum-jump';last.append(jump);}card.append(last);
+                card.addEventListener('click',e=>{if(!e.target.closest('a,button,input')&&!getSelection()?.toString())location.href=url;});feed.append(card);
+            }return count;
+        }
         function renderPosts(doc,base){
             let count=0;
             for(const {row,author,message,act,authorCell} of postRows(doc)){
@@ -3457,7 +3491,9 @@ html.dpc-viewing body {
         if(initialPosts.length){
             renderPosts(document,location.href);
             const unread=make('button','','Jump to unread');unread.type='button';nav.append(unread);
-            unread.onclick=()=>{if(firstUnread){firstUnread.scrollIntoView({block:'start'});return;}const a=originalLinks.find(a=>/unread|readrecent|firstnew/i.test(label(a)+' '+href(a)));if(a){location.href=href(a);return;}const target=feed.querySelector('[data-dpc-unread]');if(target){target.scrollIntoView({block:'start'});return;}unread.textContent='No unread marker available';};
+            unread.onclick=()=>{if(firstUnread){firstUnread.scrollIntoView({block:'start'});return;}const u=new URL('/forum.php',location.origin);u.searchParams.set('action','readrecent');u.searchParams.set('FORUM_THREAD_ID',tid);location.href=u.href;};
+        }else if(sid&&action==='list'){
+            renderTopics(document,location.href);
         }else if(!tid&&!forms.some(f=>f.querySelector('textarea'))){
             let group='';
             for(const row of listRows){
@@ -3472,15 +3508,15 @@ html.dpc-viewing body {
             }
         }
         function nextPage(doc,base){
-            const current=new URL(base);const links=[...doc.querySelectorAll('a[href]')].filter(a=>{try{const u=new URL(href(a,base));return u.pathname===current.pathname&&u.searchParams.get('FORUM_THREAD_ID')===tid&&u.href!==current.href;}catch{return false;}});
+            const current=new URL(base);const links=[...doc.querySelectorAll('a[href]')].filter(a=>{try{const u=new URL(href(a,base));return u.pathname===current.pathname&&u.searchParams.get('FORUM_THREAD_ID')===tid&&(!sid||tid||u.searchParams.get('FORUM_SECTION_ID')===sid)&&u.searchParams.has('page')&&u.href!==current.href;}catch{return false;}});
             const explicit=links.find(a=>/^(?:next(?: page)?|next posts?|>|»|→)$/i.test(label(a).trim())||a.rel==='next');if(explicit)return href(explicit,base);
             const pageKey=['PAGE','page','OFFSET','offset','start','START'].find(k=>links.some(a=>new URL(href(a,base)).searchParams.has(k)));if(!pageKey)return '';
             const here=Number(current.searchParams.get(pageKey)||(/page/i.test(pageKey)?1:0));return links.map(a=>href(a,base)).filter(u=>Number(new URL(u).searchParams.get(pageKey))>here).sort((a,b)=>Number(new URL(a).searchParams.get(pageKey))-Number(new URL(b).searchParams.get(pageKey)))[0]||'';
         }
-        if(initialPosts.length){
-            let next=nextPage(document,location.href),busy=false;const visited=new Set([location.href]);const more=make('button','dpc-forum-more','Load more posts');more.type='button';body.append(more);
+        if(initialPosts.length||(sid&&action==='list'&&feed.children.length)){
+            const noun=initialPosts.length?'posts':'threads';let next=nextPage(document,location.href),busy=false;const visited=new Set([location.href]);const more=make('button','dpc-forum-more','Load more '+noun);more.type='button';body.append(more);
             const nativePages=make('div','dpc-forum-nav');for(const a of originalLinks.filter(a=>isThread(a)&&/^(?:\d+|next|previous|first|last|[<>«»])$/i.test(label(a))))nativePages.append(link(a));if(nativePages.children.length)body.append(nativePages);
-            async function load(){if(busy||!next||visited.has(next))return;busy=true;more.disabled=true;more.textContent='Loading posts…';const url=next;try{const response=await backgroundFetch(url,{credentials:'same-origin'});if(!response.ok)throw Error('HTTP '+response.status);const doc=new DOMParser().parseFromString(await response.text(),'text/html');const count=renderPosts(doc,response.url||url);visited.add(url);next=count?nextPage(doc,response.url||url):'';if(visited.has(next))next='';more.textContent=next?'Load more posts':'End of thread';if(next){io?.unobserve(more);io?.observe(more);}else io?.unobserve(more);}catch{more.textContent='Retry loading posts';io?.unobserve(more);}finally{busy=false;more.disabled=!next;}}
+            async function load(){if(busy||!next||visited.has(next))return;busy=true;more.disabled=true;more.textContent='Loading '+noun+'…';const url=next;try{const response=await backgroundFetch(url,{credentials:'same-origin'});if(!response.ok)throw Error('HTTP '+response.status);const doc=new DOMParser().parseFromString(await response.text(),'text/html');const count=initialPosts.length?renderPosts(doc,response.url||url):renderTopics(doc,response.url||url);visited.add(url);next=count?nextPage(doc,response.url||url):'';if(visited.has(next))next='';more.textContent=next?'Load more '+noun:initialPosts.length?'End of thread':'End of forum';if(next){io?.unobserve(more);io?.observe(more);}else io?.unobserve(more);}catch{more.textContent='Retry loading '+noun;io?.unobserve(more);}finally{busy=false;more.disabled=!next;}}
             more.onclick=load;more.hidden=!next;const io=typeof IntersectionObserver==='function'?new IntersectionObserver(entries=>{if(entries.some(e=>e.isIntersecting))load();},{rootMargin:'250px'}):null;if(next)io?.observe(more);
         }
         for(const form of forms){
@@ -3490,6 +3526,7 @@ html.dpc-viewing body {
         }
         if(!feed.children.length&&!forms.length)return;
         $('#dpc-original').onclick=()=>original();mount();
+        if(initialPosts.length&&location.hash){const id=decodeURIComponent(location.hash.slice(1));requestAnimationFrame(()=>[...feed.children].find(n=>n.id===id)?.scrollIntoView({block:'start'}));}
     }
 
     document.addEventListener('click',captureGallery,true);
