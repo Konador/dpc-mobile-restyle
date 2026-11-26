@@ -2,7 +2,7 @@
 // ==UserScript==
 // @name DPChallenge Mobile — Editorial Gallery
 // @namespace dpc-mobile
-// @version 5.08
+// @version 5.09
 // @updateURL https://raw.githubusercontent.com/Konador/dpc-mobile-restyle/main/dpc-mobile.user.js
 // @downloadURL https://raw.githubusercontent.com/Konador/dpc-mobile-restyle/main/dpc-mobile.user.js
 // @match *://*.dpchallenge.com/challenge_vote_image.php*
@@ -2961,7 +2961,7 @@ html.dpc-viewing body {
             const file=input.files?.[0];if(!file)return;
             if(localURL)URL.revokeObjectURL(localURL);
             localPreview.hidden=true;localURL=null;
-            if(/^image\\//i.test(file.type)||/\\.jpe?g$/i.test(file.name)){
+            if(file.type.startsWith('image/')||file.name.toLowerCase().endsWith('.jpg')||file.name.toLowerCase().endsWith('.jpeg')){
                 localURL=URL.createObjectURL(file);localPreview.src=localURL;
             }
             if(caption){caption.hidden=false;caption.querySelector('strong').textContent='Choose a different photo';caption.querySelector('.dpc-upload-hint').textContent=file.name;}
