@@ -2,7 +2,7 @@
 // ==UserScript==
 // @name DPChallenge Mobile — Editorial Gallery
 // @namespace dpc-mobile
-// @version 5.16
+// @version 5.17
 // @updateURL https://raw.githubusercontent.com/Konador/dpc-mobile-restyle/main/dpc-mobile.user.js
 // @downloadURL https://raw.githubusercontent.com/Konador/dpc-mobile-restyle/main/dpc-mobile.user.js
 // @match *://*.dpchallenge.com/challenge_vote_image.php*
@@ -1160,6 +1160,7 @@ html.dpc-viewing body {
 
     style.textContent += "#dpc-app.dpc-entry-preview-mode .dpc-navigation,#dpc-app.dpc-entry-preview-mode .dpc-actions{display:none!important}#dpc-app.dpc-entry-preview-mode .dpc-overview{font:600 20px system-ui}";
     style.textContent += "#dpc-app .dpc-home-vote-status{display:flex;flex-wrap:wrap;gap:6px 12px}#dpc-app .dpc-home-comment-status{font-size:inherit}#dpc-app .dpc-home-progress[hidden]{display:none!important}";
+    style.textContent += "#dpc-app .dpc-home-vote-card .dpc-home-progress{position:relative;overflow:hidden}#dpc-app .dpc-home-vote-card .dpc-home-progress i{position:absolute;left:0;top:0;height:100%;transition:width .25s ease}#dpc-app .dpc-home-vote-card .dpc-home-progress .dpc-home-comment-fill{background:#d4ac58;z-index:1}";
     const progressMarkup = `
 <div class="dpc-progress">
     <div class="dpc-progress-label">
@@ -1662,8 +1663,8 @@ html.dpc-viewing body {
                 if(details.childNodes.length)card.append(details);
                 const completed=!!item.progress&&+item.progress[2]>0&&+item.progress[1]>=+item.progress[2];
                 const commentStatus=make('span','dpc-home-comment-status','Comments —');
-                if(item.progress){const status=make('div','dpc-home-vote-status');if(!completed)status.append(make('span','',item.progress[1]+'/'+item.progress[2]+' rated'));status.append(commentStatus);card.append(status);}
-                if(item.progress){const bar=make('div','dpc-home-progress'),fill=make('i');fill.style.width=(completed?0:Math.min(100,100*+item.progress[1]/Math.max(1,+item.progress[2])))+'%';bar.hidden=completed;bar.append(fill);card.append(bar);}
+                if(item.progress){const status=make('div','dpc-home-vote-status');status.append(make('span','',item.progress[1]+'/'+item.progress[2]+' rated'));status.append(commentStatus);card.append(status);}
+                if(item.progress){const bar=make('div','dpc-home-progress'),fill=make('i','dpc-home-rated-fill'),comments=make('i','dpc-home-comment-fill');fill.style.width=Math.min(100,100*+item.progress[1]/Math.max(1,+item.progress[2]))+'%';comments.style.width='0%';bar.append(fill,comments);card.append(bar);}
                 if(voting){
                     card.classList.add('dpc-home-vote-card');
                     const voteKey='dpc-vote-bg-v2-'+safe(item.action);
@@ -1678,7 +1679,7 @@ html.dpc-viewing body {
                         if(id&&item.progress)countHomeComments(doc,response.url||safe(item.action),id,+item.progress[2]).then(n=>{
                             if(n===null)return;
                             commentStatus.textContent=n+'/'+item.progress[2]+' commented';
-                            if(completed){const bar=card.querySelector('.dpc-home-progress');bar.hidden=false;bar.firstElementChild.style.width=(100*n/+item.progress[2])+'%';}
+                            const fill=card.querySelector('.dpc-home-comment-fill');if(fill)fill.style.width=(100*n/+item.progress[2])+'%';
                         }).catch(()=>{});
                         if(voteCached&&Date.now()-voteCached.time<3600000)return;
                         const images=[...doc.querySelectorAll('.dpc-vote-thumbnail-image img,.dpc-vote-primary-image,.dpc-vote-thumbnail-cell img[src],a[href*="challenge_vote_image.php"] img[src]')].filter(im=>{const src=im.getAttribute('src')||'';return src&&!/spacer|pixel|pix\.gif|logo|ribbon|removed\.png/i.test(src);});
