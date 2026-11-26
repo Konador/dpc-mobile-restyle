@@ -2,7 +2,7 @@
 // ==UserScript==
 // @name DPChallenge Mobile — Editorial Gallery
 // @namespace dpc-mobile
-// @version 5.11
+// @version 5.12
 // @updateURL https://raw.githubusercontent.com/Konador/dpc-mobile-restyle/main/dpc-mobile.user.js
 // @downloadURL https://raw.githubusercontent.com/Konador/dpc-mobile-restyle/main/dpc-mobile.user.js
 // @match *://*.dpchallenge.com/challenge_vote_image.php*
@@ -1133,6 +1133,7 @@ html.dpc-viewing body {
     style.textContent += "#dpc-app .dpc-submit-page #upload_file>.dpc-upload-caption{display:flex!important;position:relative;z-index:0}#dpc-app .dpc-submit-page .dpc-local-entry-preview:not([hidden]){display:block!important;max-width:100%;max-height:50vh;object-fit:contain;border-radius:5px}#dpc-app .dpc-submit-page .dpc-local-entry-preview[hidden]{display:none!important}#dpc-app .dpc-submit-page #file_selection *:not(input):not(button){color:inherit!important}";
     style.textContent += "#dpc-app .dpc-submit-page .dpc-local-preview-ready #file_selection img{display:none!important}#dpc-app .dpc-submit-page .dpc-local-preview-ready #file_selection{padding:4px 8px!important;margin:4px 0!important;background:transparent!important}";
     style.textContent += "#dpc-app .dpc-submit-page #upload_file>.dpc-legacy-upload-prompt{display:none!important}#dpc-app .dpc-submit-page #upload_file{min-height:64px!important;padding:14px 8px!important;gap:0!important}#dpc-app .dpc-submit-page #upload_file>.dpc-upload-caption{gap:8px!important}#dpc-app .dpc-submit-page .dpc-upload-hint:empty{display:none!important}#dpc-app .dpc-submit-page .dpc-local-preview-ready #upload_file{min-height:0!important;padding:8px!important}";
+    style.textContent += "#dpc-app .dpc-submit-page #file_selection .dpc-numeric-filename{display:none!important}";
     document.head.append(style);
 
     const header = `
@@ -2974,7 +2975,25 @@ html.dpc-viewing body {
         },true);
         localPreview.addEventListener('load',()=>{localPreview.hidden=false;uploadCard.classList.add('dpc-local-preview-ready');});
         localPreview.addEventListener('error',()=>{localPreview.hidden=true;uploadCard.classList.remove('dpc-local-preview-ready');});
-        if(selection)selection.classList.add('dpc-upload-selection');
+        if(selection){
+            selection.classList.add('dpc-upload-selection');
+            // Suppress camera-generated numeric filename labels, not upload state or progress.
+            const hideNumericNames=()=>{
+                const walker=document.createTreeWalker(selection,NodeFilter.SHOW_TEXT);
+                const labels=[];
+                while(walker.nextNode()){
+                    const node=walker.currentNode;
+                    if(node.parentElement?.closest('.dpc-numeric-filename,script,style,button,select,textarea'))continue;
+                    if(/^\d{7,}(?:\.jpe?g)?$/i.test(node.textContent.trim()))labels.push(node);
+                }
+                for(const node of labels){
+                    const label=make('span','dpc-numeric-filename');label.hidden=true;
+                    node.before(label);label.append(node);
+                }
+            };
+            new MutationObserver(hideNumericNames).observe(selection,{subtree:true,childList:true,characterData:true});
+            hideNumericNames();
+        }
         const fallback=make('a','dpc-submit-rules-link','Use original upload page');fallback.href=location.href;fallback.onclick=e=>{e.preventDefault();original();};uploadCard.append(fallback);
         const cancel=uploadSection.querySelector('input[type=button][value=Cancel]');if(cancel){cancel.onclick=()=>{location.href='/challenge_index.php#submit';};const actions=make('div','dpc-upload-actions');submit.before(actions);actions.append(submit,cancel);}
         for(const node of [...uploadSection.childNodes]){if(node.nodeType===1&&node.tagName==='BR')node.remove();}
