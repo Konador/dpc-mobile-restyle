@@ -2,7 +2,7 @@
 // ==UserScript==
 // @name DPChallenge Mobile — Editorial Gallery
 // @namespace dpc-mobile
-// @version 5.01
+// @version 5.02
 // @updateURL https://raw.githubusercontent.com/Konador/dpc-mobile-restyle/main/dpc-mobile.user.js
 // @downloadURL https://raw.githubusercontent.com/Konador/dpc-mobile-restyle/main/dpc-mobile.user.js
 // @match *://*.dpchallenge.com/challenge_vote_image.php*
@@ -1124,6 +1124,7 @@ html.dpc-viewing body {
     style.textContent += "#dpc-app .dpc-split-summary>a.dpc-restyle-badge-link{display:flex;align-items:center;justify-content:center;flex:none;padding:0 5px;border:0;align-self:stretch}#dpc-app .dpc-restyle-badge-link .dpc-restyle-mark{margin:0}";
     style.textContent += "#dpc-app .dpc-challenge-index .dpc-home-challenge-tabs{gap:clamp(8px,3vw,22px);overflow-x:auto;scrollbar-width:none}#dpc-app .dpc-challenge-index .dpc-home-challenge-tab{font-size:clamp(15px,4.5vw,24px)}#dpc-app .dpc-index-panel[hidden]{display:none!important}#dpc-app .dpc-challenge-index .dpc-entry-grid{margin-top:0}#dpc-app .dpc-index-extra{font-size:11px;color:var(--muted);margin-bottom:12px}#dpc-app .dpc-index-type{grid-column:1/-1;color:var(--muted);font-size:10px}#dpc-app .dpc-challenge-index .dpc-home-detail{grid-template-columns:1fr}#dpc-app .dpc-challenge-index .dpc-home-detail>*{grid-column:1/-1;text-align:left}";
     style.textContent += "#dpc-app .dpc-submit-page{max-width:680px;padding:16px 12px 32px}#dpc-app .dpc-submit-back{display:inline-block;font-size:13px;margin:0 0 14px;color:var(--accent)}#dpc-app .dpc-submit-card{padding:16px;margin:0 0 14px}#dpc-app .dpc-submit-kicker{font:600 10px system-ui;letter-spacing:.12em;text-transform:uppercase;color:var(--accent);margin-bottom:8px}#dpc-app .dpc-submit-title{font:500 clamp(36px,10vw,58px)/1.02 var(--serif),Georgia,serif;letter-spacing:-.045em;margin:0 0 12px;overflow-wrap:anywhere}#dpc-app .dpc-submit-description{font-size:14px;line-height:1.55;margin:0 0 14px}#dpc-app .dpc-submit-meta{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.6fr);margin:0;font-size:12px}#dpc-app .dpc-submit-meta dt,#dpc-app .dpc-submit-meta dd{margin:0;padding:8px 0;border-top:1px solid var(--line)}#dpc-app .dpc-submit-meta dt{color:var(--muted)}#dpc-app .dpc-submit-meta dd{text-align:right;overflow-wrap:anywhere}#dpc-app .dpc-submit-card h2{font:500 28px/1.1 var(--serif),Georgia,serif;letter-spacing:-.035em;margin:0 0 14px;padding:0 0 10px;border-bottom:1px solid var(--line);color:inherit}#dpc-app .dpc-submit-card h2 em{color:inherit}#dpc-app .dpc-submit-rule-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}#dpc-app .dpc-submit-rule-grid>div{background:#80808013;border-radius:5px;padding:10px;font-size:12px;line-height:1.45}#dpc-app .dpc-submit-rule-grid strong{display:block;color:var(--accent);font-size:11px;margin-bottom:4px}#dpc-app .dpc-submit-rules-link{display:inline-block;margin-top:12px;font-size:12px}#dpc-app .dpc-native-upload{margin:0!important;padding:0!important;border:0!important;background:none!important;width:auto!important;color:inherit}#dpc-app #upload_container{display:flex;flex-direction:column;gap:10px;width:100%;position:relative}#dpc-app #upload_file{float:none!important;width:100%!important;box-sizing:border-box;min-height:160px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;background:#8080800b;border:1px dashed var(--accent)!important;border-radius:8px;padding:20px 8px!important;text-align:center}#dpc-app #upload_file>img,#dpc-app #upload_file>div>div{display:none!important}#dpc-app #upload_file>div{float:none!important;padding:0!important;color:var(--accent)!important;font:500 24px/1.2 var(--serif),Georgia,serif!important}#dpc-app .dpc-upload-graphic{width:48px;height:48px;color:var(--accent)}#dpc-app .dpc-upload-graphic svg{width:100%;height:100%}#dpc-app .dpc-upload-hint{font:12px system-ui;color:var(--muted)}#dpc-app .dpc-workshop-button{float:none!important;margin:0!important;border:1px solid var(--line)!important;border-radius:6px;padding:0!important;display:flex;align-items:center;justify-content:center;min-height:44px}#dpc-app .dpc-workshop-button>img{display:none}#dpc-app .dpc-workshop-picker{float:none!important;flex:1;text-align:center;padding:12px!important;color:var(--accent)!important;font:500 13px system-ui!important}#dpc-app #file_selection{margin:14px 0!important;padding:10px;background:#80808012;border-radius:6px;overflow:hidden}#dpc-app #file_selection table{width:100%;table-layout:fixed}#dpc-app #file_selection td{max-width:100%;overflow-wrap:anywhere}#dpc-app #file_selection img{width:auto!important;height:auto!important;max-width:100%;max-height:210px;object-fit:contain;border:0!important;border-radius:4px}#dpc-app #file_selection td>div{max-width:100%;white-space:normal;overflow-wrap:anywhere}#dpc-app #upload_progress{width:100%!important;font-size:11px}#dpc-app #upload_size_progress_bar{background:var(--accent)!important}#dpc-app .dpc-upload-agreement{width:100%!important;margin:14px 0;background:#8080800c;border:1px solid var(--line);border-radius:6px;padding:9px;border-spacing:6px;font-size:12px;line-height:1.55}#dpc-app .dpc-upload-agreement label{font:inherit;color:inherit}#dpc-app #agreement_check{width:20px;height:20px;accent-color:var(--accent);margin:2px 4px 0 0}#dpc-app .dpc-native-upload input[type=button],#dpc-app .dpc-classic-upload input[type=submit],#dpc-app .dpc-classic-upload input[type=button]{border:1px solid var(--line);background:transparent;color:inherit;font:600 14px system-ui;border-radius:6px;min-height:44px;padding:10px 16px;margin:0 6px 8px 0}#dpc-app #submit{background:var(--accent);color:#111115;border-color:var(--accent);min-width:55%}#dpc-app #submit:disabled{opacity:.4}#dpc-app .dpc-native-upload .textsm{font:12px/1.5 system-ui;color:var(--muted)}#dpc-app .dpc-native-upload .textsm span[onclick]{color:var(--accent);text-decoration:underline}#dpc-app .dpc-classic-upload .divider,#dpc-app .dpc-classic-upload .divider_container{background:none;color:inherit;border:0;margin:0;padding:0}#dpc-app .dpc-classic-upload input[type=file]{max-width:100%;margin:12px 0}html.dpc-submission.dpc-mobile body>.ui-dialog,html.dpc-submission.dpc-mobile body>.ui-widget-overlay,html.dpc-submission.dpc-mobile body>[id*=\"jqip\"],html.dpc-submission.dpc-mobile body>[class*=\"imagePicker\"]{display:block!important;max-width:100vw}";
+    style.textContent += "#dpc-app .dpc-profile-who h1{font-weight:600;-webkit-text-stroke:.18px currentColor}#dpc-app .dpc-profile-realname{font-weight:600}";
     document.head.append(style);
 
     const header = `
@@ -2747,12 +2748,43 @@ html.dpc-viewing body {
         function select(i){panels.forEach((p,j)=>{p.hidden=i!==j;buttons[j].classList.toggle('active',i===j);buttons[j].setAttribute('aria-selected',String(i===j));});}
         function section(parent,label){const sec=make('section','dpc-profile-section');sec.append(heading(label));parent.append(sec);return sec;}
         const overview=panel('Overview'),history=panel('Challenge entries'),portfolio=panel('Portfolio'),about=panel('About');
-        const imageObserver=new IntersectionObserver(items=>{for(const item of items){if(!item.isIntersecting)continue;imageObserver.unobserve(item.target);const im=item.target;if(im.dataset.src)im.src=im.dataset.src;}},{rootMargin:'250px'});
-        function thumbnail(im,src){if(src){im.dataset.src=src;imageObserver.observe(im);}}
+        const profileFullQueue=[],profileFullCache=new Map();let profileFullActive=false;
+        const imageIdFromSrc=src=>photoFilename(src).match(/(?:^|_)(\d+)\.[a-z]+$/i)?.[1];
+        async function upgradeProfileThumb(im){
+            const href=im.dataset.href,thumb=im.dataset.src,id=photoCacheId(href);
+            if(!id||imageIdFromSrc(thumb)!==id||!im.isConnected)return;
+            const cached=sharedPhotoRead(href);
+            if(cached&&imageIdFromSrc(cached.full)===id){im.src=cached.full;return;}
+            let pending=profileFullCache.get(id);
+            if(!pending){
+                pending=(async()=>{
+                    const response=await backgroundFetch(href,{credentials:'same-origin'});if(!response.ok)return null;
+                    const template=document.createElement('template');template.innerHTML=await response.text();
+                    const photo=[...template.content.querySelectorAll('#img_container img[src]')].find(p=>imageIdFromSrc(new URL(p.getAttribute('src'),response.url).href)===id);
+                    if(!photo)return null;
+                    const src=new URL(photo.getAttribute('src'),response.url).href;
+                    const probe=new Image();probe.src=src;await probe.decode();
+                    if(!probe.naturalWidth||!probe.naturalHeight)return null;
+                    sharedPhotoWrite(href,src,probe.naturalWidth,probe.naturalHeight);return src;
+                })().catch(()=>null);
+                profileFullCache.set(id,pending);
+            }
+            const src=await pending;if(src&&im.isConnected)im.src=src;
+        }
+        function pumpProfileFull(){
+            if(profileFullActive||document.hidden||backgroundBlocked())return;
+            while(profileFullQueue.length){
+                const im=profileFullQueue.shift();if(!im.isConnected||im.closest('[hidden]'))continue;
+                profileFullActive=true;upgradeProfileThumb(im).catch(()=>{}).finally(()=>{profileFullActive=false;pumpProfileFull();});break;
+            }
+        }
+        document.addEventListener('visibilitychange',pumpProfileFull);
+        const imageObserver=new IntersectionObserver(items=>{for(const item of items){if(!item.isIntersecting)continue;imageObserver.unobserve(item.target);const im=item.target;if(im.dataset.src)im.src=im.dataset.src;if(im.dataset.href)profileFullQueue.push(im);}pumpProfileFull();},{rootMargin:'200px'});
+        function thumbnail(im,src,href){if(src){im.dataset.src=src;if(href)im.dataset.href=href;imageObserver.observe(im);}}
         function gallery(source,label){
             if(!source)return;const sec=section(overview,label),grid=make('div','dpc-profile-gallery');sec.append(grid);
             for(const td of source.querySelectorAll('td')){const a=td.querySelector('.dpc-winning-entry-image a[href]'),im=a?.querySelector('img');if(!im)continue;
-                const card=make('article','dpc-profile-card dpc-profile-tile');const link=safeLink(a,'');link.className='dpc-profile-photo';const pic=make('img');pic.alt=im.alt||'';pic.loading='lazy';const cached=sharedPhotoRead(a.href,im.src);thumbnail(pic,cached?.full||im.src);link.append(pic);
+                const card=make('article','dpc-profile-card dpc-profile-tile');const link=safeLink(a,'');link.className='dpc-profile-photo';const pic=make('img');pic.alt=im.alt||'';pic.loading='lazy';const cached=sharedPhotoRead(a.href,im.src);thumbnail(pic,cached?.full||im.src,a.href);link.append(pic);
                 const rank=Number(td.querySelector('img[alt*="Place"]')?.alt.match(/\d+/)?.[0])||photoRank.get(a.href)||0;const ribbon=detailRibbon(rank-1);card.append(link);const caption=make('div','dpc-profile-caption');const title=safeLink(a,im.alt||clean(td.querySelector('a[href*="image.php"]:not(:has(img))')));title.className='dpc-profile-photo-title';if(ribbon)title.prepend(ribbon);caption.append(title);
                 const ch=td.querySelector('a[href*="challenge_results.php"]');if(ch)caption.append(safeLink(ch));const avg=clean(td).match(/Average:\s*([\d.]+)/i);if(avg)caption.append(make('strong','dpc-profile-score',avg[1]+' avg'));card.append(caption);grid.append(card);
             }
@@ -2766,7 +2798,7 @@ html.dpc-viewing body {
                 const decoder=document.createElement('textarea');decoder.innerHTML=String(r[1]);const title=decoder.value;
                 const href=new URL('/image.php?IMAGE_ID='+r[0],location.origin).href;
                 const card=make('article','dpc-profile-card dpc-profile-tile'),link=make('a','dpc-profile-photo');link.href=href;
-                const pic=make('img');pic.alt=title;pic.loading='lazy';thumbnail(pic,sharedPhotoRead(href)?.full||new URL(src,location.href).href);link.append(pic);
+                const pic=make('img');pic.alt=title;pic.loading='lazy';thumbnail(pic,sharedPhotoRead(href)?.full||new URL(src,location.href).href,href);link.append(pic);
                 const ribbon=highest&&Number(r[10])>=1&&Number(r[10])<=5?detailRibbon(Number(r[10])-1):null;
                 const caption=make('div','dpc-profile-caption'),name=make('a','dpc-profile-photo-title',title);name.href=href;if(ribbon)name.prepend(ribbon);caption.append(name);
                 if(highest){const ch=make('a','',String(r[6]));ch.href='/challenge_results.php?CHALLENGE_ID='+r[7];caption.append(ch,make('strong','dpc-profile-score',Number(r[9]).toFixed(4)+' avg'));}
@@ -2794,7 +2826,7 @@ html.dpc-viewing body {
                 for(const r of batch){const title=decode(r[1]),href=new URL('/image.php?IMAGE_ID='+r[0],location.origin).href;const card=make('article','dpc-profile-card dpc-profile-list-card');const a=make('a','dpc-profile-photo');a.href=href;const im=make('img');im.alt=title;im.loading='lazy';
                     let src='';try{if(typeof def.thumb==='function'&&(!def.challenge||r[14]===1||r[15]===1))src=def.thumb(r);}catch{}
                     // Respect the native hidden-image placeholder, and do not request unpublished thumbnails.
-                    if(src){const cached=def.challenge&&r[15]===1?null:sharedPhotoRead(href);thumbnail(im,cached?.full||new URL(src,location.href).href);a.append(im);}else a.append(make('span','dpc-profile-meta','View photo'));
+                    if(src){const cached=def.challenge&&r[15]===1?null:sharedPhotoRead(href);thumbnail(im,cached?.full||new URL(src,location.href).href,def.challenge&&r[15]===1?null:href);a.append(im);}else a.append(make('span','dpc-profile-meta','View photo'));
                     const rank=Number(r[10]);const ribbon=def.challenge&&r[13]===0&&rank>=1&&rank<=5?detailRibbon(rank-1):null;card.append(a);
                     const cap=make('div','dpc-profile-caption');const name=make('a','dpc-profile-photo-title',title);name.href=href;if(ribbon)name.prepend(ribbon);cap.append(name);
                     const group=make('a','',decode(r[6]));group.href=def.challenge?'/challenge_results.php?CHALLENGE_ID='+r[7]:(()=>{const p=summary.querySelector('a[href*="portfolio.php?USER_ID="]');if(!p)return '#';const u=new URL(p.href);u.searchParams.set('collection_id',String(r[7]));return u.href;})();cap.append(group);
