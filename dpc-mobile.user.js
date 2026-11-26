@@ -2,7 +2,7 @@
 // ==UserScript==
 // @name DPChallenge Mobile — Editorial Gallery
 // @namespace dpc-mobile
-// @version 4.89
+// @version 4.90
 // @updateURL https://raw.githubusercontent.com/Konador/dpc-mobile-restyle/main/dpc-mobile.user.js
 // @downloadURL https://raw.githubusercontent.com/Konador/dpc-mobile-restyle/main/dpc-mobile.user.js
 // @match *://*.dpchallenge.com/challenge_vote_image.php*
@@ -110,6 +110,26 @@ function pumpBackground(){
     }):run();
     Promise.resolve(work).then(job.resolve,job.reject).finally(()=>{backgroundRunning=false;backgroundController=null;pumpBackground();});
 }
+// Small interactive prefetch lane, separate from bulk thumbnail pagination.
+const interactiveJobs=[];let interactiveActive=0;
+function pumpInteractive(){
+    if(document.hidden)return;
+    if(backgroundBlocked()){while(interactiveJobs.length)interactiveJobs.shift().reject(new Error('Background requests paused'));return;}
+    while(interactiveActive<2&&interactiveJobs.length){
+        const job=interactiveJobs.shift();interactiveActive++;
+        const controller=new AbortController(),timer=setTimeout(()=>controller.abort(),15000);
+        fetch(job.url,{...job.options,signal:controller.signal}).then(async response=>{
+            if([429,502,503,504].includes(response.status)){stopBackground(response);throw Error('Server busy');}
+            const content=await response.text();return {ok:response.ok,status:response.status,url:response.url,text:async()=>content};
+        }).then(job.resolve,job.reject).finally(()=>{clearTimeout(timer);interactiveActive--;pumpInteractive();});
+    }
+}
+function interactiveFetch(url,options={}){
+    if(backgroundBlocked())return Promise.reject(Error('Background requests paused'));
+    return new Promise((resolve,reject)=>{interactiveJobs.push({url,options,resolve,reject});pumpInteractive();});
+}
+document.addEventListener('visibilitychange',pumpInteractive);
+addEventListener('pagehide',()=>{while(interactiveJobs.length)interactiveJobs.shift().reject(Error('Page left'));});
 function backgroundFetch(url,options={}){
     if(backgroundBlocked())return Promise.reject(new Error('Background requests paused'));
     return new Promise((resolve,reject)=>{backgroundJobs.push({url,options,resolve,reject});pumpBackground();});
@@ -1575,11 +1595,32 @@ html.dpc-viewing body {
                 if(item.progress){const bar=make('div','dpc-home-progress'),fill=make('i');fill.style.width=Math.min(100,100*+item.progress[1]/Math.max(1,+item.progress[2]))+'%';bar.append(fill);card.append(bar);}
                 if(voting){
                     card.classList.add('dpc-home-vote-card');
-                    backgroundFetch(safe(item.action),{credentials:'same-origin'}).then(r=>r.ok?r.text():'').then(html=>{
-                        const doc=new DOMParser().parseFromString(html,'text/html');
-                        const images=[...doc.querySelectorAll('.dpc-vote-thumbnail-image img,.dpc-vote-primary-image')];
-                        if(images.length){const ranked=images.map(image=>({image,rating:Number(image.closest('.dpc-vote-thumbnail-cell')?.querySelector('a.vs')?.textContent.trim())||0})).filter(x=>x.rating>0).sort((a,b)=>b.rating-a.rating).slice(0,10);const pool=ranked.length?ranked.map(x=>x.image):images;const image=pool[Math.floor(Math.random()*pool.length)];const entry=image.closest('a[href]')||image.closest('.dpc-vote-thumbnail-cell')?.querySelector('a[href*="challenge_vote_image.php"]');const set=src=>{const url=new URL(src,safe(item.action));if(/^https?:$/.test(url.protocol))card.style.setProperty('--vote-image','url('+JSON.stringify(url.href)+')');};if(image.matches('.dpc-vote-primary-image'))set(image.getAttribute('src'));else if(entry){const url=new URL(entry.getAttribute('href'),safe(item.action));backgroundFetch(url,{credentials:'same-origin'}).then(r=>r.ok?r.text():'').then(html=>{const photo=new DOMParser().parseFromString(html,'text/html').querySelector('.dpc-vote-primary-image');if(photo)set(new URL(photo.getAttribute('src'),url).href);}).catch(()=>{});}}
-                    }).catch(()=>{});
+                    const voteKey='dpc-vote-bg-v2-'+safe(item.action);
+                    const set=(src,base)=>{if(!src)return;try{const u=new URL(src,base);if(!/^https?:$/.test(u.protocol))return;card.style.setProperty('--vote-image','url('+JSON.stringify(u.href)+')');return u.href;}catch{}};
+                    let voteCached=null;try{voteCached=JSON.parse(sessionStorage.getItem(voteKey)||'null');}catch{}
+                    if(voteCached?.src)set(voteCached.src,safe(item.action));
+                    function saveVote(src){if(src)try{sessionStorage.setItem(voteKey,JSON.stringify({src,time:Date.now()}));}catch{}}
+                    async function loadVoteImage(){
+                        if(voteCached&&Date.now()-voteCached.time<3600000)return;
+                        const response=await interactiveFetch(safe(item.action),{credentials:'same-origin'});if(!response.ok)return;
+                        const doc=new DOMParser().parseFromString(await response.text(),'text/html');
+                        const images=[...doc.querySelectorAll('.dpc-vote-thumbnail-image img,.dpc-vote-primary-image,.dpc-vote-thumbnail-cell img[src],a[href*="challenge_vote_image.php"] img[src]')].filter(im=>{const src=im.getAttribute('src')||'';return src&&!/spacer|pixel|pix\.gif|logo|ribbon|removed\.png/i.test(src);});
+                        if(!images.length)return;
+                        const ranked=images.map(image=>({image,rating:Number(image.closest('.dpc-vote-thumbnail-cell')?.querySelector('a.vs')?.textContent.trim())||0})).filter(x=>x.rating>0).sort((a,b)=>b.rating-a.rating).slice(0,10);
+                        const pool=ranked.length?ranked.map(x=>x.image):images;
+                        const image=pool[Math.floor(Math.random()*pool.length)];
+                        // Show the thumbnail immediately, even if the full-size fetch fails.
+                        const thumb=set(image.getAttribute('src'),response.url);saveVote(thumb);
+                        if(image.matches('.dpc-vote-primary-image'))return;
+                        const entry=image.closest('a[href*="challenge_vote_image.php"]')||image.closest('.dpc-vote-thumbnail-cell')?.querySelector('a[href*="challenge_vote_image.php"]');
+                        if(!entry)return;
+                        const target=new URL(entry.getAttribute('href'),response.url);
+                        const full=await interactiveFetch(target.href,{credentials:'same-origin'});if(!full.ok)return;
+                        const photoDoc=new DOMParser().parseFromString(await full.text(),'text/html');
+                        const photo=photoDoc.querySelector('.dpc-vote-primary-image');
+                        if(photo){const src=set(photo.getAttribute('src'),full.url);saveVote(src);}
+                    }
+                    const voteObserver=new IntersectionObserver(items=>{if(items.some(x=>x.isIntersecting)){voteObserver.disconnect();loadVoteImage().catch(()=>{});}},{rootMargin:'300px'});voteObserver.observe(card);
                 }
                 if(voting)card.append(link(item.action,'dpc-home-action',item.progress&&+item.progress[1]>=+item.progress[2]?'Review votes':'Continue voting'));
                 grid.append(card);if(i>=limit){card.hidden=true;hidden.push(card);}
@@ -1655,7 +1696,7 @@ html.dpc-viewing body {
                         });
                         return rec.promise;
                     }
-                    rec.promise=backgroundFetch(safe(rec.a),{credentials:'same-origin'}).then(r=>r.ok?r.text():'').then(async html=>{
+                    rec.promise=interactiveFetch(safe(rec.a),{credentials:'same-origin'}).then(r=>r.ok?r.text():'').then(async html=>{
                         const doc=new DOMParser().parseFromString(html,'text/html');
                         const file=new URL(rec.src,location.href).pathname.split('/').pop();
                         const candidates=[...doc.images].filter(x=>{const src=x.getAttribute('src')||'';return src&&!/thumb|ribbon|logo|avatar|banner|spacer/i.test(src);});
@@ -1673,7 +1714,7 @@ html.dpc-viewing body {
                 async function select(i){
                     if(i<0||i>=records.length)return;
                     const token=++selectionToken,rec=records[i],direction=selected<0?0:Math.sign(i-selected);
-                    if(selected>=0)await preload(rec);
+                    // Commit the swipe immediately using the already available thumbnail; upgrade asynchronously.
                     if(token!==selectionToken)return;
                     selected=i;hero.href=safe(rec.a);heroImg.src=rec.full||rec.src;heroImg.alt=rec.title;heroImg.onerror=()=>{if(selected===i&&heroImg.src!==rec.src){heroImg.src=rec.src;preload(rec).then(()=>{if(selected===i&&rec.full)heroImg.src=rec.full;});}};
                     centre.querySelector('svg')?.remove();refreshAdjacent();
@@ -1684,7 +1725,7 @@ html.dpc-viewing body {
                     if(!reducedMotion.matches)featureAuthor.animate([{opacity:0,transform:'translateY(5px)'},{opacity:1,transform:'translateY(0)'}],{duration:420,delay:140,fill:'both'});
                     [...strip.children].forEach((b,j)=>b.setAttribute('aria-pressed',String(j===i)));
                     
-                    if(!rec.full)preload(rec).then(()=>{if(selected===i&&rec.full)heroImg.src=rec.full;});
+                    preload(rec).then(()=>{if(selected===i&&rec.full)heroImg.src=rec.full;});
                 }
                 function refreshAdjacent(){
                     [[before,selected-1],[after,selected+1]].forEach(([slide,i])=>{
@@ -2478,7 +2519,7 @@ html.dpc-viewing body {
                 const preview=make('img');if(thumb)preview.src=thumb.getAttribute('src');
                 const root=make('div','dpc-photo-detail dpc-detail-preview');root.inert=true;root.style.opacity='0';root.setAttribute('aria-hidden','true');body.append(root);
                 const rec={url,preview,root};slides[i]=rec;move(offset);
-                rec.promise=backgroundFetch(url,{credentials:'same-origin'}).then(async response=>{
+                rec.promise=interactiveFetch(url,{credentials:'same-origin'}).then(async response=>{
                     if(!response.ok)throw Error('Unavailable');
                     const template=document.createElement('template');template.innerHTML=await response.text();
                     const page=template.content;
