@@ -2,7 +2,7 @@
 // ==UserScript==
 // @name DPChallenge Mobile — Editorial Gallery
 // @namespace dpc-mobile
-// @version 5.17
+// @version 5.18
 // @updateURL https://raw.githubusercontent.com/Konador/dpc-mobile-restyle/main/dpc-mobile.user.js
 // @downloadURL https://raw.githubusercontent.com/Konador/dpc-mobile-restyle/main/dpc-mobile.user.js
 // @match *://*.dpchallenge.com/challenge_vote_image.php*
@@ -1679,6 +1679,7 @@ html.dpc-viewing body {
                         if(id&&item.progress)countHomeComments(doc,response.url||safe(item.action),id,+item.progress[2]).then(n=>{
                             if(n===null)return;
                             commentStatus.textContent=n+'/'+item.progress[2]+' commented';
+                            if(completed){const action=card.querySelector('.dpc-home-action');if(action)action.textContent=n===0?'Start commenting':'Continue commenting';}
                             const fill=card.querySelector('.dpc-home-comment-fill');if(fill)fill.style.width=(100*n/+item.progress[2])+'%';
                         }).catch(()=>{});
                         if(voteCached&&Date.now()-voteCached.time<3600000)return;
@@ -1700,7 +1701,7 @@ html.dpc-viewing body {
                     }
                     const voteObserver=new IntersectionObserver(items=>{if(items.some(x=>x.isIntersecting)){voteObserver.disconnect();loadVoteImage().catch(()=>{});}},{rootMargin:'300px'});voteObserver.observe(card);
                 }
-                if(voting)card.append(link(item.action,'dpc-home-action',completed?'Continue commenting':'Continue voting'));
+                if(voting)card.append(link(item.action,'dpc-home-action',completed?'Continue commenting':item.progress&&+item.progress[1]===0?'Start voting':'Continue voting'));
                 grid.append(card);if(i>=limit){card.hidden=true;hidden.push(card);}
             });
             if(hidden.length){const b=make('button','dpc-home-more','View all '+items.length);b.onclick=()=>{hidden.forEach(c=>c.hidden=false);b.remove();};sec.append(b);}
