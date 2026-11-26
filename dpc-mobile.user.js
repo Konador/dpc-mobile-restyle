@@ -2,7 +2,7 @@
 // ==UserScript==
 // @name DPChallenge Mobile — Editorial Gallery
 // @namespace dpc-mobile
-// @version 5.42
+// @version 5.43
 // @updateURL https://raw.githubusercontent.com/Konador/dpc-mobile-restyle/main/dpc-mobile.user.js
 // @downloadURL https://raw.githubusercontent.com/Konador/dpc-mobile-restyle/main/dpc-mobile.user.js
 // @match *://*.dpchallenge.com/challenge_vote_image.php*
@@ -1828,7 +1828,7 @@ html.dpc-viewing body {
         if(votingSection.children.length===1)votingSection.append(make('p','dpc-home-meta','No challenges open for voting.'));
         let resultsSection=null;
         const entrySection=section('Open for','entries');
-        if(entries.length){cards(entries,entrySection,false,Infinity);const grid=entrySection.querySelector('.dpc-entry-grid');if(grid){grid.style.visibility='hidden';Promise.allSettled(submissionChecks).then(()=>{grid.style.visibility='';});}}
+        if(entries.length){cards(entries,entrySection,false,Infinity);const grid=entrySection.querySelector('.dpc-entry-grid');if(grid){grid.style.visibility='hidden';Promise.allSettled(submissionChecks).then(()=>{const ordered=[...grid.children];for(const card of ordered.filter(c=>c.classList.contains('dpc-home-submitted-card')))grid.append(card);for(const card of ordered.filter(c=>!c.classList.contains('dpc-home-submitted-card')))grid.append(card);grid.style.visibility='';});}}
         else if(entryHead){const area=region(entryHead,a=>!!safe(a));if(area)entrySection.append(area.cloneNode(true));}
         if(entrySection.children.length===1)entrySection.append(make('p','dpc-home-meta','No challenges open for entries.'));
         const winnerLinks=originalLinks.filter(a=>/\/image\.php\?/i.test(safe(a))&&a.querySelector('img'));
