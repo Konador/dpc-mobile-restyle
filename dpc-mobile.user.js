@@ -2,7 +2,7 @@
 // ==UserScript==
 // @name DPChallenge Mobile — Editorial Gallery
 // @namespace dpc-mobile
-// @version 5.23
+// @version 5.24
 // @updateURL https://raw.githubusercontent.com/Konador/dpc-mobile-restyle/main/dpc-mobile.user.js
 // @downloadURL https://raw.githubusercontent.com/Konador/dpc-mobile-restyle/main/dpc-mobile.user.js
 // @match *://*.dpchallenge.com/challenge_vote_image.php*
@@ -1163,6 +1163,7 @@ html.dpc-viewing body {
     style.textContent += "#dpc-app .dpc-home-vote-card .dpc-home-progress{position:relative;overflow:hidden}#dpc-app .dpc-home-vote-card .dpc-home-progress i{position:absolute;left:0;top:0;height:100%;transition:width .25s ease}#dpc-app .dpc-home-vote-card .dpc-home-progress .dpc-home-comment-fill{background:#d4ac58;z-index:1}";
     style.textContent += "#dpc-app .dpc-auto-continue{display:flex;align-items:center;justify-content:center;gap:6px;margin:8px 0 10px;font:400 11px/1.4 system-ui;color:var(--muted);cursor:pointer}#dpc-app .dpc-auto-continue input{width:14px;height:14px;margin:0;accent-color:var(--accent)}#dpc-app .dpc-auto-continue[hidden]{display:none!important}";
     style.textContent += "@property --dpc-save-angle{syntax:\"<angle>\";initial-value:0deg;inherits:false}@keyframes dpc-saving-gradient{to{--dpc-save-angle:360deg}}#dpc-app .dpc-score.dpc-saving-button,#dpc-app #dpc-submit-comment.dpc-saving-button:disabled{opacity:1!important;background:linear-gradient(var(--dpc-save-angle),#8fa7df 0%,#c5d3f3 48%,#91a8df 100%)!important;color:#102537!important;border-color:#b4c5ed!important;animation:dpc-saving-gradient 1.8s linear infinite}#dpc-app .dpc-score.pressed.dpc-saving-button{animation:dpc-vote-press .32s ease-out both,dpc-saving-gradient 1.8s linear infinite}@media(prefers-reduced-motion:reduce){#dpc-app .dpc-score.dpc-saving-button,#dpc-app .dpc-score.pressed.dpc-saving-button,#dpc-app #dpc-submit-comment.dpc-saving-button:disabled{animation:none!important}}";
+    style.textContent += "#dpc-app .dpc-entry-grid .dpc-home-submitted-card{grid-column:1/-1;min-height:160px;isolation:isolate;overflow:hidden;position:relative}#dpc-app .dpc-entry-grid .dpc-home-submitted-card:before{content:\"\";position:absolute;inset:0;z-index:-1;background-size:cover;background-position:center right;background-repeat:no-repeat}#dpc-app .dpc-entry-grid .dpc-home-submitted-card .dpc-home-meta{max-width:72%;margin:0 0 10px;opacity:1}#dpc-app .dpc-entry-grid .dpc-home-submitted-card .dpc-home-detail{display:flex;flex-direction:row;flex-wrap:wrap;gap:6px 10px;margin:0;padding-top:0;border:0}#dpc-app .dpc-entry-grid .dpc-home-submitted-status{font:600 12px/1.4 system-ui;color:var(--accent);margin-top:10px}#dpc-app .dpc-entry-grid .dpc-home-submitted-card .dpc-home-action{margin-top:8px;align-self:flex-start}";
     const progressMarkup = `
 <div class="dpc-progress">
     <div class="dpc-progress-label">
@@ -1713,6 +1714,32 @@ html.dpc-viewing body {
                         if(e.ctrlKey||e.metaKey||e.shiftKey||e.altKey)return;
                         location.href=action.href;
                     });
+                }
+                if(!voting){
+                    const id=new URL(safe(item.a)).searchParams.get('CHALLENGE_ID')||new URL(safe(item.action)).searchParams.get('CHALLENGE_ID');
+                    if(id){
+                        const destination=new URL('/challenge_submit.php?CHALLENGE_ID='+encodeURIComponent(id),location.origin).href;
+                        card.href=destination;
+                        async function checkSubmission(){
+                            const response=await backgroundFetch(destination,{credentials:'same-origin'});if(!response.ok)return;
+                            const doc=new DOMParser().parseFromString(await response.text(),'text/html');
+                            const form=doc.querySelector('form[name="frmSubmit"]');
+                            const image=doc.querySelector('a[href*="challenge_submit_preview.php"] img');
+                            if(!form?.querySelector('input[name="IMAGE_ID"][value]')||!form.querySelector('[name="SubmitUpdate"]'))return;
+                            card.classList.add('dpc-home-vote-card','dpc-home-submitted-card');
+                            const status=make('div','dpc-home-submitted-status','✓ Entry submitted');card.append(status);
+                            card.append(make('span','dpc-home-action','Edit entry'));
+                            if(image){
+                                const url=new URL(image.getAttribute('src'),response.url||destination);
+                                if(url.origin===location.origin&&url.pathname.endsWith('/challenge_submit_readimage.php')){
+                                    url.searchParams.set('TYPE','/');
+                                    card.style.setProperty('--vote-image','url('+JSON.stringify(url.href)+')');
+                                    const preload=new Image();preload.onerror=()=>{card.style.setProperty('--vote-image','url('+JSON.stringify(new URL(image.getAttribute('src'),response.url||destination).href)+')');};preload.src=url.href;
+                                }
+                            }
+                        }
+                        const observer=new IntersectionObserver(records=>{if(records.some(x=>x.isIntersecting)){observer.disconnect();checkSubmission().catch(()=>{});}},{rootMargin:'300px'});observer.observe(card);
+                    }
                 }
                 grid.append(card);if(i>=limit){card.hidden=true;hidden.push(card);}
             });
