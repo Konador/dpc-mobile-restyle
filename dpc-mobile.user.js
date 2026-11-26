@@ -2,7 +2,7 @@
 // ==UserScript==
 // @name DPChallenge Mobile — Editorial Gallery
 // @namespace dpc-mobile
-// @version 5.28
+// @version 5.29
 // @updateURL https://raw.githubusercontent.com/Konador/dpc-mobile-restyle/main/dpc-mobile.user.js
 // @downloadURL https://raw.githubusercontent.com/Konador/dpc-mobile-restyle/main/dpc-mobile.user.js
 // @match *://*.dpchallenge.com/challenge_vote_image.php*
@@ -1167,7 +1167,8 @@ html.dpc-viewing body {
     style.textContent += "#dpc-app .dpc-home-main-tabs{gap:0;justify-content:space-between}#dpc-app .dpc-home-main-tabs .dpc-home-challenge-tab{flex:1;text-align:center;font-size:clamp(19px,5.5vw,29px)}#dpc-app [id^=dpc-home-challenge-panel-][hidden]{display:none!important}";
     style.textContent += "#dpc-app .dpc-home-main-tabs .dpc-home-challenge-tab.active em{font-style:normal}#dpc-app #dpc-home-challenge-panel-1 .dpc-home-vote-card{padding:13px 12px!important;min-height:142px;border-radius:6px}#dpc-app #dpc-home-challenge-panel-1 .dpc-home-vote-card h3,#dpc-app #dpc-home-challenge-panel-1 .dpc-home-vote-card h3 a{font:500 23px/1.08 var(--serif)!important;letter-spacing:inherit}#dpc-app #dpc-home-challenge-panel-1 .dpc-home-vote-card .dpc-home-meta{font:400 13px/1.45 system-ui!important;margin:0 0 12px;opacity:.86}#dpc-app #dpc-home-challenge-panel-1 .dpc-home-vote-card .dpc-home-detail{font:400 11px/1.3 system-ui;gap:5px 8px}#dpc-app #dpc-home-challenge-panel-1 .dpc-home-vote-status{font:500 11px/1.4 system-ui}#dpc-app #dpc-home-challenge-panel-1 .dpc-home-action{font:500 11px/1.4 system-ui;padding:7px 8px}#dpc-app #dpc-home-challenge-panel-1 .dpc-home-vote-card:before{transition:none!important}";
     style.textContent += "#dpc-app #dpc-home-challenge-panel-1 .dpc-vote-bg-reveal:before{background-image:linear-gradient(90deg,#111115fa 0%,#111115ed 40%,#111115b0 70%,#11111545 100%),var(--vote-blur,none);filter:blur(13px);transform:scale(1.08);opacity:0;transition:opacity .35s ease!important}#dpc-app #dpc-home-challenge-panel-1 .dpc-vote-bg-reveal.dpc-bg-preview:before{opacity:1}#dpc-app #dpc-home-challenge-panel-1 .dpc-vote-bg-reveal:after{content:\"\";position:absolute;inset:0;z-index:-1;pointer-events:none;background-image:linear-gradient(90deg,#111115fa 0%,#111115ed 40%,#111115b0 70%,#11111545 100%),var(--vote-image,none);background-size:cover;background-position:center,right center;opacity:0;transition:opacity .65s ease}#dpc-app #dpc-home-challenge-panel-1 .dpc-vote-bg-reveal.dpc-bg-ready:after{opacity:1}html.dpc-light #dpc-app #dpc-home-challenge-panel-1 .dpc-vote-bg-reveal:before{background-image:linear-gradient(90deg,#f5f6f8fa 0%,#f5f6f8ed 40%,#f5f6f8b0 70%,#f5f6f845 100%),var(--vote-blur,none)}html.dpc-light #dpc-app #dpc-home-challenge-panel-1 .dpc-vote-bg-reveal:after{background-image:linear-gradient(90deg,#f5f6f8fa 0%,#f5f6f8ed 40%,#f5f6f8b0 70%,#f5f6f845 100%),var(--vote-image,none)}@media(prefers-reduced-motion:reduce){#dpc-app #dpc-home-challenge-panel-1 .dpc-vote-bg-reveal:before,#dpc-app #dpc-home-challenge-panel-1 .dpc-vote-bg-reveal:after{transition:none!important}}";
-    style.textContent += "#dpc-app .dpc-home-main-tabs~section .dpc-home-vote-card:not(.dpc-home-submitted-card) h3,#dpc-app .dpc-home-main-tabs~section .dpc-home-vote-card:not(.dpc-home-submitted-card) h3 a{font-size:19px!important;line-height:1.12!important}#dpc-app .dpc-home-main-tabs~section .dpc-home-vote-card:not(.dpc-home-submitted-card) .dpc-home-meta{font-size:12px!important;line-height:1.4!important;max-width:85%;margin:0 0 9px;-webkit-text-size-adjust:none;text-size-adjust:none}#dpc-app .dpc-home-main-tabs~section .dpc-home-vote-card:not(.dpc-home-submitted-card){-webkit-text-size-adjust:none;text-size-adjust:none}#dpc-app .dpc-home-main-tabs~section .dpc-home-vote-card:not(.dpc-home-submitted-card) .dpc-home-vote-status{font-size:10px!important}#dpc-app .dpc-home-main-tabs~section .dpc-home-vote-card:not(.dpc-home-submitted-card) .dpc-entry-deadline{font-size:11px!important}#dpc-app .dpc-home-main-tabs~section .dpc-home-vote-card:not(.dpc-home-submitted-card) .dpc-home-action{font-size:10px!important;padding:6px 8px}";
+    style.textContent += "#dpc-app .dpc-home-carousel section .dpc-home-vote-card:not(.dpc-home-submitted-card) h3,#dpc-app .dpc-home-carousel section .dpc-home-vote-card:not(.dpc-home-submitted-card) h3 a{font-size:19px!important;line-height:1.12!important}#dpc-app .dpc-home-carousel section .dpc-home-vote-card:not(.dpc-home-submitted-card) .dpc-home-meta{font-size:12px!important;line-height:1.4!important;max-width:85%;margin:0 0 9px;-webkit-text-size-adjust:none;text-size-adjust:none}#dpc-app .dpc-home-carousel section .dpc-home-vote-card:not(.dpc-home-submitted-card){-webkit-text-size-adjust:none;text-size-adjust:none}#dpc-app .dpc-home-carousel section .dpc-home-vote-card:not(.dpc-home-submitted-card) .dpc-home-vote-status{font-size:10px!important}#dpc-app .dpc-home-carousel section .dpc-home-vote-card:not(.dpc-home-submitted-card) .dpc-entry-deadline{font-size:11px!important}#dpc-app .dpc-home-carousel section .dpc-home-vote-card:not(.dpc-home-submitted-card) .dpc-home-action{font-size:10px!important;padding:6px 8px}";
+    style.textContent += "#dpc-app .dpc-home-carousel{width:100%;overflow:hidden;touch-action:pan-y pinch-zoom;position:relative}#dpc-app .dpc-home-carousel-track{display:flex;width:100%;align-items:flex-start;will-change:transform}#dpc-app .dpc-home-carousel-track>section{flex:0 0 100%;width:100%;min-width:0;box-sizing:border-box;margin:0!important;display:flow-root}#dpc-app .dpc-home-carousel-track>section[aria-hidden=true]{pointer-events:none}#dpc-app .dpc-home-carousel-track>section>h2[hidden]{display:none!important}";
     const progressMarkup = `
 <div class="dpc-progress">
     <div class="dpc-progress-label">
@@ -1931,12 +1932,59 @@ html.dpc-viewing body {
             tabs.append(button);buttons.push(button);button.onclick=()=>selectHomeTab(i);
             button.onkeydown=e=>{if(['ArrowLeft','ArrowRight','Home','End'].includes(e.key)){e.preventDefault();const next=e.key==='Home'?0:e.key==='End'?panels.length-1:(i+(e.key==='ArrowLeft'?-1:1)+panels.length)%panels.length;selectHomeTab(next);buttons[next].focus();}};
         });
-        function selectHomeTab(index){
-            panels.forEach((panel,i)=>{panel.hidden=i!==index;buttons[i].classList.toggle('active',i===index);buttons[i].setAttribute('aria-selected',String(i===index));buttons[i].tabIndex=i===index?0:-1;});
-            try{sessionStorage.setItem('dpc-home-challenge-tab',String(index));}catch{}
-        }
+        const viewport=make('div','dpc-home-carousel'),track=make('div','dpc-home-carousel-track');
+        tabs.after(viewport);viewport.append(track);panels.forEach(panel=>{panel.hidden=false;track.append(panel);});
         let selectedTab=0;try{const saved=Number(sessionStorage.getItem('dpc-home-challenge-tab'));if(Number.isInteger(saved)&&saved>=0&&saved<panels.length)selectedTab=saved;}catch{}
-        selectHomeTab(selectedTab);
+        let gesture=null,suppressClickUntil=0,settleTimer=null;
+        const motion=matchMedia('(prefers-reduced-motion: reduce)');
+        function fitHeight(dragging=false){
+            const heights=panels.map(p=>p.getBoundingClientRect().height);
+            const height=dragging&&gesture?.axis==='x'?Math.max(heights[selectedTab],heights[Math.max(0,Math.min(2,selectedTab+(gesture.dx<0?1:-1))) ]):heights[selectedTab];
+            if(height>0)viewport.style.height=Math.ceil(height)+'px';
+        }
+        function positionHome(dx=0,animate=false){
+            track.style.transition=animate&&!motion.matches?'transform 280ms cubic-bezier(.22,.75,.25,1)':'none';
+            track.style.transform='translate3d(calc('+(-selectedTab*100)+'% + '+dx+'px),0,0)';
+        }
+        function selectHomeTab(index,animate=true){
+            clearTimeout(settleTimer);gesture=null;
+            selectedTab=Math.max(0,Math.min(panels.length-1,index));
+            panels.forEach((panel,i)=>{panel.hidden=false;panel.inert=i!==selectedTab;panel.setAttribute('aria-hidden',String(i!==selectedTab));buttons[i].classList.toggle('active',i===selectedTab);buttons[i].setAttribute('aria-selected',String(i===selectedTab));buttons[i].tabIndex=i===selectedTab?0:-1;});
+            positionHome(0,animate);
+            if(animate&&!motion.matches){fitHeight();settleTimer=setTimeout(()=>fitHeight(),290);}else fitHeight();
+            try{sessionStorage.setItem('dpc-home-challenge-tab',String(selectedTab));}catch{}
+        }
+        viewport.addEventListener('touchstart',e=>{
+            if(e.touches.length!==1||e.target.closest('input,textarea,select,[contenteditable]'))return;
+            const t=e.touches[0];gesture={id:t.identifier,x:t.clientX,y:t.clientY,dx:0,axis:null,time:performance.now()};
+        },{passive:true});
+        viewport.addEventListener('touchmove',e=>{
+            if(!gesture||e.touches.length!==1){if(gesture){gesture=null;positionHome(0,true);fitHeight();}return;}
+            const t=e.touches[0];if(t.identifier!==gesture.id)return;
+            const dx=t.clientX-gesture.x,dy=t.clientY-gesture.y;
+            if(!gesture.axis){if(Math.max(Math.abs(dx),Math.abs(dy))<8)return;gesture.axis=Math.abs(dx)>Math.abs(dy)*1.2?'x':'y';}
+            if(gesture.axis!=='x')return;
+            if(e.cancelable)e.preventDefault();
+            gesture.dx=dx;
+            const w=viewport.clientWidth;
+            const offset=(selectedTab===0&&dx>0||selectedTab===panels.length-1&&dx<0)?dx*.18:Math.max(-w,Math.min(w,dx));
+            positionHome(offset);fitHeight(true);
+        },{passive:false});
+        function finishHomeSwipe(cancel=false){
+            if(!gesture)return;
+            const g=gesture;gesture=null;
+            if(g.axis!=='x')return;
+            suppressClickUntil=performance.now()+350;
+            const distance=Math.abs(g.dx),speed=distance/Math.max(1,performance.now()-g.time);
+            const advance=!cancel&&(distance>viewport.clientWidth*.25||(distance>35&&speed>.45));
+            selectHomeTab(selectedTab+(advance?(g.dx<0?1:-1):0));
+        }
+        viewport.addEventListener('touchend',()=>finishHomeSwipe(),{passive:true});
+        viewport.addEventListener('touchcancel',()=>finishHomeSwipe(true),{passive:true});
+        viewport.addEventListener('click',e=>{if(performance.now()<suppressClickUntil){e.preventDefault();e.stopImmediatePropagation();} },true);
+        const homeResize=new ResizeObserver(()=>fitHeight(!!gesture&&gesture.axis==='x'));panels.forEach(p=>homeResize.observe(p));homeResize.observe(viewport);
+        selectHomeTab(selectedTab,false);
+        requestAnimationFrame(()=>fitHeight());
         const forum=region(forumHead,a=>/forum.*(?:THREAD_ID|thread)/i.test(safe(a)));
         if(forum){
             const sec=section('Community','talk'),hidden=[],seenThreads=new Set();
