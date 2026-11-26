@@ -2,7 +2,7 @@
 // ==UserScript==
 // @name DPChallenge Mobile — Editorial Gallery
 // @namespace dpc-mobile
-// @version 5.22
+// @version 5.23
 // @updateURL https://raw.githubusercontent.com/Konador/dpc-mobile-restyle/main/dpc-mobile.user.js
 // @downloadURL https://raw.githubusercontent.com/Konador/dpc-mobile-restyle/main/dpc-mobile.user.js
 // @match *://*.dpchallenge.com/challenge_vote_image.php*
@@ -1162,6 +1162,7 @@ html.dpc-viewing body {
     style.textContent += "#dpc-app .dpc-home-vote-status{display:flex;flex-wrap:wrap;gap:6px 12px}#dpc-app .dpc-home-comment-status{font-size:inherit}#dpc-app .dpc-home-progress[hidden]{display:none!important}";
     style.textContent += "#dpc-app .dpc-home-vote-card .dpc-home-progress{position:relative;overflow:hidden}#dpc-app .dpc-home-vote-card .dpc-home-progress i{position:absolute;left:0;top:0;height:100%;transition:width .25s ease}#dpc-app .dpc-home-vote-card .dpc-home-progress .dpc-home-comment-fill{background:#d4ac58;z-index:1}";
     style.textContent += "#dpc-app .dpc-auto-continue{display:flex;align-items:center;justify-content:center;gap:6px;margin:8px 0 10px;font:400 11px/1.4 system-ui;color:var(--muted);cursor:pointer}#dpc-app .dpc-auto-continue input{width:14px;height:14px;margin:0;accent-color:var(--accent)}#dpc-app .dpc-auto-continue[hidden]{display:none!important}";
+    style.textContent += "@property --dpc-save-angle{syntax:\"<angle>\";initial-value:0deg;inherits:false}@keyframes dpc-saving-gradient{to{--dpc-save-angle:360deg}}#dpc-app .dpc-score.dpc-saving-button,#dpc-app #dpc-submit-comment.dpc-saving-button:disabled{opacity:1!important;background:linear-gradient(var(--dpc-save-angle),#8fa7df 0%,#c5d3f3 48%,#91a8df 100%)!important;color:#102537!important;border-color:#b4c5ed!important;animation:dpc-saving-gradient 1.8s linear infinite}#dpc-app .dpc-score.pressed.dpc-saving-button{animation:dpc-vote-press .32s ease-out both,dpc-saving-gradient 1.8s linear infinite}@media(prefers-reduced-motion:reduce){#dpc-app .dpc-score.dpc-saving-button,#dpc-app .dpc-score.pressed.dpc-saving-button,#dpc-app #dpc-submit-comment.dpc-saving-button:disabled{animation:none!important}}";
     const progressMarkup = `
 <div class="dpc-progress">
     <div class="dpc-progress-label">
@@ -3464,6 +3465,7 @@ html.dpc-viewing body {
 
     function setBusy(v) {
         busy=v;
+        if(!v){app.querySelectorAll('.dpc-saving-button').forEach(b=>{b.classList.remove('dpc-saving-button');b.removeAttribute('aria-busy');});}
         scores.forEach(b=>b.disabled=v);
         $('#dpc-prev').disabled=v||!current.prev;
         $('#dpc-next').disabled=v||!current.next;
@@ -3790,6 +3792,7 @@ html.dpc-viewing body {
 
         setBusy(true);
         status('Saving…');
+        if(score===null&&stay){const button=$('#dpc-submit-comment');button.classList.add('dpc-saving-button');button.setAttribute('aria-busy','true');}
 
         if (score!==null) {
             const pressed=scores.find(
@@ -3797,7 +3800,8 @@ html.dpc-viewing body {
             );
 
             scores.forEach(b=>b.classList.remove('selected'));
-            pressed?.classList.add('pressed');
+            pressed?.classList.add('pressed','dpc-saving-button');
+            pressed?.setAttribute('aria-busy','true');
 
             $('.dpc-current-score').textContent=
                 'Saving '+score+' / 10';
