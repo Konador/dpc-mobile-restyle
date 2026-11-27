@@ -2,7 +2,7 @@
 // ==UserScript==
 // @name DPChallenge Mobile — Editorial Gallery
 // @namespace dpc-mobile
-// @version 5.73
+// @version 5.74
 // @updateURL https://raw.githubusercontent.com/Konador/dpc-mobile-restyle/main/dpc-mobile.user.js
 // @downloadURL https://raw.githubusercontent.com/Konador/dpc-mobile-restyle/main/dpc-mobile.user.js
 // @match *://*.dpchallenge.com/challenge_vote_image.php*
@@ -3113,27 +3113,58 @@ html.dpc-viewing body {
                 Promise.all(slides.map(lookAhead)).catch(()=>{});
             }
             while(detailPageCache.size>18){const href=[...detailPageCache.keys()].find(key=>!keep.has(key));if(!href)break;detailPageCache.delete(href);}
-            // Extend challenge results with the actual next page, preserving its native sorting.
-            if(activeGallery&&activeGallery.queue?.length&&!links[1]){
+            // Prefetch the next native results page before reaching the current boundary.
+            let pageLoading=null;
+            function extendGallery(){
                 const ctx=activeGallery;
-                (async()=>{
-                    const next=ctx.queue[0],response=await interactiveFetch(next,{credentials:'same-origin'},true);
-                    if(!response.ok||!current.isConnected||activeGallery!==ctx)return;
-                    const page=new DOMParser().parseFromString(await response.text(),'text/html');
-                    const added=[...page.querySelectorAll('table.dpc-challenge-results td.dpc-result-thumb')].map(cell=>({href:cell.querySelector('a[href*="image.php"]')?.getAttribute('href'),src:cell.querySelector('img[src]')?.getAttribute('src')})).filter(e=>e.href).map(e=>({href:new URL(e.href,response.url||next).href,src:e.src?new URL(e.src,response.url||next).href:''}));
-                    if(!added.length)return;
-                    ctx.entries=normaliseGallery([...ctx.entries,...added]);ctx.queue.shift();ctx.visited.push(next);
+                if(!ctx||!ctx.queue?.length)return Promise.resolve(false);
+                if(ctx.loadingPage)return ctx.loadingPage;
+                const next=ctx.queue[0];
+                const task=(async()=>{
+                    const response=await interactiveFetch(next,{credentials:'same-origin'},true);
+                    if(!response.ok||activeGallery!==ctx)return false;
+                    const base=response.url||next,page=new DOMParser().parseFromString(await response.text(),'text/html');
+                    const added=[...page.querySelectorAll('table.dpc-challenge-results td.dpc-result-thumb')].map(cell=>({href:cell.querySelector('a[href*="image.php"]')?.getAttribute('href'),src:cell.querySelector('img[src]')?.getAttribute('src')})).filter(e=>e.href).map(e=>({href:new URL(e.href,base).href,src:e.src?new URL(e.src,base).href:''}));
+                    if(!added.length)return false;
+                    ctx.entries=normaliseGallery([...ctx.entries,...added]);
+                    ctx.queue.shift();ctx.visited.push(next);
                     const visited=new Set([...ctx.visited,...ctx.queue]);
-                    for(const a of page.querySelectorAll('a[href]')){const u=new URL(a.getAttribute('href'),next),origin=new URL(ctx.origin);u.hash='';u.searchParams.sort();if(u.origin!==origin.origin||u.pathname!==origin.pathname||u.searchParams.get('CHALLENGE_ID')!==origin.searchParams.get('CHALLENGE_ID')||!a.querySelector('img[src*="/images/page/"]')&&!/^\\d+$|next|previous|page\\s+\\d+/i.test(a.textContent.trim())||visited.has(u.href))continue;visited.add(u.href);ctx.queue.push(u.href);}
+                    for(const a of page.querySelectorAll('a[href]')){
+                        const u=new URL(a.getAttribute('href'),base),origin=new URL(ctx.origin);u.hash='';u.searchParams.sort();
+                        if(u.origin!==origin.origin||u.pathname!==origin.pathname||u.searchParams.get('CHALLENGE_ID')!==origin.searchParams.get('CHALLENGE_ID')||(!a.querySelector('img[src*="/images/page/"]')&&!/^(?:\d+|next|previous|page\s+\d+)$/i.test(a.textContent.trim()))||visited.has(u.href))continue;
+                        visited.add(u.href);ctx.queue.push(u.href);
+                    }
                     const pageNo=url=>{const q=new URL(url).searchParams;return Number(q.get('page')||q.get('PAGE')||q.get('PAGE_ID')||q.get('page_id')||0);};
-                    ctx.queue.sort((a,b)=>pageNo(a)-pageNo(b));storeGallery(ctx);
-                    const nextLink=contextualLinks(doc)?.[1];if(nextLink&&!slides[1]&&current.isConnected){links[1]=nextLink;prepare(1);}
-                })().catch(()=>{});
+                    ctx.queue.sort((a,b)=>pageNo(a)-pageNo(b));storeGallery(ctx);return true;
+                })().catch(()=>false).finally(()=>{delete ctx.loadingPage;});
+                Object.defineProperty(ctx,'loadingPage',{value:task,writable:true,configurable:true,enumerable:false});
+                return task;
+            }
+            function ensureNextPage(){
+                if(pageLoading)return pageLoading;
+                pageLoading=extendGallery().then(ok=>{
+                    if(!current.isConnected)return false;
+                    const nextLink=contextualLinks(doc)?.[1];
+                    if(nextLink&&!slides[1]){links[1]=nextLink;prepare(1);}
+                    const indicator=app.querySelector(':scope > .dpc-gallery-context-label');
+                    if(indicator&&activeGallery){const index=activeGallery.entries.findIndex(e=>photoCacheId(e.href)===photoCacheId(location.href));if(index>=0)indicator.textContent=indicator.textContent.replace(/ · \d+ \/ \d+\+?$/,' · '+(index+1)+' / '+activeGallery.entries.length+(activeGallery.queue?.length?'+':''));}
+                    return ok;
+                }).finally(()=>{pageLoading=null;});
+                return pageLoading;
+            }
+            if(activeGallery?.queue?.length){
+                const index=activeGallery.entries.findIndex(e=>photoCacheId(e.href)===photoCacheId(location.href));
+                if(index>=activeGallery.entries.length-5)ensureNextPage();
             }
             requestAnimationFrame(()=>{if(current.isConnected&&!drag&&!busy)move(0);});
             const resize=new ResizeObserver(()=>{if(!current.isConnected){resize.disconnect();return;}if(!drag&&!busy)move(0);});resize.observe(body);
             async function go(d){
-                if(busy)return;const rec=slides[d<0?0:1];if(!rec){move(0,true);return;}
+                if(busy)return;
+                if(d>0&&!slides[1]&&activeGallery?.queue?.length){
+                    move(0);busy=true;await ensureNextPage();busy=false;
+                    if(!current.isConnected)return;
+                }
+                const rec=slides[d<0?0:1];if(!rec){move(0);return;}
                 busy=true;fallback(rec);move(-d*distance(),true);
                 const [page]=await Promise.all([rec.promise,new Promise(resolve=>setTimeout(resolve,reducedMotion.matches?0:270))]);
                 if(!page){move(0,true);busy=false;location.href=rec.url;return;}
@@ -3143,7 +3174,7 @@ html.dpc-viewing body {
             }
             swipeArea.addEventListener('pointerdown',e=>{if(busy||!e.isPrimary||e.button!==0)return;drag={id:e.pointerId,x:e.clientX,y:e.clientY,axis:null};});
             swipeArea.addEventListener('pointermove',e=>{if(!drag||drag.id!==e.pointerId)return;const dx=e.clientX-drag.x,dy=e.clientY-drag.y;if(!drag.axis&&Math.max(Math.abs(dx),Math.abs(dy))>8){drag.axis=Math.abs(dx)>Math.abs(dy)*1.2?'x':'y';if(drag.axis==='x')swipeArea.setPointerCapture(e.pointerId);}if(drag.axis==='x'){const available=slides[dx>0?0:1];if(available)fallback(available);move(Math.max(-distance(),Math.min(distance(),available?dx:dx*.18)));}});
-            swipeArea.addEventListener('pointerup',e=>{if(!drag||drag.id!==e.pointerId)return;const horizontal=drag.axis==='x';drag=null;if(horizontal){if(Math.abs(offset)>Math.min(90,distance()*.22))go(offset<0?1:-1);else move(0,true);}else if(offset)move(0,true);});
+            swipeArea.addEventListener('pointerup',e=>{if(!drag||drag.id!==e.pointerId)return;const horizontal=drag.axis==='x',dx=e.clientX-drag.x;drag=null;if(horizontal){if(Math.abs(dx)>Math.min(90,distance()*.22))go(dx<0?1:-1);else move(0,true);}else if(offset)move(0,true);});
             swipeArea.addEventListener('pointercancel',()=>{drag=null;if(!busy)move(0,true);});
             swipeArea.addEventListener('dragstart',e=>{if(drag?.axis==='x')e.preventDefault();});
         }
