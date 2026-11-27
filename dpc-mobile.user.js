@@ -2,7 +2,7 @@
 // ==UserScript==
 // @name DPChallenge Mobile — Editorial Gallery
 // @namespace dpc-mobile
-// @version 5.87
+// @version 5.88
 // @updateURL https://raw.githubusercontent.com/Konador/dpc-mobile-restyle/main/dpc-mobile.user.js
 // @downloadURL https://raw.githubusercontent.com/Konador/dpc-mobile-restyle/main/dpc-mobile.user.js
 // @match *://*.dpchallenge.com/challenge_vote_image.php*
@@ -1516,28 +1516,31 @@ html.dpc-viewing body {
         const ell=(x,y,w,h,c)=>({ty:'gr',it:[{ty:'el',p:p([x,y]),s:p([w,h])},{ty:'fl',c:p(rgb(c)),o:p(100),r:1},tr()]});
         const zero=n=>Array.from({length:n},()=>[0,0]);
         const line=(v,c,w)=>({ty:'gr',it:[shape(v,zero(v.length),zero(v.length),false),{ty:'st',c:p(rgb(c)),o:p(100),w:p(w),lc:2,lj:2},tr()]});
-        const face=grad([[32,5],[51,17],[50,35],[32,46],[14,35],[13,17]], [[-11,0],[-3,-7],[2,-8],[10,0],[5,6],[-2,7]],[[11,0],[3,7],[-5,6],[-10,0],[-2,-8],[3,-7]],[[0,'#e8e9ec'],[.5,'#b2b7c1'],[1,'#777e8e']],[20,8],[47,45],'#151722',2.6);
-        const hair=grad([[12,32],[11,19],[18,8],[32,4],[46,8],[53,19],[52,32],[47,27],[46,20],[18,20],[17,27]],[[0,0],[0,5],[-4,3],[-7,0],[-4,-3],[0,-5],[0,0],[2,2],[1,1],[4,0],[0,-3]],[[0,-4],[0,-5],[4,-3],[7,0],[4,3],[0,5],[0,0],[-2,-2],[-4,0],[-1,1],[-2,2]],[[0,'#bfc4cd'],[.48,'#9199a8'],[1,'#464c59']],[18,4],[40,30],'#151722',2.4);
-        const band=path([[18,19],[46,19],[47,22],[17,22]],zero(4),zero(4),'#282c36',null);
-        const shine=path([[20,10],[28,7],[39,8],[43,11],[30,10]],[[0,0],[-4,0],[-3,-1],[0,0],[5,0]],[[3,-2],[4,0],[3,1],[0,0],[-5,0]],'#c9ced6',null);
-        const neck=grad([[24,43],[40,43],[40,50],[32,55],[24,50]],zero(5),zero(5),[[0,'#9298a4'],[1,'#d5d8df']],[32,42],[32,55],'#151722',2.2);
-        const shirt=grad([[3,68],[3,60],[11,52],[23,48],[32,55],[41,48],[53,52],[61,60],[61,68]],[[0,0],[0,4],[-5,3],[-4,0],[-3,0],[-3,0],[-4,-2],[0,-4],[0,0]],[[0,0],[0,-4],[5,-3],[3,0],[3,0],[4,0],[5,3],[0,4],[0,0]],[[0,palette[0]],[.55,palette[0]],[1,palette[1]]],[10,49],[56,70],'#151722',2.7);
-        const eyes=[ell(25,30,3.4,3.5,'#646a77'),ell(39,30,3.4,3.5,'#646a77'),ell(24.5,29.4,1.1,1.1,'#d2d5db'),ell(38.5,29.4,1.1,1.1,'#d2d5db'),tr([32,30],[32,30],k([[0,[100,100]],[5,[100,100]],[8,[100,12]],[12,[100,100]],[24,[100,100]],[30,[100,100]],[60,[100,100]],[90,[100,100]]]))];
+        const face=grad([[32,5],[52,25],[32,46],[12,25]],[[-11.05,0],[0,-11.05],[11.05,0],[0,11.05]],[[11.05,0],[0,11.05],[-11.05,0],[0,-11.05]],[[0,'#e8e9ec'],[.5,'#b2b7c1'],[1,'#777e8e']],[20,8],[47,45],'#151722',2.6);
+        const hair=grad([[13,31],[10.5,21],[32,3],[53.5,21],[51,31],[46,25],[32,19],[18,25]],[[2,3],[0,6],[-12,0],[0,-11],[2,-3],[2,3],[8,0],[2,-3]],[[-2,-3],[0,-11],[12,0],[0,6],[-2,3],[-2,-3],[-8,0],[-2,3]],[[0,'#bfc4cd'],[.48,'#9199a8'],[1,'#464c59']],[18,4],[40,30],'#151722',2.4);
+        const band=path([[17,20],[32,17.5],[47,20],[32,21]],[ [0,1],[-8,0],[0,-1],[8,0] ],[[0,-1],[8,0],[0,1],[-8,0]],'#282c36',null);
+        const shine=path([[19,12],[30,7],[43,11],[30,10]],[[0,-1],[-6,0],[1,-2],[6,0]],[[1,-2],[6,0],[0,1],[-6,0]],'#c9ced6',null);
+        const neck=grad([[24,42],[40,42],[40,49],[32,54],[24,49]],[[0,0],[0,0],[0,-3],[4,0],[0,3]],[[0,0],[0,0],[0,3],[-4,0],[0,-3]],[[0,'#9298a4'],[1,'#d5d8df']],[32,42],[32,55],'#151722',2.2);
+        const shirt=grad([[5,68],[3,65],[6,55],[23,48],[32,54],[41,48],[58,55],[61,65],[59,68]],[[ -2,0],[0,2],[-3,4],[-8,0],[-4,0],[-4,0],[-5,-5],[0,-4],[2,0]],[[0,0],[0,-4],[5,-5],[4,0],[4,0],[8,0],[3,4],[0,2],[0,0]],[[0,palette[0]],[.55,palette[0]],[1,palette[1]]],[10,49],[56,70],'#151722',2.7);
+        const eyes=[ell(25,30,3.4,3.5,'#646a77'),ell(39,30,3.4,3.5,'#646a77'),ell(24.5,29.4,1.1,1.1,'#d2d5db'),ell(38.5,29.4,1.1,1.1,'#d2d5db'),tr([32,30],[32,30],k([[0,[100,100]],[5,[100,100]],[8,[100,12]],[12,[100,100]],[24,[100,100]],[30,[100,100]],[60,[100,100]],[90,[100,100]],[210,[100,100]]]))];
         const head=[{ty:'gr',it:eyes},shine,band,hair,face,tr(k([[0,[32,43]],[30,[32,43]],[39,[32,43]],[48,[32,45]],[57,[32,43]],[60,[32,43]],[90,[32,43]]]),[32,43])];
         // Position is constant for blink/tilt; nod segment moves the head. Tilt is a separate segment.
-        head[head.length-1].p=k([[0,[32,43]],[39,[32,43]],[48,[32,45]],[57,[32,43]],[90,[32,43]]]);
-        head[head.length-1].r=k([[0,0],[60,0],[69,-9],[77,5],[86,0],[90,0]]);
-        return {v:'5.12.2',fr:30,ip:0,op:90,w:64,h:70,nm:'DPC legacy member',ddd:0,assets:[],layers:[{ddd:0,ind:1,ty:4,nm:'Character',sr:1,ks:{o:p(100),r:p(0),p:p([0,0,0]),a:p([0,0,0]),s:p([100,100,100])},ao:0,shapes:[{ty:'gr',it:head},line([[15,62],[15,67]],palette[1],2),line([[49,62],[49,67]],palette[1],2),shirt,neck],ip:0,op:90,st:0,bm:0}]};
+        head[head.length-1].p=k([[0,[32,43]],[39,[32,43]],[48,[32,45]],[57,[32,43]],[90,[32,43]],[150,[32,42]],[210,[32,43]]]);
+        head[head.length-1].s=k([[0,[100,100]],[90,[100,100]],[150,[100.6,101.5]],[210,[100,100]]]);
+        head[head.length-1].r=k([[0,0],[60,0],[69,-9],[77,5],[86,0],[90,0],[150,1],[210,0]]);
+        return {v:'5.12.2',fr:30,ip:0,op:210,w:64,h:70,nm:'DPC legacy member',ddd:0,assets:[],layers:[{ddd:0,ind:1,ty:4,nm:'Character',sr:1,ks:{o:p(100),r:p(0),p:p([0,0,0]),a:p([0,0,0]),s:p([100,100,100])},ao:0,shapes:[{ty:'gr',it:head},line([[15,62],[15,67]],palette[1],2),line([[49,62],[49,67]],palette[1],2),shirt,neck],ip:0,op:210,st:0,bm:0}]};
     }
     const dpcRoleObserver=typeof IntersectionObserver==='function'?new IntersectionObserver(entries=>{
         for(const e of entries){const state=e.target.dpcRoleState;if(!state)continue;state.visible=e.isIntersecting;if(state.visible)dpcRoleSchedule(e.target,state);else dpcRoleStop(state);}
     }):null;
-    function dpcRoleStop(state){clearTimeout(state.timer);state.timer=null;if(state.anim){state.anim.resetSegments(true);state.anim.goToAndStop(0,true);}}
+    function dpcRoleStop(state){clearTimeout(state.timer);state.timer=null;state.running=false;state.action=false;if(state.anim){state.anim.pause();if(dpcRoleMotion.matches){state.anim.resetSegments(true);state.anim.goToAndStop(0,true);}}}
     function dpcRoleSchedule(el,state){
-        if(state.timer||!state.visible||!el.isConnected||document.hidden||dpcRoleMotion.matches||!state.ready)return;
-        state.timer=setTimeout(()=>{state.timer=null;if(!el.isConnected||!state.visible||document.hidden||dpcRoleMotion.matches)return;
-            const segments=[[0,24],[30,60],[60,89]],segment=segments[Math.floor(Math.random()*segments.length)];
-            state.anim.playSegments(segment,true);
+        if(!state.visible||!el.isConnected||document.hidden||dpcRoleMotion.matches||!state.ready)return;
+        if(!state.running){state.running=true;state.anim.loop=true;state.anim.playSegments([90,210],true);state.anim.goToAndPlay(Math.random()*119,true);}
+        if(state.timer||state.action)return;
+        state.timer=setTimeout(()=>{state.timer=null;if(!state.running||!el.isConnected||!state.visible||document.hidden||dpcRoleMotion.matches)return;
+            const segments=[[0,24],[30,60],[60,90]],segment=segments[Math.floor(Math.random()*segments.length)];
+            state.action=true;state.anim.loop=false;state.anim.playSegments(segment,true);
         },3500+Math.random()*12500);
     }
     function dpcRoleSweep(){
@@ -1559,7 +1562,7 @@ html.dpc-viewing body {
                 const anim=window.lottie.loadAnimation({container:host,renderer:'svg',loop:false,autoplay:false,animationData:dpcRoleData(info.role),rendererSettings:{preserveAspectRatio:'xMidYMid meet',progressiveLoad:false}});
                 const state={anim,visible:!dpcRoleObserver,ready:false,timer:null};holder.dpcRoleState=state;dpcRoleActive.set(holder,state);
                 anim.addEventListener('DOMLoaded',()=>{if(!holder.isConnected)return;state.ready=true;anim.goToAndStop(0,true);clone.remove();dpcRoleSchedule(holder,state);});
-                anim.addEventListener('complete',()=>{anim.resetSegments(true);anim.goToAndStop(0,true);dpcRoleSchedule(holder,state);});
+                anim.addEventListener('complete',()=>{state.action=false;state.running=false;dpcRoleSchedule(holder,state);});
                 dpcRoleObserver?.observe(holder);dpcRoleMutation.observe(app,{childList:true,subtree:true});
             }catch{host.remove();}
         });
