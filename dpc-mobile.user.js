@@ -2,7 +2,7 @@
 // ==UserScript==
 // @name DPChallenge Mobile — Editorial Gallery
 // @namespace dpc-mobile
-// @version 5.91
+// @version 5.92
 // @updateURL https://raw.githubusercontent.com/Konador/dpc-mobile-restyle/main/dpc-mobile.user.js
 // @downloadURL https://raw.githubusercontent.com/Konador/dpc-mobile-restyle/main/dpc-mobile.user.js
 // @match *://*.dpchallenge.com/challenge_vote_image.php*
@@ -1505,7 +1505,7 @@ html.dpc-viewing body {
     const dpcRoleActive=new Map();
     const dpcRoleProp=k=>({a:0,k});
     const dpcRoleKeys=(frames)=>({a:1,k:frames.map(([t,v],i)=>i===frames.length-1?{t,s:Array.isArray(v)?v:[v]}:{t,s:Array.isArray(v)?v:[v],i:{x:.33,y:1},o:{x:.67,y:0}})});
-    function dpcRoleData(role){
+    function dpcRoleData(role,variant=''){
         const p=dpcRoleProp,k=dpcRoleKeys;
         const rgb=h=>[1,3,5].map(i=>parseInt(h.slice(i,i+2),16)/255);
         const palette=({'Registered User':['#c8cbd2','#727783'],'Member':['#a9a3ff','#5047bc'],'Site Council':['#d0a6ed','#7950a8'],'Administrator':['#ffe28b','#b78522']})[role];
@@ -1525,13 +1525,13 @@ html.dpc-viewing body {
             return {ty:'sh',ks:p({v,i,o,c:closed})};
         }
         const stroke=(c,w,opacity=100)=>({ty:'st',c:p(rgb(c)),o:p(opacity),w:p(w),lc:2,lj:2});
-        const gradient=(sh,colors,from,to,w=11)=>({ty:'gr',it:[sh,{ty:'gf',o:p(100),r:1,t:1,s:p(from),e:p(to),g:{p:colors.length,k:p(colors.flatMap(([x,c])=>[x,...rgb(c)]))}},stroke('#121319',w),tr()]});
+        const gradient=(sh,colors,from,to,w=17)=>({ty:'gr',it:[sh,{ty:'gf',o:p(100),r:1,t:1,s:p(from),e:p(to),g:{p:colors.length,k:p(colors.flatMap(([x,c])=>[x,...rgb(c)]))}},stroke('#121319',w),tr()]});
         const ell=(x,y,w,h,c)=>({ty:'gr',it:[{ty:'el',p:p([x,y]),s:p([w,h])},{ty:'fl',c:p(rgb(c)),o:p(100),r:1},tr()]});
-        const line=(a,b)=>({ty:'gr',it:[outline(a,[[b]],false),stroke(palette[1],6,70),tr()]});
+        const line=(a,b)=>({ty:'gr',it:[outline(a,[[b]],false),stroke(palette[1],8,80),tr()]});
         const silver=[[0,'#f0f2f6'],[.5,'#c7cbd5'],[1,'#9299a9']];
         const c=53*.5522847498;
         const face=gradient(outline([57,82],[[[57,82-c],[110-c,29],[110,29]],[[110+c,29],[163,82-c],[163,82]],[[163,82+c],[110+c,135],[110,135]],[[110-c,135],[57,82+c],[57,82]]]),silver,[72,29],[148,135]);
-        const hair=gradient(outline([57,82],[[[57,82-c],[110-c,29],[110,29]],[[110+c,29],[163,82-c],[163,82]],[[153,76],[151,58],[145,53]],[[118,76],[88,50],[70,67]],[[65,76],[57,82]]]),[[0,'#b5bbc7'],[1,'#697181']],[68,29],[153,82],9);
+        const hair=gradient(outline([57,82],[[[57,82-c],[110-c,29],[110,29]],[[110+c,29],[163,82-c],[163,82]],[[153,76],[151,58],[145,53]],[[118,76],[88,50],[70,67]],[[65,76],[57,82]]]),[[0,'#b5bbc7'],[1,'#697181']],[68,29],[153,82],14);
         const neck=gradient(outline([89,122],[[[131,122]],[[131,136]],[[110,152]],[[89,136]],[[89,122]]]),silver,[95,122],[125,152]);
         const shirt=gradient(outline([35,185],[[[35,173]],[[35,141],[110,133]],[[185,141],[185,173]],[[185,185]],[[185,191],[179,191]],[[41,191]],[[35,191],[35,185]]]),[[0,palette[0]],[1,palette[1]]],[50,133],[170,191]);
         // All actions start and finish at the same resting pose, including the single idle loop.
@@ -1543,7 +1543,36 @@ html.dpc-viewing body {
         const headPos=k([[0,[110,130]],[5,[110,128]],[9,[110,132]],[16,[110,130]],[30,[110,130]],[36,[110,126]],[44,[110,140]],[50,[110,128]],[58,[110,131]],[66,[110,130]],[72,[110,130]],[80,[110,130]],[90,[110,128]],[97,[110,130]],[102,[110,130]],[132,[110,127]],[162,[110,130]],[192,[110,127]],[222,[110,130]],[223,[110,130]],[229,[113,130]],[236,[105,130]],[243,[115,130]],[250,[108,130]],[259,[110,130]],[267,[110,133]],[271,[110,128]],[280,[110,133]],[284,[110,128]],[295,[110,130]],[303,[107,133]],[310,[115,124]],[321,[115,124]],[330,[109,132]],[337,[110,130]],[345,[110,138]],[352,[110,116]],[359,[110,125]],[364,[110,134]],[371,[110,128]],[379,[110,130]],[385,[110,132]],[395,[110,128]],[405,[110,128]],[413,[110,131]],[421,[110,130]]]);
         const headScale=k([[0,[100,100]],[5,[98,104]],[9,[106,94]],[16,[100,100]],[30,[100,100]],[36,[96,105]],[44,[109,88]],[50,[97,104]],[58,[101,99]],[66,[100,100]],[72,[102,98]],[80,[98,103]],[90,[100,100]],[102,[100,100]],[132,[98,104]],[162,[100,100]],[192,[102,97]],[222,[100,100]],[223,[100,100]],[229,[102,98]],[236,[98,102]],[243,[98,102]],[250,[101,99]],[259,[100,100]],[267,[104,95]],[271,[98,103]],[280,[104,95]],[284,[98,103]],[295,[100,100]],[303,[106,93]],[310,[96,106]],[321,[98,103]],[330,[102,98]],[337,[100,100]],[345,[114,84]],[352,[89,113]],[359,[97,103]],[364,[108,91]],[371,[97,104]],[379,[100,100]],[385,[104,96]],[395,[97,104]],[405,[99,102]],[413,[102,98]],[421,[100,100]]]);
         const rot=k([[0,0],[30,0],[66,0],[72,-5],[80,15],[88,12],[96,-4],[102,0],[132,-3],[162,0],[192,3],[222,0],[223,0],[229,6],[236,-15],[243,15],[250,-7],[259,0],[295,0],[303,-4],[310,8],[321,8],[330,-3],[337,0],[345,-3],[352,4],[364,-3],[379,0],[385,6],[395,-17],[405,-13],[413,5],[421,0]]);
-        const head={ty:'gr',it:[eyes,hair,face,tr(headPos,[110,130],headScale,rot)]};
+        // Pigtails attach at the temples and follow the head, with independent delayed,
+        // damped rotation and tip flex. All action boundaries return to gravity's rest pose.
+        const tails=[];
+        if(variant==='_F'){
+            const boundaries=[0,30,66,102,222,223,259,295,337,379,421];
+            const sample=(frames,t)=>{for(let j=1;j<frames.length;j++){if(t<=frames[j][0]){const a=frames[j-1],b=frames[j],f=Math.max(0,Math.min(1,(t-a[0])/(b[0]-a[0])));return a[1].map((v,n)=>v+(b[1][n]-v)*f);}}return frames.at(-1)[1];};
+            for(const side of [-1,1]){
+                const root=[110+side*45,69];
+                const point=(x,y)=>[root[0]+side*x,root[1]+y];
+                const tail=gradient(outline(point(0,-5),[[point(17,-5),point(28,9),point(29,23)],[point(30,34),point(38,43),point(41,43)],[point(31,53),point(12,49),point(10,35)],[point(7,22),point(12,12),point(0,-5)]]),[[0,'#b5bbc7'],[1,'#697181']],point(0,0),point(34,49),13);
+                const tie=ell(root[0],root[1]+2,13,13,palette[1]);
+                const angles=[],flex=[];
+                let angle=0,velocity=0,stretch=0,stretchVelocity=0;
+                for(let t=0;t<=421;t++){
+                    if(boundaries.includes(t)){angle=velocity=stretch=stretchVelocity=0;}
+                    else{
+                        const prev=sample(headPos.k.map(x=>[x.t,x.s]),Math.max(0,t-1)),now=sample(headPos.k.map(x=>[x.t,x.s]),t);
+                        const rp=sample(rot.k.map(x=>[x.t,x.s]),Math.max(0,t-1))[0],rn=sample(rot.k.map(x=>[x.t,x.s]),t)[0];
+                        const target=-(rn-rp)*5-(now[0]-prev[0])*2.4+side*(now[1]-prev[1])*3.2;
+                        velocity=(velocity+(target-angle)*.24)*.73;angle+=velocity;
+                        const targetStretch=-(now[1]-prev[1])*2.2;
+                        stretchVelocity=(stretchVelocity+(targetStretch-stretch)*.22)*.70;stretch+=stretchVelocity;
+                    }
+                    const next=boundaries.find(x=>x>=t)??421,settle=Math.min(1,(next-t)/4);
+                    if(t%2===0||boundaries.includes(t)){angles.push([t,Math.max(-34,Math.min(34,angle))*settle]);flex.push([t,[100-stretch*.45*settle,100+stretch*settle]]);}
+                }
+                tails.push({ty:'gr',it:[tie,tail,tr(root,root,k(flex),k(angles))]});
+            }
+        }
+        const head={ty:'gr',it:[eyes,hair,face,...tails,tr(headPos,[110,130],headScale,rot)]};
         const torso={ty:'gr',it:[line([66,175],[66,189]),line([154,175],[154,189]),neck,shirt,tr()]};
         // Extra vertical room for overshoot, without changing the approved artwork.
         return {v:'5.12.2',fr:30,ip:0,op:422,w:220,h:205,nm:'DPC approved member character',ddd:0,assets:[],layers:[{ddd:0,ind:1,ty:4,nm:'Character',sr:1,ks:{o:p(100),r:p(0),p:p([0,0,0]),a:p([0,0,0]),s:p([100,100,100])},ao:0,shapes:[head,torso],ip:0,op:422,st:0,bm:0}]};
@@ -1575,14 +1604,14 @@ html.dpc-viewing body {
     function dpcRoleArtwork(im){
         const info=dpcRoleInfo(im);if(!info)return null;
         const clone=im.cloneNode();clone.removeAttribute('style');clone.removeAttribute('width');clone.removeAttribute('height');clone.classList.add('dpc-role-icon','dpc-role-original');
-        if(info.custom||info.variant||!window.lottie?.loadAnimation)return clone;
+        if(info.custom||(info.variant&&info.variant!=='_F')||!window.lottie?.loadAnimation)return clone;
         const holder=document.createElement('span');holder.className='dpc-role-icon';holder.title=info.role;holder.setAttribute('role','img');holder.setAttribute('aria-label',info.role);
         holder.append(clone);
         queueMicrotask(()=>{
             if(!holder.isConnected)return;
             const host=document.createElement('span');host.className='dpc-role-lottie';holder.append(host);
             try{
-                const anim=window.lottie.loadAnimation({container:host,renderer:'svg',loop:false,autoplay:false,animationData:dpcRoleData(info.role),rendererSettings:{preserveAspectRatio:'xMidYMid meet',progressiveLoad:false}});
+                const anim=window.lottie.loadAnimation({container:host,renderer:'svg',loop:false,autoplay:false,animationData:dpcRoleData(info.role,info.variant),rendererSettings:{preserveAspectRatio:'xMidYMid meet',progressiveLoad:false}});
                 const state={anim,visible:!dpcRoleObserver,ready:false,timer:null};holder.dpcRoleState=state;dpcRoleActive.set(holder,state);
                 anim.addEventListener('DOMLoaded',()=>{if(!holder.isConnected)return;state.ready=true;anim.goToAndStop(0,true);clone.remove();dpcRoleSchedule(holder,state);});
                 anim.addEventListener('loopComplete',()=>{
