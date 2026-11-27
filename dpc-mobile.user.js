@@ -2,7 +2,7 @@
 // ==UserScript==
 // @name DPChallenge Mobile — Editorial Gallery
 // @namespace dpc-mobile
-// @version 6.16
+// @version 6.17
 // @updateURL https://raw.githubusercontent.com/Konador/dpc-mobile-restyle/main/dpc-mobile.user.js
 // @downloadURL https://raw.githubusercontent.com/Konador/dpc-mobile-restyle/main/dpc-mobile.user.js
 // @match *://*.dpchallenge.com/challenge_vote_image.php*
@@ -4471,8 +4471,10 @@ html.dpc-viewing body {
             const noun=initialPosts.length?'posts':'threads',visited=new Set();
             const states=[{direction:1,url:nextPage(document,location.href,1),busy:false},{direction:-1,url:initialPosts.length?nextPage(document,location.href,-1):'',busy:false}];
             const total=clean(document.body).match(/Showing (?:posts|threads)\s+[\d,]+\s*-\s*[\d,]+\s+of\s+([\d,]+)/i);
+            const nativeReply=initialPosts.length&&actionLinks.find(a=>/^(?:post (?:a )?reply|reply)$/i.test(label(a))&&!a.closest('.dpc-forum-message,.dpc-forum-actions')&&href(a));
             const status=make('div','dpc-forum-meta');status.style.textAlign='center';
-            const updateStatus=()=>{status.textContent=known.size.toLocaleString()+(total?' of '+total[1]:'')+' '+noun+' loaded';};updateStatus();feed.after(status);
+            const updateStatus=()=>{status.textContent=initialPosts.length&&!states[0].url?'End of thread'+(total?' · '+Number(total[1].replace(/,/g,'')).toLocaleString()+' posts in total':''):known.size.toLocaleString()+' '+noun+' loaded'+(total?' · '+Number(total[1].replace(/,/g,'')).toLocaleString()+' total':'');};updateStatus();feed.after(status);
+            if(nativeReply){const bottom=make('div','dpc-forum-nav dpc-forum-toolbar');bottom.style.justifyContent='center';const reply=link(nativeReply,'Reply to thread');reply.classList.add('dpc-forum-primary');bottom.append(reply);status.after(bottom);}
             let loading=false;
             for(const state of states){
                 const more=make('button','dpc-forum-more',state.direction===1?'Load more '+noun:'Load earlier posts');more.type='button';
@@ -4500,7 +4502,7 @@ html.dpc-viewing body {
                         updateStatus();ok=true;
                         more.textContent=state.url?(state.direction===1?'Load more '+noun:'Load earlier posts'):(state.direction===1?'End of '+(initialPosts.length?'thread':'forum'):'Start of thread');
                     }catch{more.textContent='Retry loading '+noun;observer?.unobserve(more);}
-                    finally{loading=state.busy=false;more.disabled=!state.url;if(ok&&state.url&&state.direction===1){observer?.unobserve(more);observer?.observe(more);}else if(!state.url)observer?.unobserve(more);}
+                    finally{loading=state.busy=false;more.disabled=!state.url;if(ok&&!state.url)more.hidden=true;if(ok&&state.url&&state.direction===1){observer?.unobserve(more);observer?.observe(more);}else if(!state.url)observer?.unobserve(more);}
                 }
                 more.onclick=load;
                 if(state.direction===1&&typeof IntersectionObserver==='function'){observer=new IntersectionObserver(entries=>{if(entries.some(e=>e.isIntersecting))load();},{rootMargin:'500px'});if(state.url)observer.observe(more);}
