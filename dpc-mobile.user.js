@@ -2,7 +2,7 @@
 // ==UserScript==
 // @name DPChallenge Mobile — Editorial Gallery
 // @namespace dpc-mobile
-// @version 6.14
+// @version 6.15
 // @updateURL https://raw.githubusercontent.com/Konador/dpc-mobile-restyle/main/dpc-mobile.user.js
 // @downloadURL https://raw.githubusercontent.com/Konador/dpc-mobile-restyle/main/dpc-mobile.user.js
 // @match *://*.dpchallenge.com/challenge_vote_image.php*
@@ -1664,7 +1664,7 @@ html.dpc-viewing body {
                         const xx=x*Math.cos(a)+z*Math.sin(a),zz=z*Math.cos(a)-x*Math.sin(a);
                         const px=110+53*xx,py=82+53*(y*Math.cos(b)-zz*Math.sin(b));
                         // Preserve the resting outline; clamp facial hair to the jaw.
-                        if(beard){const dx=px-110,dy=py-82,len=Math.hypot(dx,dy),f=Math.min(1,54/Math.max(1,len));return [110+dx*f,82+dy*f];}
+                        if(beard){const dx=px-110,dy=py-82,len=Math.hypot(dx,dy),f=Math.min(1,59/Math.max(1,len));return [110+dx*f,82+dy*f];}
                         return [px,py];
                     };
                     const at=t=>{
@@ -1687,10 +1687,12 @@ html.dpc-viewing body {
                     [[63,66],[66,86],[59,96]],[[51,94],[49,89],[53,83]]
                 ]),browns,[66,12],[154,94],9);
                 const locks=[
-                    [[60,51],[[[48,35],[71,18],[91,25]],[[98,37],[83,42],[74,53]],[[72,61],[76,66],[71,70]],[[62,64],[63,55],[60,51]]]],
-                    [[82,29],[[[85,13],[109,12],[120,23]],[[125,37],[113,43],[106,52]],[[101,59],[104,64],[98,68]],[[88,61],[94,46],[82,29]]]],
-                    [[113,25],[[[123,10],[147,19],[151,35]],[[152,46],[141,48],[137,57]],[[134,65],[140,70],[132,73]],[[121,64],[129,48],[113,25]]]],
-                    [[145,36],[[[161,25],[173,45],[166,57]],[[159,67],[168,75],[160,83]],[[150,76],[148,64],[153,55]],[[156,48],[150,43],[145,36]]]]
+                    [[69,48],[[[53,50],[40,38],[45,24]],[[48,35],[61,36],[69,28]],[[77,19],[67,12],[65,7]],[[86,10],[94,29],[80,40]],[[76,44],[72,46],[69,48]]]],
+                    [[87,40],[[[76,28],[83,18],[91,14]],[[99,9],[98,1],[95,-4]],[[114,2],[120,16],[108,27]],[[102,34],[104,42],[99,47]],[[94,44],[90,42],[87,40]]]],
+                    [[112,39],[[[105,25],[113,17],[126,17]],[[137,16],[142,7],[137,0]],[[157,5],[156,25],[143,31]],[[135,35],[133,44],[129,48]],[[122,46],[116,42],[112,39]]]],
+                    [[140,46],[[[137,34],[151,28],[161,31]],[[171,35],[181,28],[180,20]],[[193,36],[182,51],[168,51]],[[158,51],[159,63],[153,65]],[[148,59],[143,52],[140,46]]]],
+                    [[61,66],[[[47,66],[37,56],[37,45]],[[42,51],[48,53],[55,49]],[[67,43],[74,54],[69,62]],[[65,68],[63,70],[61,66]]]],
+                    [[158,69],[[[149,56],[162,49],[173,56]],[[181,62],[187,57],[189,51]],[[194,67],[181,79],[170,73]],[[165,70],[160,73],[158,69]]]]
                 ];
                 const hairParts=locks.map(([start,segs],j)=>{
                     const part=wrapShape(gradient(outline(start,segs),[[0,j%2?'#b18a60':'#99714b'],[1,'#513625']],[start[0]-8,20],[start[0]+20,76],5),.95);
@@ -1724,7 +1726,7 @@ html.dpc-viewing body {
                 // Rear crown stays behind the silver head; separate front roots
                 // provide coverage without a single large front-facing hair slab.
                 costumeBehind.push(wrapShape(back,.25));
-                const crown=gradient(outline([57,48],[[[52,30],[74,14],[90,22]],[[99,9],[119,12],[128,21]],[[147,13],[166,28],[163,46]],[[148,53],[132,43],[121,40]],[[103,49],[83,43],[70,55]],[[61,59],[57,48]]]),browns,[70,15],[150,56],6);
+                const crown=gradient(outline([57,48],[[[52,30],[74,14],[90,22]],[[99,9],[119,12],[128,21]],[[147,13],[166,28],[163,46]],[[153,52],[146,44],[135,49]],[[125,57],[116,43],[107,49]],[[96,56],[86,46],[76,54]],[[65,59],[57,48]]]),browns,[70,15],[150,56],6);
                 costumeHead.unshift(...hairParts,wrapShape(crown,.65));
                 // Reveal additional crown curls when looking down, with separate
                 // depth and occlusion rather than stretching the front fringe.
@@ -1734,26 +1736,31 @@ html.dpc-viewing body {
                     const ct=tr();ct.o=k(depthTimes.map(t=>[t,Math.min(100,Math.max(0,pitchAt(t))*145)]));
                     costumeHead.unshift({ty:'gr',it:[crownLock,ct]});
                 }
-                const beard=gradient(outline([65,101],[
-                    [[73,114],[83,120],[92,121]],[[98,117],[104,118],[110,121]],
-                    [[116,118],[122,117],[128,121]],[[137,120],[147,114],[155,101]],
-                    [[153,120],[138,133],[124,136]],[[115,139],[105,139],[96,136]],
-                    [[82,133],[67,120],[65,101]]
-                ]),browns,[82,105],[134,137],4);
-                costumeHead.push(wrapShape(beard,1,true));
-                const moustache=gradient(outline([91,112],[[[95,105],[104,104],[110,108]],[[116,104],[125,105],[129,112]],[[119,113],[114,112],[110,112]],[[106,112],[101,113],[91,112]]]),browns,[97,105],[124,113],2);
+                // Full-width close beard: connected sideburns, cheeks and jaw.
+                const beard=gradient(outline([57,88],[
+                    [[62,89],[67,96],[68,105]],[[73,112],[85,113],[92,117]],
+                    [[101,119],[119,119],[128,117]],[[135,113],[147,112],[152,105]],
+                    [[153,96],[158,89],[163,88]],[[164,108],[153,123],[139,132]],
+                    [[124,143],[96,143],[81,132]],[[67,123],[56,108],[57,88]]
+                ]),browns,[72,96],[146,137],5);
+                costumeHead.push(wrapShape(beard,.95,true));
+                const moustache=gradient(outline([83,111],[[[91,104],[101,103],[110,107]],[[119,103],[129,104],[137,111]],[[128,116],[118,115],[110,112]],[[102,115],[92,116],[83,111]]]),browns,[91,104],[129,116],2);
                 costumeHead.unshift(wrapShape(moustache,1,true));
                 // One continuous flame print, flush with the inside of the hem.
-                const fire=outline([43,182],[
-                    [[45,170],[58,171],[59,156]],[[69,164],[62,170],[73,173]],
-                    [[85,177],[87,158],[94,150]],[[106,159],[96,170],[110,174]],
-                    [[122,176],[120,164],[132,154]],[[140,163],[130,171],[144,173]],
-                    [[154,174],[158,165],[161,160]],[[170,170],[174,174],[177,182]],
-                    [[177,187]],[[43,187]],[[43,182]]
+                const fire=outline([35,185],[
+                    [[39,171],[49,174],[52,158]],[[62,165],[51,176],[67,177]],
+                    [[82,178],[74,158],[89,151]],[[87,163],[103,168],[99,179]],
+                    [[118,177],[105,160],[124,146]],[[121,161],[140,166],[137,177]],
+                    [[151,176],[151,164],[158,157]],[[158,169],[179,169],[185,185]],
+                    [[185,191],[179,191]],[[41,191]],[[35,191],[35,185]]
                 ]);
-                costumeBody.push(gradient(fire,[[0,'#e63323'],[.48,'#ff7818'],[1,'#ffd443']],[110,150],[110,187],0));
-                // Keep bottom contour on top so the print meets the hem cleanly.
-                costumeBody.unshift({ty:'gr',it:[outline([41,191],[[[179,191]]],false),stroke('#121319',17),tr()]});
+                costumeBody.push(gradient(fire,[[0,'#e63323'],[.48,'#ff7818'],[1,'#ffd443']],[110,150],[110,191],0));
+                // Smaller inner flame tongues add the yellow cores of the print.
+                const inner=outline([46,191],[[[50,182],[59,183],[61,174]],[[65,184],[78,185],[84,172]],[[88,182],[96,185],[107,174]],[[115,183],[124,178],[128,167]],[[132,182],[143,184],[153,175]],[[159,182],[169,185],[174,191]],[[46,191]]]);
+                costumeBody.unshift(gradient(inner,[[0,'#ff9d1b'],[1,'#ffe453']],[110,169],[110,191],0));
+                // Redraw the outer sides, but use only a thin bottom keyline so
+                // the print visibly reaches the very bottom of the shirt.
+                costumeBody.unshift({ty:'gr',it:[outline([35,178],[[[35,185]],[[35,191],[41,191]],[[179,191]],[[185,191],[185,185]],[[185,178]]],false),stroke('#121319',5),tr()]});
             }
             if(skin==='paul'){
                 // Dark shoulder yoke over the original bright green jersey.
@@ -1826,7 +1833,7 @@ html.dpc-viewing body {
         const head={ty:'gr',it:[...(neutral?[...(admin?[shades]:[]),pawnHead]:[...((skin==='bat'||skin==='konador')?[shades,...costumeHead]:[...costumeHead,admin||skin?shades:eyes]),...(!skin||skin==='bear'?[hair]:[]),face,...tails,...costumeBehind]),tr(turnHeadPos,[110,130],turnHeadScale,turnRot)]};
         const torso={ty:'gr',it:[...(neutral?[pawnBody]:[...costumeBody,line([66,175],[66,189]),line([154,175],[154,189]),neck,shirt]),tr()]};
         // Extra vertical room for overshoot, without changing the approved artwork.
-        return {v:'5.12.2',fr:30,ip:0,op:555,w:220,h:skin==='general'?235:skin==='chef'?265:skin==='konador'?225:205,nm:'DPC approved member character',ddd:0,assets:[],layers:[{ddd:0,ind:1,ty:4,nm:'Character',sr:1,ks:{o:p(100),r:p(0),p:p([0,skin==='general'?30:skin==='chef'?60:skin==='konador'?20:0,0]),a:p([0,0,0]),s:p([100,100,100])},ao:0,shapes:[head,torso],ip:0,op:555,st:0,bm:0}]};
+        return {v:'5.12.2',fr:30,ip:0,op:555,w:220,h:skin==='general'?235:skin==='chef'?265:skin==='konador'?235:205,nm:'DPC approved member character',ddd:0,assets:[],layers:[{ddd:0,ind:1,ty:4,nm:'Character',sr:1,ks:{o:p(100),r:p(0),p:p([0,skin==='general'?30:skin==='chef'?60:skin==='konador'?30:0,0]),a:p([0,0,0]),s:p([100,100,100])},ao:0,shapes:[head,torso],ip:0,op:555,st:0,bm:0}]};
     }
     const dpcRoleObserver=typeof IntersectionObserver==='function'?new IntersectionObserver(entries=>{
         for(const e of entries){const state=e.target.dpcRoleState;if(!state)continue;state.visible=e.isIntersecting;if(state.visible)dpcRoleSchedule(e.target,state);else dpcRoleStop(state);}
