@@ -2,7 +2,7 @@
 // ==UserScript==
 // @name DPChallenge Mobile — Editorial Gallery
 // @namespace dpc-mobile
-// @version 6.02
+// @version 6.03
 // @updateURL https://raw.githubusercontent.com/Konador/dpc-mobile-restyle/main/dpc-mobile.user.js
 // @downloadURL https://raw.githubusercontent.com/Konador/dpc-mobile-restyle/main/dpc-mobile.user.js
 // @match *://*.dpchallenge.com/challenge_vote_image.php*
@@ -1499,6 +1499,7 @@ html.dpc-viewing body {
         const customId=path.match(/^\/images\/user_icon\/user_id\/(\d+)\.gif$/i)?.[1];
         const councilSkin=({'1031':'general','69684':'chef','100393':'paul'})[customId];
         if(councilSkin)return {role:'Site Council',variant:'',skin:councilSkin};
+        if(customId==='19825'||customId==='30861'||customId==='30049')return {role:'Administrator',variant:'',skin:customId==='19825'?'bat':customId==='30861'?'bear':''};
         // DPC also serves administrator artwork under custom filenames. Its native
         // role label is authoritative; keep the custom Council exception separate.
         if([im.alt,im.title].some(v=>/^Administrator(?:\s+(?:Male|Female|Neutral))?$/i.test((v||'').trim()))){
@@ -1517,7 +1518,7 @@ html.dpc-viewing body {
     function dpcRoleData(role,variant='',skin=''){
         const p=dpcRoleProp,k=dpcRoleKeys;
         const rgb=h=>[1,3,5].map(i=>parseInt(h.slice(i,i+2),16)/255);
-        const palette=(skin?({general:['#454477','#181831'],chef:['#ffffff','#c5c9d2'],paul:['#8ce83c','#28920c']})[skin]:null)||({'Registered User':['#c8cbd2','#727783'],'Member':['#a9a3ff','#5047bc'],'Site Council':['#d0a6ed','#7950a8'],'Administrator':['#ffe28b','#b78522']})[role];
+        const palette=(skin?({general:['#454477','#181831'],chef:['#ffffff','#c5c9d2'],paul:['#8ce83c','#28920c'],bat:['#383a43','#101116'],bear:['#ffffff','#c9cbd1']})[skin]:null)||({'Registered User':['#c8cbd2','#727783'],'Member':['#a9a3ff','#5047bc'],'Site Council':['#d0a6ed','#7950a8'],'Administrator':['#ffe28b','#b78522']})[role];
         const tr=(pos=[0,0],anchor=[0,0],scale=[100,100],rot=0)=>({ty:'tr',p:Array.isArray(pos)?p(pos):pos,a:p(anchor),s:Array.isArray(scale)?p(scale):scale,r:typeof rot==='number'?p(rot):rot,o:p(100),sk:p(0),sa:p(0)});
         // Convert the approved SVG's exact cubic/quadratic geometry into Bodymovin paths.
         function outline(start,segments,closed=true){
@@ -1538,8 +1539,8 @@ html.dpc-viewing body {
         const ell=(x,y,w,h,c)=>({ty:'gr',it:[{ty:'el',p:p([x,y]),s:p([w,h])},{ty:'fl',c:p(rgb(c)),o:p(100),r:1},tr()]});
         const line=(a,b)=>({ty:'gr',it:[outline(a,[[b]],false),stroke(palette[1],8,80),tr()]});
         const admin=role==='Administrator',neutral=variant==='_N';
-        const silver=admin?[[0,'#fff0ae'],[.5,'#e6bb50'],[1,'#b78522']]:[[0,'#f0f2f6'],[.5,'#c7cbd5'],[1,'#9299a9']];
-        const hairColors=admin?[[0,'#c99a35'],[1,'#85601b']]:[[0,'#b5bbc7'],[1,'#697181']];
+        const silver=admin&&!skin?[[0,'#fff0ae'],[.5,'#e6bb50'],[1,'#b78522']]:[[0,'#f0f2f6'],[.5,'#c7cbd5'],[1,'#9299a9']];
+        const hairColors=admin&&!skin?[[0,'#c99a35'],[1,'#85601b']]:[[0,'#b5bbc7'],[1,'#697181']];
         const c=53*.5522847498;
         const face=gradient(outline([57,82],[[[57,82-c],[110-c,29],[110,29]],[[110+c,29],[163,82-c],[163,82]],[[163,82+c],[110+c,135],[110,135]],[[110-c,135],[57,82+c],[57,82]]]),silver,[72,29],[148,135]);
         const hair=gradient(outline([57,82],[[[57,82-c],[110-c,29],[110,29]],[[110+c,29],[163,82-c],[163,82]],[[153,76],[151,58],[145,53]],[[118,76],[88,50],[70,67]],[[65,76],[57,82]]]),hairColors,[68,29],[153,82],14);
@@ -1636,7 +1637,7 @@ html.dpc-viewing body {
             }
         }
         // Sunglasses are a rigid facial accessory: follow gaze projection, not eyelid squash.
-        const lens=(x)=>({ty:'gr',it:[outline([x-16,77],[[[x+16,77]],[[x+16,87],[x+12,96],[x,96]],[[x-12,96],[x-16,87],[x-16,77]]]),{ty:'fl',c:p(rgb('#292319')),o:p(100),r:1},stroke('#121319',6),tr()]});
+        const lens=(x)=>({ty:'gr',it:[outline([x-16,77],[[[x+16,77]],[[x+16,87],[x+12,96],[x,96]],[[x-12,96],[x-16,87],[x-16,77]]]),{ty:'fl',c:p(rgb(skin==='bear'?'#d92935':skin==='bat'?'#f7f8fc':'#292319')),o:p(100),r:1},stroke('#121319',6),tr()]});
         const shades={ty:'gr',it:[{ty:'gr',it:[outline([101,82],[[[119,82]]],false),stroke('#121319',7),tr()]},lens(87),lens(133),{ty:'gr',it:[outline([58,78],[[[162,78]]],false),stroke('#121319',6),tr()]},tr(addKeys(eyePos,turnTimes.map(t=>[t,[110+23*yawAt(t),87+19*pitchAt(t)]])),[110,87],k([[0,[100,100]],[421,[100,100]],...turnTimes.map(t=>[t,[100-28*Math.abs(yawAt(t)),100-12*Math.abs(pitchAt(t))]])]))]};
         // Council costume layers use the existing head/torso rig, with independent hat
         // inertia and perspective. The original GIF remains the load-failure fallback.
@@ -1663,7 +1664,7 @@ html.dpc-viewing body {
                 costumeBody.push(form([89,137],[[[110,151]],[[131,137]],[[130,151]],[[110,163]],[[90,151]],[[89,137]]],'#f8f9fc',5));
                 for(const x of [98,122])for(const y of [172,185])costumeBody.push(ell(x,y,7,7,'#555961'));
             }
-            if(skin!=='paul'){
+            if(skin==='general'||skin==='chef'){
                 const hatShapes=[];
                 if(skin==='general'){
                     const hatOutline=outline([42,78],[[[36,67],[48,58],[61,47]],[[76,32],[80,5],[110,5]],[[140,5],[144,32],[159,47]],[[172,58],[184,67],[178,78]],[[148,71],[110,72]],[[72,71],[42,78]]]);
@@ -1691,22 +1692,26 @@ html.dpc-viewing body {
                     if(t%2===0||boundaries.includes(t)){
                         const end=boundaries.find(x=>x>=t)??554,settle=Math.min(1,(end-t)/5),yaw=yawAt(t),pitch=pitchAt(t);
                         angles.push([t,a*settle*(skin==='chef'?1.15:.7)+yaw*5]);
-                        scales.push([t,[100-19*Math.abs(yaw)-b*.4*settle,100+b*settle*(skin==='chef'?1.5:.4)-8*Math.abs(pitch)]]);
+                        scales.push([t,[125-19*Math.abs(yaw)-b*.4*settle,135+b*settle*(skin==='chef'?1.5:.4)-8*Math.abs(pitch)]]);
                         positions.push([t,[110+18*yaw,65+10*pitch-b*.4*settle]]);
                     }
                 }
                 costumeHead.push({ty:'gr',it:[...hatShapes,tr(k(positions),[110,65],k(scales),k(angles))]});
             }
         }
+        if(skin==='bat'){
+            const mask=gradient(outline([57,95],[[[49,65]],[[51,8]],[[76,35]],[[110,27],[144,35]],[[169,8]],[[171,65]],[[163,95]],[[145,109]],[[145,100]],[[75,100]],[[75,109]],[[57,95]]]),[[0,'#3a3c46'],[1,'#101116']],[68,12],[150,105],10);
+            costumeHead.push(mask);
+        }
         // Neutral icons are abstract pawns, not bald human characters. Use one
         // continuous body mass, no face, collar, shoulder seams or separate neck.
         const pawnColors=[[0,palette[0]],[1,palette[1]]];
         const pawnHead=gradient(outline([57,82],[[[57,82-c],[110-c,29],[110,29]],[[110+c,29],[163,82-c],[163,82]],[[163,82+c],[110+c,135],[110,135]],[[110-c,135],[57,82+c],[57,82]]]),pawnColors,[72,29],[148,135]);
         const pawnBody=gradient(outline([35,191],[[[35,157],[68,138],[96,124]],[[110,119],[124,124]],[[152,138],[185,157],[185,191]],[[35,191]]]),pawnColors,[65,124],[155,191]);
-        const head={ty:'gr',it:[...(neutral&&!admin?[pawnHead]:[...costumeHead,admin||skin?shades:eyes,...(neutral||skin?[]:[hair]),face,...tails]),tr(turnHeadPos,[110,130],turnHeadScale,turnRot)]};
-        const torso={ty:'gr',it:[...(neutral&&!admin?[pawnBody]:[...costumeBody,line([66,175],[66,189]),line([154,175],[154,189]),neck,shirt]),tr()]};
+        const head={ty:'gr',it:[...(neutral?[...(admin?[shades]:[]),pawnHead]:[...(skin==='bat'?[shades,...costumeHead]:[...costumeHead,admin||skin?shades:eyes]),...(!skin||skin==='bear'?[hair]:[]),face,...tails]),tr(turnHeadPos,[110,130],turnHeadScale,turnRot)]};
+        const torso={ty:'gr',it:[...(neutral?[pawnBody]:[...costumeBody,line([66,175],[66,189]),line([154,175],[154,189]),neck,shirt]),tr()]};
         // Extra vertical room for overshoot, without changing the approved artwork.
-        return {v:'5.12.2',fr:30,ip:0,op:555,w:220,h:skin&&skin!=='paul'?245:205,nm:'DPC approved member character',ddd:0,assets:[],layers:[{ddd:0,ind:1,ty:4,nm:'Character',sr:1,ks:{o:p(100),r:p(0),p:p([0,skin&&skin!=='paul'?40:0,0]),a:p([0,0,0]),s:p([100,100,100])},ao:0,shapes:[head,torso],ip:0,op:555,st:0,bm:0}]};
+        return {v:'5.12.2',fr:30,ip:0,op:555,w:220,h:(skin==='general'||skin==='chef')?265:205,nm:'DPC approved member character',ddd:0,assets:[],layers:[{ddd:0,ind:1,ty:4,nm:'Character',sr:1,ks:{o:p(100),r:p(0),p:p([0,(skin==='general'||skin==='chef')?60:0,0]),a:p([0,0,0]),s:p([100,100,100])},ao:0,shapes:[head,torso],ip:0,op:555,st:0,bm:0}]};
     }
     const dpcRoleObserver=typeof IntersectionObserver==='function'?new IntersectionObserver(entries=>{
         for(const e of entries){const state=e.target.dpcRoleState;if(!state)continue;state.visible=e.isIntersecting;if(state.visible)dpcRoleSchedule(e.target,state);else dpcRoleStop(state);}
