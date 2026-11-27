@@ -2,7 +2,7 @@
 // ==UserScript==
 // @name DPChallenge Mobile — Editorial Gallery
 // @namespace dpc-mobile
-// @version 5.83
+// @version 5.84
 // @updateURL https://raw.githubusercontent.com/Konador/dpc-mobile-restyle/main/dpc-mobile.user.js
 // @downloadURL https://raw.githubusercontent.com/Konador/dpc-mobile-restyle/main/dpc-mobile.user.js
 // @match *://*.dpchallenge.com/challenge_vote_image.php*
@@ -1490,7 +1490,38 @@ html.dpc-viewing body {
         }
     }
 
+    // Role artwork: only replace explicitly recognised legacy assets; retain custom Council artwork.
+    function dpcRoleInfo(im){
+        let path;try{path=new URL(im.getAttribute('src'),location.href).pathname;}catch{return null;}
+        const m=path.match(/^\/images\/(?:user_icon\/)?(1|11|21|31)(_F|_N)?\.gif$/i);
+        const label=[im.alt,im.title].join(' ');
+        if(m)return {role:({'1':'Administrator','11':'Site Council','21':'Member','31':'Registered User'})[m[1]],variant:(m[2]||'').toUpperCase()};
+        if(/\/images\/user_icon\//i.test(path)||/^(?:Site Council|Administrator|Registered User|Member)(?:\s+.*)?$/i.test(label.trim()))return {custom:true};
+        return null;
+    }
+    function dpcRoleArtwork(im){
+        const info=dpcRoleInfo(im);if(!info)return null;
+        if(info.custom){const clone=im.cloneNode();clone.removeAttribute('style');clone.removeAttribute('width');clone.removeAttribute('height');clone.classList.add('dpc-role-icon','dpc-role-original');return clone;}
+        const palettes={'Registered User':['#a9afb9','#686f7c','#d9dde3'],'Member':['#78b4ef','#326db0','#c3e2ff'],'Site Council':['#ba9aef','#7951bd','#e5d7ff'],'Administrator':['#f3c45d','#b77a24','#ffe8aa']};
+        const [light,dark,shine]=palettes[info.role];
+        const holder=document.createElement('span');holder.className='dpc-role-icon';holder.title=info.role;holder.setAttribute('role','img');holder.setAttribute('aria-label',info.role);
+        const female=info.variant==='_F',neutral=info.variant==='_N';
+        const hair=female?'M5 15C1 9 4 2 12 2S23 9 19 17L16 16 16 8 8 8 8 16Z':neutral?'M5 9C5 2 18 1 19 9L15 11 4 10Z':'M5 10C3 5 7 2 12 2L16 1 16 4 20 5 19 10 14 6 9 9Z';
+        holder.innerHTML='<svg viewBox="0 0 24 24" aria-hidden="true"><g stroke="#242630" stroke-width="1.15" stroke-linejoin="round"><path fill="'+dark+'" d="M3 22v-3c0-5 4-7 9-7s9 2 9 7v3Z"/><path fill="'+light+'" stroke="none" d="M5 21v-3c1-3 4-4 7-4s6 1 7 4v3Z"/><path fill="'+dark+'" d="'+hair+'"/><circle cx="12" cy="10" r="5.8" fill="'+shine+'"/><path fill="'+light+'" d="'+hair+'"/><g class="dpc-role-eyes" stroke="none" fill="#282b35"><ellipse cx="10" cy="10.8" rx=".7" ry="1"/><ellipse cx="14" cy="10.8" rx=".7" ry="1"/></g></g></svg>';
+        return holder;
+    }
+    function dpcRoleAttach(target,source){
+        if(!target||!source||target.querySelector('.dpc-role-icon'))return;
+        const im=[...source.querySelectorAll('img')].find(i=>dpcRoleInfo(i));if(!im)return;
+        const icon=dpcRoleArtwork(im);if(icon)target.prepend(icon);
+    }
+    style.textContent += '#dpc-app .dpc-role-icon{display:inline-flex!important;vertical-align:-.17em;width:16px!important;height:16px!important;min-width:16px;max-width:16px!important;margin:0 4px 0 0;object-fit:contain;align-items:center;justify-content:center;flex:none;line-height:1!important;-webkit-text-size-adjust:none;text-size-adjust:none}#dpc-app .dpc-role-icon svg{width:100%!important;height:100%!important;overflow:visible}#dpc-app .dpc-role-eyes{transform-origin:12px 11px;animation:dpc-role-blink 7s ease infinite}@keyframes dpc-role-blink{0%,46%,50%,100%{transform:scaleY(1)}48%{transform:scaleY(.12)}}@media(prefers-reduced-motion:reduce){#dpc-app .dpc-role-eyes{animation:none}}';
+    function dpcRoleReplace(node){
+        for(const im of node.querySelectorAll('img:not(.dpc-role-icon)')){const info=dpcRoleInfo(im);if(info&&!info.custom){const icon=dpcRoleArtwork(im);if(icon)im.replaceWith(icon);}}
+    }
+
     function mount() {
+        dpcRoleReplace(app);
         buildSharedMenu();
         // Explicit home navigation creates a fresh history entry; Back restores the old one.
         for(const a of app.querySelectorAll('.dpc-brand,.dpc-home-menu a[href]')){
@@ -3326,7 +3357,7 @@ html.dpc-viewing body {
         const composer=make('button','dpc-detail-action','Add your comment');composer.type='button';composer.onclick=()=>original(location.href.split('#')[0]+'#post');actionIcon(composer,'comment');comments.append(composer);
         if(thread){let card=null;for(const row of thread.rows){
             const a=row.querySelector('.dpc-forum-author-details a[href*="profile.php"]');
-            if(a){card=make('article','dpc-detail-comment');const head=make('div','dpc-detail-comment-head');const avatar=row.querySelector('.forumpic img');if(avatar){const im=copy(avatar);im.removeAttribute('style');im.loading='lazy';head.append(im);}const meta=make('div');meta.append(copy(a));const actions=row.querySelector('.dpc-forum-actions');if(actions){const time=copy(actions);time.querySelectorAll('span,img,a').forEach(n=>n.remove());meta.append(make('small','',time.textContent.trim()));}head.append(meta);card.append(head);comments.append(card);if(actions){const bar=make('div','dpc-detail-comment-actions');for(const link of actions.querySelectorAll('a[href]')){const label=link.querySelector('img')?.title||link.title||link.textContent.trim()||'Reply';if(/report|spam/i.test(label+' '+link.getAttribute('href')))continue;const b=make('a','',label);b.href=link.href;b.onclick=e=>{e.preventDefault();original(b.href);};actionIcon(b,/edit/i.test(label)?'edit':'reply');bar.append(b);}card.append(bar);}}
+            if(a){card=make('article','dpc-detail-comment');const head=make('div','dpc-detail-comment-head');const avatar=row.querySelector('.forumpic img');if(avatar){const im=copy(avatar);im.removeAttribute('style');im.loading='lazy';head.append(im);}const meta=make('div');const authorLink=copy(a);dpcRoleAttach(authorLink,row.querySelector('.dpc-forum-author-details'));meta.append(authorLink);const actions=row.querySelector('.dpc-forum-actions');if(actions){const time=copy(actions);time.querySelectorAll('span,img,a').forEach(n=>n.remove());meta.append(make('small','',time.textContent.trim()));}head.append(meta);card.append(head);comments.append(card);if(actions){const bar=make('div','dpc-detail-comment-actions');for(const link of actions.querySelectorAll('a[href]')){const label=link.querySelector('img')?.title||link.title||link.textContent.trim()||'Reply';if(/report|spam/i.test(label+' '+link.getAttribute('href')))continue;const b=make('a','',label);b.href=link.href;b.onclick=e=>{e.preventDefault();original(b.href);};actionIcon(b,/edit/i.test(label)?'edit':'reply');bar.append(b);}card.append(bar);}}
             const message=row.querySelector('.dpc-forum-message .forum-post td');if(message&&card){const p=make('div','dpc-detail-prose');for(const n of message.childNodes)p.append(copy(n));card.insertBefore(p,card.querySelector('.dpc-detail-comment-actions'));}
             if(row.querySelector('img[src*="ratings/helpful"]')&&card){let bar=card.querySelector('.dpc-detail-comment-actions');if(!bar){bar=make('div','dpc-detail-comment-actions');card.append(bar);}if(!bar.querySelector('.dpc-detail-helpful'))bar.append(actionIcon(make('small','dpc-detail-helpful','Photographer found comment helpful'),'check'));}
             if(!a&&/Comments Made During the Challenge/i.test(row.textContent)){comments.append(make('h3','dpc-detail-divider','Comments made during the challenge'));card=null;}
@@ -3924,7 +3955,7 @@ html.dpc-viewing body {
                 if(tags.children.length)card.append(tags);
                 const title=link(a,clean(a),base);title.className='dpc-forum-title';card.append(title);
                 const info=make('div','dpc-forum-meta dpc-forum-topic-info');
-                const creator=c[2].querySelector('a[href]');info.append(document.createTextNode('Started by '));if(creator)info.append(link(creator,clean(creator),base));else info.append(document.createTextNode(clean(c[2])));
+                const creator=c[2].querySelector('a[href]');info.append(document.createTextNode('Started by '));if(creator){const name=link(creator,clean(creator),base);dpcRoleAttach(name,c[2]);info.append(name);}else info.append(document.createTextNode(clean(c[2])));
                 info.append(document.createTextNode(' · '+clean(c[3])+' replies'));card.append(info);
                 const last=make('div','dpc-forum-topic-last');last.append(make('span','dpc-forum-meta',clean(c[5])));
                 if(recent){const jump=link(recent,unread?'Unread →':'Last post →',base);jump.className='dpc-forum-jump';last.append(jump);}card.append(last);
@@ -3939,7 +3970,7 @@ html.dpc-viewing body {
                 const key=nativeAnchor?.name||nativeAnchor?.id||[clean(author),clean(act),clean(message)].join('|');
                 if(known.has(key))continue;known.add(key);count++;
                 const card=make('article','dpc-forum-card');if(nativeAnchor&&(nativeAnchor.name||nativeAnchor.id))card.id=nativeAnchor.name||nativeAnchor.id;
-                const person=author.querySelector('a[href*="profile.php"]');const head=person?link(person,clean(person),base):make('strong','',clean(author));head.className='dpc-forum-title';const identity=make('div','dpc-forum-identity');const avatar=authorCell.querySelector('.forumpic img');if(avatar){const im=make('img','dpc-forum-avatar');im.src=new URL(avatar.getAttribute('src'),base).href;im.alt='';im.loading='lazy';identity.append(im);}const who=make('div','dpc-forum-who');who.append(head);identity.append(who);card.append(identity);
+                const person=author.querySelector('a[href*="profile.php"]');const head=person?link(person,clean(person),base):make('strong','',clean(author));head.className='dpc-forum-title';const identity=make('div','dpc-forum-identity');const avatar=authorCell.querySelector('.forumpic img');if(avatar){const im=make('img','dpc-forum-avatar');im.src=new URL(avatar.getAttribute('src'),base).href;im.alt='';im.loading='lazy';identity.append(im);}const who=make('div','dpc-forum-who');dpcRoleAttach(head,author);who.append(head);identity.append(who);card.append(identity);
                 if(act){const copy=act.cloneNode(true);copy.querySelectorAll('.dpc-legacy-forum-actions,img').forEach(n=>n.remove());who.append(make('div','dpc-forum-meta',clean(copy)));}
                 const prose=make('div','dpc-forum-prose');for(const child of message.childNodes)prose.append(child.cloneNode(true));prose.querySelectorAll('script,style,noscript,iframe,object,embed').forEach(n=>n.remove());for(const n of prose.querySelectorAll('*'))for(const a of [...n.attributes])if(/^on/i.test(a.name))n.removeAttribute(a.name);stripGraphics(prose,base);card.append(prose);
                 const actions=make('div','dpc-forum-nav');for(const a of (act||row).querySelectorAll('a[href]')){const t=label(a);if(/reply|quote|edit|report|permalink/i.test(t)&&href(a,base)){const item=link(a,/quote/i.test(t)?'Quote':/edit/i.test(t)?'Edit':t,base);actions.append(item);}}if(actions.children.length)card.append(actions);
@@ -4076,7 +4107,7 @@ html.dpc-viewing body {
                 check.onchange=()=>remove.disabled=!selected.some(c=>c.checked);card.append(check);
                 if(unread)card.append(make('span','dpc-pm-unread'));
                 const a=link(subject.href,'');const meta=make('div','dpc-pm-meta');
-                meta.append(make('span','dpc-pm-person',clean(action==='sent'?cells[2]:cells[1])),make('span','',clean(cells[5])));
+                const personCell=action==='sent'?cells[2]:cells[1],personName=make('span','dpc-pm-person',clean(personCell));dpcRoleAttach(personName,personCell);meta.append(personName,make('span','',clean(cells[5])));
                 a.append(meta,make('h2','',clean(subject)),make('div','dpc-pm-meta',clean(cells[4])));card.append(a);list.append(card);
             }
             if(!listRows.length)list.append(make('p','dpc-pm-meta','No messages.'));
@@ -4090,7 +4121,7 @@ html.dpc-viewing body {
             if(info){
                 const recipients=[...info.querySelectorAll('a[href*="profile.php"]')].map(a=>clean(a)).filter(n=>n.toLowerCase()!==myName);
                 if(recipients.length){const meta=make('div','dpc-pm-thread-meta');meta.append(make('span','dpc-pm-person',[...new Set(recipients)].join(', ')),make('span','dpc-pm-meta',readRows.length+' messages on this page'));body.append(meta);}
-                const details=make('details','dpc-pm-options');details.append(make('summary','','Participants & options'));for(const row of [...info.rows])if(/^Subject:/i.test(clean(row.cells[0])))row.remove();info.querySelectorAll('img[src*="/images/user_icon/"]').forEach(im=>im.remove());const add=info.querySelector('a[onclick*="addUsers"]');if(add){add.textContent='Add participants';add.classList.add('dpc-pm-format-tool');}details.append(info);const reverse=native.querySelector('.dpc-msg-pagination a[href*="order="]');if(reverse&&readRows.length>1)details.append(link(reverse.href,'Reverse message order'));body.append(details);
+                const details=make('details','dpc-pm-options');details.append(make('summary','','Participants & options'));for(const row of [...info.rows])if(/^Subject:/i.test(clean(row.cells[0])))row.remove();dpcRoleReplace(info);const add=info.querySelector('a[onclick*="addUsers"]');if(add){add.textContent='Add participants';add.classList.add('dpc-pm-format-tool');}details.append(info);const reverse=native.querySelector('.dpc-msg-pagination a[href*="order="]');if(reverse&&readRows.length>1)details.append(link(reverse.href,'Reverse message order'));body.append(details);
             }
             pagination();
             for(const row of readRows){
@@ -4098,7 +4129,7 @@ html.dpc-viewing body {
                 const content=row.cells[1].querySelector('table td');if(!content)continue;
                 const card=make('article','dpc-pm-message'+(myName&&clean(author).toLowerCase()===myName?' own':''));
                 const head=make('div','dpc-pm-author');if(avatar){const im=avatar.cloneNode();im.removeAttribute('style');im.className='dpc-pm-avatar';head.append(im);}
-                const who=make('div');if(author)who.append(link(author.href,clean(author)));who.append(make('small','',clean(time)));head.append(who);card.append(head);
+                const who=make('div');if(author){const name=link(author.href,clean(author));dpcRoleAttach(name,row.cells[0]);who.append(name);}who.append(make('small','',clean(time)));head.append(who);card.append(head);
                 const prose=make('div','dpc-pm-prose');
                 for(const n of content.childNodes){if(n.nodeType===1&&n.matches('.dpc-msg-actions,script,style'))continue;prose.append(n.cloneNode(true));}
                 card.append(prose);const actions=make('div','dpc-pm-actions');
