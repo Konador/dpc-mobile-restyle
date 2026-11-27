@@ -2,7 +2,7 @@
 // ==UserScript==
 // @name DPChallenge Mobile — Editorial Gallery
 // @namespace dpc-mobile
-// @version 5.65
+// @version 5.66
 // @updateURL https://raw.githubusercontent.com/Konador/dpc-mobile-restyle/main/dpc-mobile.user.js
 // @downloadURL https://raw.githubusercontent.com/Konador/dpc-mobile-restyle/main/dpc-mobile.user.js
 // @match *://*.dpchallenge.com/challenge_vote_image.php*
@@ -2156,7 +2156,25 @@ html.dpc-viewing body {
             style.textContent += '#dpc-app .dpc-current-submission{grid-template-columns:clamp(72px,22vw,100px) minmax(0,1fr);gap:9px;align-items:center}#dpc-app .dpc-current-thumb{width:100%!important;height:auto!important;aspect-ratio:1;min-width:0;min-height:0;max-width:none;max-height:none;background:transparent;display:flex;align-items:center;justify-content:center}#dpc-app .dpc-current-thumb img{width:100%!important;height:100%!important;object-fit:cover!important;object-position:center}#dpc-app .dpc-current-info{grid-template-columns:minmax(0,1fr) auto;column-gap:5px}#dpc-app .dpc-current-challenge,#dpc-app .dpc-current-title{white-space:normal;overflow-wrap:anywhere}#dpc-app .dpc-current-metric.score strong{font-size:clamp(21px,6vw,26px)}#dpc-app .dpc-current-secondary{gap:3px 7px}';
             style.textContent += '#dpc-app .dpc-current-submission{padding:0!important;gap:0;overflow:hidden;grid-template-columns:clamp(88px,26vw,116px) minmax(0,1fr);align-items:stretch}#dpc-app .dpc-current-thumb{position:relative;align-self:start;margin:0!important;padding:0!important;border:0!important;border-radius:0!important;overflow:hidden;aspect-ratio:1}#dpc-app .dpc-current-thumb img{position:absolute;inset:0;display:block!important;margin:0!important;padding:0!important;border:0!important;border-radius:0!important;object-fit:cover!important}#dpc-app .dpc-current-info{min-width:0;padding:8px 9px 7px 10px;grid-template-columns:minmax(0,1fr) max-content;column-gap:12px;align-content:center}#dpc-app .dpc-current-title{min-width:0;max-width:140px;white-space:normal!important;overflow-wrap:anywhere;line-height:1.3}#dpc-app .dpc-current-metric.score{min-width:0;align-self:start}#dpc-app .dpc-current-actions{margin-top:2px}#dpc-app .dpc-current-secondary{margin-top:3px}';
             style.textContent += '#dpc-app .dpc-current-info{align-content:end;align-items:end;row-gap:3px}#dpc-app .dpc-current-title{grid-row:1;grid-column:1;font:600 15px/1.12 var(--serif),Georgia,serif;font-optical-sizing:none;font-variation-settings:"opsz" 12,"wght" 600;-webkit-text-stroke:.22px currentColor;letter-spacing:-.015em;max-width:none}#dpc-app .dpc-current-challenge{grid-row:2;grid-column:1;font:500 10px/1.25 system-ui,sans-serif}#dpc-app .dpc-current-metric.score{align-self:end}#dpc-app .dpc-current-secondary{grid-row:3}#dpc-app .dpc-current-actions{grid-row:4}';
-            if(strip.children.length)tabs.before(strip);
+            style.textContent += '#dpc-app .dpc-current-info{grid-template-columns:minmax(0,1fr) max-content;grid-template-rows:minmax(0,1fr) auto auto;align-content:stretch;align-items:start;column-gap:8px;row-gap:4px}#dpc-app .dpc-current-title{grid-row:1;grid-column:1;align-self:start;line-height:1.04;font-size:18px;min-width:0}#dpc-app .dpc-current-metric.score{grid-row:1;grid-column:2;align-self:start}#dpc-app .dpc-current-challenge{grid-row:2;grid-column:1/-1;align-self:end}#dpc-app .dpc-current-secondary{grid-row:3;grid-column:1;align-self:end;margin:0;gap:2px 6px}#dpc-app .dpc-current-actions{grid-row:3;grid-column:2;align-self:end;margin:0}#dpc-app .dpc-current-thumb{align-self:stretch;height:100%!important;min-height:0;aspect-ratio:1}';
+            if(strip.children.length){
+                tabs.before(strip);
+                const fitTitles=()=>{
+                    for(const card of strip.children){
+                        const title=card.querySelector('.dpc-current-title'),info=card.querySelector('.dpc-current-info'),thumb=card.querySelector('.dpc-current-thumb');
+                        if(!title||!info||!thumb||!title.clientWidth)continue;
+                        const bottom=card.querySelector('.dpc-current-challenge'),stats=card.querySelector('.dpc-current-secondary'),actions=card.querySelector('.dpc-current-actions');
+                        const cs=getComputedStyle(info);
+                        const available=Math.max(30,thumb.clientWidth-parseFloat(cs.paddingTop)-parseFloat(cs.paddingBottom)-2*parseFloat(cs.rowGap)-(bottom?.offsetHeight||0)-Math.max(stats?.offsetHeight||0,actions?.offsetHeight||0));
+                        for(let size=24;size>=12;size--){title.style.fontSize=size+'px';if(title.offsetHeight<=available&&title.scrollWidth<=title.clientWidth)break;}
+                    }
+                };
+                let lastWidth=0;
+                const observer=new ResizeObserver(()=>{if(strip.clientWidth!==lastWidth){lastWidth=strip.clientWidth;fitTitles();}});
+                observer.observe(strip);
+                requestAnimationFrame(fitTitles);
+                document.fonts?.ready.then(fitTitles);
+            }
         }
         const panels=[resultsSection,votingSection,entrySection,forumSection],buttons=[];
         const labels=['Results',allVoted?'Comment':'Vote','Enter','Forum'];
