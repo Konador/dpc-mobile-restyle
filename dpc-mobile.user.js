@@ -2,7 +2,7 @@
 // ==UserScript==
 // @name DPChallenge Mobile — Editorial Gallery
 // @namespace dpc-mobile
-// @version 5.88
+// @version 5.89
 // @updateURL https://raw.githubusercontent.com/Konador/dpc-mobile-restyle/main/dpc-mobile.user.js
 // @downloadURL https://raw.githubusercontent.com/Konador/dpc-mobile-restyle/main/dpc-mobile.user.js
 // @match *://*.dpchallenge.com/challenge_vote_image.php*
@@ -1508,40 +1508,61 @@ html.dpc-viewing body {
     function dpcRoleData(role){
         const p=dpcRoleProp,k=dpcRoleKeys;
         const rgb=h=>[1,3,5].map(i=>parseInt(h.slice(i,i+2),16)/255);
-        const palette=({'Registered User':['#b8bcc5','#666b78'],'Member':['#8580ee','#36349c'],'Site Council':['#b08add','#633b99'],'Administrator':['#f5ce65','#ac751f']})[role];
+        const palette=({'Registered User':['#c8cbd2','#727783'],'Member':['#a9a3ff','#5047bc'],'Site Council':['#d0a6ed','#7950a8'],'Administrator':['#ffe28b','#b78522']})[role];
         const tr=(pos=[0,0],anchor=[0,0],scale=[100,100],rot=0)=>({ty:'tr',p:Array.isArray(pos)?p(pos):pos,a:p(anchor),s:Array.isArray(scale)?p(scale):scale,r:typeof rot==='number'?p(rot):rot,o:p(100),sk:p(0),sa:p(0)});
-        const shape=(v,i,o,closed=true)=>({ty:'sh',ks:p({v,i,o,c:closed})});
-        const path=(v,i,o,fill,stroke,width=2)=>({ty:'gr',it:[shape(v,i,o),...(fill?[{ty:'fl',c:p(rgb(fill)),o:p(100),r:1}]:[]),...(stroke?[{ty:'st',c:p(rgb(stroke)),o:p(100),w:p(width),lc:2,lj:2}]:[]),tr()]});
-        const grad=(v,i,o,colors,from,to,stroke,width=2)=>({ty:'gr',it:[shape(v,i,o),{ty:'gf',o:p(100),r:1,t:1,s:p(from),e:p(to),g:{p:colors.length,k:p(colors.flatMap(([x,c])=>[x,...rgb(c)]))}},{ty:'st',c:p(rgb(stroke)),o:p(100),w:p(width),lc:2,lj:2},tr()]});
+        // Convert the approved SVG's exact cubic/quadratic geometry into Bodymovin paths.
+        function outline(start,segments,closed=true){
+            const v=[start],i=[[0,0]],o=[[0,0]];
+            const sub=(a,b)=>[a[0]-b[0],a[1]-b[1]];
+            for(const seg of segments){
+                const prev=v[v.length-1],end=seg[seg.length-1];let c1=prev,c2=end;
+                if(seg.length===3){[c1,c2]=seg;}
+                else if(seg.length===2){const q=seg[0];c1=prev.map((x,j)=>x+(q[j]-x)*2/3);c2=end.map((x,j)=>x+(q[j]-x)*2/3);}
+                o[o.length-1]=sub(c1,prev);
+                if(closed&&end[0]===start[0]&&end[1]===start[1]){i[0]=sub(c2,end);break;}
+                v.push(end);i.push(sub(c2,end));o.push([0,0]);
+            }
+            return {ty:'sh',ks:p({v,i,o,c:closed})};
+        }
+        const stroke=(c,w,opacity=100)=>({ty:'st',c:p(rgb(c)),o:p(opacity),w:p(w),lc:2,lj:2});
+        const gradient=(sh,colors,from,to,w=4)=>({ty:'gr',it:[sh,{ty:'gf',o:p(100),r:1,t:1,s:p(from),e:p(to),g:{p:colors.length,k:p(colors.flatMap(([x,c])=>[x,...rgb(c)]))}},stroke('#292c36',w),tr()]});
         const ell=(x,y,w,h,c)=>({ty:'gr',it:[{ty:'el',p:p([x,y]),s:p([w,h])},{ty:'fl',c:p(rgb(c)),o:p(100),r:1},tr()]});
-        const zero=n=>Array.from({length:n},()=>[0,0]);
-        const line=(v,c,w)=>({ty:'gr',it:[shape(v,zero(v.length),zero(v.length),false),{ty:'st',c:p(rgb(c)),o:p(100),w:p(w),lc:2,lj:2},tr()]});
-        const face=grad([[32,5],[52,25],[32,46],[12,25]],[[-11.05,0],[0,-11.05],[11.05,0],[0,11.05]],[[11.05,0],[0,11.05],[-11.05,0],[0,-11.05]],[[0,'#e8e9ec'],[.5,'#b2b7c1'],[1,'#777e8e']],[20,8],[47,45],'#151722',2.6);
-        const hair=grad([[13,31],[10.5,21],[32,3],[53.5,21],[51,31],[46,25],[32,19],[18,25]],[[2,3],[0,6],[-12,0],[0,-11],[2,-3],[2,3],[8,0],[2,-3]],[[-2,-3],[0,-11],[12,0],[0,6],[-2,3],[-2,-3],[-8,0],[-2,3]],[[0,'#bfc4cd'],[.48,'#9199a8'],[1,'#464c59']],[18,4],[40,30],'#151722',2.4);
-        const band=path([[17,20],[32,17.5],[47,20],[32,21]],[ [0,1],[-8,0],[0,-1],[8,0] ],[[0,-1],[8,0],[0,1],[-8,0]],'#282c36',null);
-        const shine=path([[19,12],[30,7],[43,11],[30,10]],[[0,-1],[-6,0],[1,-2],[6,0]],[[1,-2],[6,0],[0,1],[-6,0]],'#c9ced6',null);
-        const neck=grad([[24,42],[40,42],[40,49],[32,54],[24,49]],[[0,0],[0,0],[0,-3],[4,0],[0,3]],[[0,0],[0,0],[0,3],[-4,0],[0,-3]],[[0,'#9298a4'],[1,'#d5d8df']],[32,42],[32,55],'#151722',2.2);
-        const shirt=grad([[5,68],[3,65],[6,55],[23,48],[32,54],[41,48],[58,55],[61,65],[59,68]],[[ -2,0],[0,2],[-3,4],[-8,0],[-4,0],[-4,0],[-5,-5],[0,-4],[2,0]],[[0,0],[0,-4],[5,-5],[4,0],[4,0],[8,0],[3,4],[0,2],[0,0]],[[0,palette[0]],[.55,palette[0]],[1,palette[1]]],[10,49],[56,70],'#151722',2.7);
-        const eyes=[ell(25,30,3.4,3.5,'#646a77'),ell(39,30,3.4,3.5,'#646a77'),ell(24.5,29.4,1.1,1.1,'#d2d5db'),ell(38.5,29.4,1.1,1.1,'#d2d5db'),tr([32,30],[32,30],k([[0,[100,100]],[5,[100,100]],[8,[100,12]],[12,[100,100]],[24,[100,100]],[30,[100,100]],[60,[100,100]],[90,[100,100]],[210,[100,100]]]))];
-        const head=[{ty:'gr',it:eyes},shine,band,hair,face,tr(k([[0,[32,43]],[30,[32,43]],[39,[32,43]],[48,[32,45]],[57,[32,43]],[60,[32,43]],[90,[32,43]]]),[32,43])];
-        // Position is constant for blink/tilt; nod segment moves the head. Tilt is a separate segment.
-        head[head.length-1].p=k([[0,[32,43]],[39,[32,43]],[48,[32,45]],[57,[32,43]],[90,[32,43]],[150,[32,42]],[210,[32,43]]]);
-        head[head.length-1].s=k([[0,[100,100]],[90,[100,100]],[150,[100.6,101.5]],[210,[100,100]]]);
-        head[head.length-1].r=k([[0,0],[60,0],[69,-9],[77,5],[86,0],[90,0],[150,1],[210,0]]);
-        return {v:'5.12.2',fr:30,ip:0,op:210,w:64,h:70,nm:'DPC legacy member',ddd:0,assets:[],layers:[{ddd:0,ind:1,ty:4,nm:'Character',sr:1,ks:{o:p(100),r:p(0),p:p([0,0,0]),a:p([0,0,0]),s:p([100,100,100])},ao:0,shapes:[{ty:'gr',it:head},line([[15,62],[15,67]],palette[1],2),line([[49,62],[49,67]],palette[1],2),shirt,neck],ip:0,op:210,st:0,bm:0}]};
+        const line=(a,b)=>({ty:'gr',it:[outline(a,[[b]],false),stroke(palette[1],3,45),tr()]});
+        const silver=[[0,'#f0f2f6'],[.5,'#c7cbd5'],[1,'#9299a9']];
+        const c=53*.5522847498;
+        const face=gradient(outline([57,82],[[[57,82-c],[110-c,29],[110,29]],[[110+c,29],[163,82-c],[163,82]],[[163,82+c],[110+c,135],[110,135]],[[110-c,135],[57,82+c],[57,82]]]),silver,[72,29],[148,135]);
+        const hair=gradient(outline([57,82],[[[57,82-c],[110-c,29],[110,29]],[[110+c,29],[163,82-c],[163,82]],[[153,76],[151,58],[145,53]],[[118,76],[88,50],[70,67]],[[65,76],[57,82]]]),[[0,'#b5bbc7'],[1,'#697181']],[68,29],[153,82],3.5);
+        const neck=gradient(outline([89,122],[[[131,122]],[[131,136]],[[110,152]],[[89,136]],[[89,122]]]),silver,[95,122],[125,152]);
+        const shirt=gradient(outline([35,185],[[[35,173]],[[35,141],[110,133]],[[185,141],[185,173]],[[185,185]],[[185,191],[179,191]],[[41,191]],[[35,191],[35,185]]]),[[0,palette[0]],[1,palette[1]]],[50,133],[170,191]);
+        // Frame 0 is the approved static pose. Each action begins and ends in that pose.
+        // 0-30 blink/squash; 30-66 nod; 66-102 curious tilt; 102-222 idle.
+        const eyeScale=k([[0,[100,100]],[5,[105,112]],[9,[120,8]],[12,[100,115]],[16,[100,100]],[30,[100,100]],[66,[100,100]],[102,[100,100]],[222,[100,100]]]);
+        const eyes={ty:'gr',it:[ell(90.8,85,2.6,2.6,'#f2f3f6'),ell(126.8,85,2.6,2.6,'#f2f3f6'),ell(92,87,9,11.2,'#484e5c'),ell(128,87,9,11.2,'#484e5c'),tr([110,87],[110,87],eyeScale)]};
+        const headPos=k([[0,[110,130]],[5,[110,128]],[9,[110,132]],[16,[110,130]],[30,[110,130]],[36,[110,126]],[44,[110,140]],[50,[110,128]],[58,[110,131]],[66,[110,130]],[72,[110,130]],[80,[110,130]],[90,[110,128]],[97,[110,130]],[102,[110,130]],[132,[110,127]],[162,[110,130]],[192,[110,127]],[222,[110,130]]]);
+        const headScale=k([[0,[100,100]],[5,[98,104]],[9,[106,94]],[16,[100,100]],[30,[100,100]],[36,[96,105]],[44,[109,88]],[50,[97,104]],[58,[101,99]],[66,[100,100]],[72,[102,98]],[80,[98,103]],[90,[100,100]],[102,[100,100]],[132,[98,104]],[162,[100,100]],[192,[102,97]],[222,[100,100]]]);
+        const rot=k([[0,0],[30,0],[66,0],[72,-5],[80,15],[88,12],[96,-4],[102,0],[132,-3],[162,0],[192,3],[222,0]]);
+        const head={ty:'gr',it:[eyes,hair,face,tr(headPos,[110,130],headScale,rot)]};
+        const torso={ty:'gr',it:[line([66,175],[66,189]),line([154,175],[154,189]),neck,shirt,tr()]};
+        // Extra vertical room for overshoot, without changing the approved artwork.
+        return {v:'5.12.2',fr:30,ip:0,op:223,w:220,h:205,nm:'DPC approved member character',ddd:0,assets:[],layers:[{ddd:0,ind:1,ty:4,nm:'Character',sr:1,ks:{o:p(100),r:p(0),p:p([0,0,0]),a:p([0,0,0]),s:p([100,100,100])},ao:0,shapes:[head,torso],ip:0,op:223,st:0,bm:0}]};
     }
     const dpcRoleObserver=typeof IntersectionObserver==='function'?new IntersectionObserver(entries=>{
         for(const e of entries){const state=e.target.dpcRoleState;if(!state)continue;state.visible=e.isIntersecting;if(state.visible)dpcRoleSchedule(e.target,state);else dpcRoleStop(state);}
     }):null;
-    function dpcRoleStop(state){clearTimeout(state.timer);state.timer=null;state.running=false;state.action=false;if(state.anim){state.anim.pause();if(dpcRoleMotion.matches){state.anim.resetSegments(true);state.anim.goToAndStop(0,true);}}}
+    function dpcRoleStop(state){clearTimeout(state.timer);state.timer=null;state.running=false;state.action=false;state.pending=null;if(state.anim){state.anim.pause();if(dpcRoleMotion.matches){state.anim.resetSegments(true);state.anim.goToAndStop(0,true);}}}
     function dpcRoleSchedule(el,state){
         if(!state.visible||!el.isConnected||document.hidden||dpcRoleMotion.matches||!state.ready)return;
-        if(!state.running){state.running=true;state.anim.loop=true;state.anim.playSegments([90,210],true);state.anim.goToAndPlay(Math.random()*119,true);}
-        if(state.timer||state.action)return;
-        state.timer=setTimeout(()=>{state.timer=null;if(!state.running||!el.isConnected||!state.visible||document.hidden||dpcRoleMotion.matches)return;
-            const segments=[[0,24],[30,60],[60,90]],segment=segments[Math.floor(Math.random()*segments.length)];
-            state.action=true;state.anim.loop=false;state.anim.playSegments(segment,true);
-        },3500+Math.random()*12500);
+        if(!state.running){
+            state.running=true;state.anim.loop=true;state.anim.playSegments([102,223],true);
+            if(!state.started){state.started=true;state.anim.goToAndPlay(Math.random()*120,true);}
+        }
+        if(state.timer||state.action||state.pending)return;
+        state.timer=setTimeout(()=>{
+            state.timer=null;
+            if(!state.running||!el.isConnected||!state.visible||document.hidden||dpcRoleMotion.matches)return;
+            const segments=[[0,30],[30,66],[66,102]];
+            state.pending=segments[Math.floor(Math.random()*segments.length)];
+        },3000+Math.random()*9000);
     }
     function dpcRoleSweep(){
         for(const [el,state] of dpcRoleActive){if(!el.isConnected){dpcRoleStop(state);state.anim?.destroy();dpcRoleObserver?.unobserve(el);dpcRoleActive.delete(el);}else if(document.hidden||dpcRoleMotion.matches)dpcRoleStop(state);else dpcRoleSchedule(el,state);}
@@ -1562,6 +1583,10 @@ html.dpc-viewing body {
                 const anim=window.lottie.loadAnimation({container:host,renderer:'svg',loop:false,autoplay:false,animationData:dpcRoleData(info.role),rendererSettings:{preserveAspectRatio:'xMidYMid meet',progressiveLoad:false}});
                 const state={anim,visible:!dpcRoleObserver,ready:false,timer:null};holder.dpcRoleState=state;dpcRoleActive.set(holder,state);
                 anim.addEventListener('DOMLoaded',()=>{if(!holder.isConnected)return;state.ready=true;anim.goToAndStop(0,true);clone.remove();dpcRoleSchedule(holder,state);});
+                anim.addEventListener('loopComplete',()=>{
+                    if(!state.pending||!state.running||!state.visible||document.hidden||dpcRoleMotion.matches)return;
+                    const segment=state.pending;state.pending=null;state.action=true;anim.loop=false;anim.playSegments(segment,true);
+                });
                 anim.addEventListener('complete',()=>{state.action=false;state.running=false;dpcRoleSchedule(holder,state);});
                 dpcRoleObserver?.observe(holder);dpcRoleMutation.observe(app,{childList:true,subtree:true});
             }catch{host.remove();}
