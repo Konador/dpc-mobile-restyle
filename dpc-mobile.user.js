@@ -2,7 +2,7 @@
 // ==UserScript==
 // @name DPChallenge Mobile — Editorial Gallery
 // @namespace dpc-mobile
-// @version 5.95
+// @version 5.96
 // @updateURL https://raw.githubusercontent.com/Konador/dpc-mobile-restyle/main/dpc-mobile.user.js
 // @downloadURL https://raw.githubusercontent.com/Konador/dpc-mobile-restyle/main/dpc-mobile.user.js
 // @match *://*.dpchallenge.com/challenge_vote_image.php*
@@ -1496,6 +1496,12 @@ html.dpc-viewing body {
         let path;try{path=new URL(im.getAttribute('src'),location.href).pathname;}catch{return null;}
         const m=path.match(/^\/images\/(?:user_icon\/)?(1|11|21|31)(_F|_N)?\.gif$/i);
         const label=[im.alt,im.title].join(' ');
+        // DPC also serves administrator artwork under custom filenames. Its native
+        // role label is authoritative; keep the custom Council exception separate.
+        if([im.alt,im.title].some(v=>/^Administrator(?:\s+(?:Male|Female|Neutral))?$/i.test((v||'').trim()))){
+            const suffix=path.match(/_([FN])\.[a-z]+$/i);
+            return {role:'Administrator',variant:suffix?'_'+suffix[1].toUpperCase():''};
+        }
         if(m)return {role:({'1':'Administrator','11':'Site Council','21':'Member','31':'Registered User'})[m[1]],variant:(m[2]||'').toUpperCase()};
         if(/\/images\/user_icon\//i.test(path)||/^(?:Site Council|Administrator|Registered User|Member)(?:\s+.*)?$/i.test(label.trim()))return {custom:true};
         return null;
