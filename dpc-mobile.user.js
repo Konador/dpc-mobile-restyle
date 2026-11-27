@@ -2,7 +2,7 @@
 // ==UserScript==
 // @name DPChallenge Mobile — Editorial Gallery
 // @namespace dpc-mobile
-// @version 5.76
+// @version 5.77
 // @updateURL https://raw.githubusercontent.com/Konador/dpc-mobile-restyle/main/dpc-mobile.user.js
 // @downloadURL https://raw.githubusercontent.com/Konador/dpc-mobile-restyle/main/dpc-mobile.user.js
 // @match *://*.dpchallenge.com/challenge_vote_image.php*
@@ -30,13 +30,15 @@ if(top!==self){
     try{softChild=parent===top&&parent.__dpcSoftAccept?.(window,window.name)===true;}catch{}
     if(!softChild)return;
 }
-const softPaths=new Set(['/','/index.php','/challenge_results.php','/image.php']);
+const softPaths=new Set(['/','/index.php','/challenge_results.php','/image.php','/profile.php','/forum.php','/community_index.php']);
 function softEligible(raw){
     try{
         const u=new URL(raw,location.href);
         if(u.origin!==location.origin||!softPaths.has(u.pathname))return false;
-        if(u.hash&&!u.hash.startsWith('#dpc-gallery='))return false;
-        if([...u.searchParams.keys()].some(k=>/^(action|vote|submit|delete|update|logout)$/i.test(k)))return false;
+        if(u.hash&&!u.hash.startsWith('#dpc-gallery=')&&!(u.pathname==='/forum.php'&&/^#[\w-]+$/.test(u.hash)&&u.hash!=='#post'))return false;
+        if([...u.searchParams.keys()].some(k=>/^(vote|submit|delete|update|logout)$/i.test(k)||(/^action$/i.test(k)&&u.pathname!=='/forum.php')))return false;
+        if(u.pathname==='/forum.php')return /^(?:|read|readrecent|list)$/i.test(u.searchParams.get('action')||'');
+        if(u.pathname==='/profile.php'||u.pathname==='/community_index.php')return !u.searchParams.has('action');
         return u.pathname==='/'||u.pathname==='/index.php'||(u.pathname==='/image.php'?!!u.searchParams.get('IMAGE_ID'):!!u.searchParams.get('CHALLENGE_ID'));
     }catch{return false;}
 }
@@ -107,6 +109,11 @@ if(!softChild&&softEligible(location.href)){
         if(!navigate(location.href,e.state))location.reload();
     });
     softRouter={navigate};
+}
+function browsePage(raw){
+    const url=new URL(raw,location.href).href;
+    if(softEligible(url)&&(softChild?parent.__dpcSoftNavigate?.(window,url):softRouter?.navigate(url)))return;
+    openNative(url);
 }
 if(softChild){
     const replace=history.replaceState.bind(history);
@@ -3891,7 +3898,7 @@ html.dpc-viewing body {
                 info.append(document.createTextNode(' · '+clean(c[3])+' replies'));card.append(info);
                 const last=make('div','dpc-forum-topic-last');last.append(make('span','dpc-forum-meta',clean(c[5])));
                 if(recent){const jump=link(recent,unread?'Unread →':'Last post →',base);jump.className='dpc-forum-jump';last.append(jump);}card.append(last);
-                card.addEventListener('click',e=>{if(!e.target.closest('a,button,input')&&!getSelection()?.toString())location.href=url;});feed.append(card);
+                card.addEventListener('click',e=>{if(!e.target.closest('a,button,input')&&!getSelection()?.toString())browsePage(url);});feed.append(card);
             }return count;
         }
         function renderPosts(doc,base){
@@ -3913,7 +3920,7 @@ html.dpc-viewing body {
         if(initialPosts.length){
             renderPosts(document,location.href);
             if(!composing){const unread=make('button','','Jump to unread');unread.type='button';unread.classList.add('dpc-forum-secondary');controls.append(unread);
-            unread.onclick=()=>{if(firstUnread){firstUnread.scrollIntoView({block:'start'});return;}const u=new URL('/forum.php',location.origin);u.searchParams.set('action','readrecent');u.searchParams.set('FORUM_THREAD_ID',tid);location.href=u.href;};}
+            unread.onclick=()=>{if(firstUnread){firstUnread.scrollIntoView({block:'start'});return;}const u=new URL('/forum.php',location.origin);u.searchParams.set('action','readrecent');u.searchParams.set('FORUM_THREAD_ID',tid);browsePage(u.href);};}
         }else if(!composing&&sid&&action==='list'){
             renderTopics(document,location.href);
         }else if(!composing&&!tid&&!forms.some(f=>f.querySelector('textarea'))){
@@ -3926,7 +3933,7 @@ html.dpc-viewing body {
                 const sec=anchors.find(x=>x!==a&&isSection(x));if(sec)card.append(link(sec));
                 const cell=a.closest('td');const desc=clean(cell).replace(clean(a),'').trim();if(desc)card.append(make('div','dpc-forum-prose',desc));
                 const meta=[...row.cells].filter(c=>c!==cell).map(clean).filter(Boolean).join(' · ');if(meta)card.append(make('div','dpc-forum-meta',meta));
-                card.addEventListener('click',e=>{if(!e.target.closest('a,button,input')&&!getSelection()?.toString())location.href=u;});feed.append(card);
+                card.addEventListener('click',e=>{if(!e.target.closest('a,button,input')&&!getSelection()?.toString())browsePage(u.href);});feed.append(card);
             }
         }
         function pageLinks(doc,base){
@@ -3993,6 +4000,11 @@ html.dpc-viewing body {
     }
 
     document.addEventListener('click',captureGallery,true);
+    // Forms must leave staged frames through the normal top-level browser flow.
+    if(softChild)document.addEventListener('submit',e=>{
+        const form=e.target;if(!(form instanceof HTMLFormElement))return;
+        form.target='_top';
+    },true);
     // Let existing click handlers (including gallery context capture) run first.
     document.addEventListener('click',e=>{
         if(e.defaultPrevented||e.button!==0||e.ctrlKey||e.metaKey||e.shiftKey||e.altKey)return;
