@@ -2,7 +2,7 @@
 // ==UserScript==
 // @name DPChallenge Mobile — Editorial Gallery
 // @namespace dpc-mobile
-// @version 5.74
+// @version 5.75
 // @updateURL https://raw.githubusercontent.com/Konador/dpc-mobile-restyle/main/dpc-mobile.user.js
 // @downloadURL https://raw.githubusercontent.com/Konador/dpc-mobile-restyle/main/dpc-mobile.user.js
 // @match *://*.dpchallenge.com/challenge_vote_image.php*
@@ -19,15 +19,96 @@
 // @match *://*.dpchallenge.com/community_index.php*
 // @grant none
 // @run-at document-start
-// @noframes
 // ==/UserScript==
 
 (() => {
 'use strict';
 
-if (top !== self) return;
+// Only explicitly staged browsing frames run the restyle; native voting frames never do.
+let softChild=false;
+if(top!==self){
+    try{softChild=parent===top&&parent.__dpcSoftAccept?.(window,window.name)===true;}catch{}
+    if(!softChild)return;
+}
+const softPaths=new Set(['/','/index.php','/challenge_results.php','/image.php']);
+function softEligible(raw){
+    try{
+        const u=new URL(raw,location.href);
+        if(u.origin!==location.origin||!softPaths.has(u.pathname))return false;
+        if(u.hash&&!u.hash.startsWith('#dpc-gallery='))return false;
+        if([...u.searchParams.keys()].some(k=>/^(action|vote|submit|delete|update|logout)$/i.test(k)))return false;
+        return u.pathname==='/'||u.pathname==='/index.php'||(u.pathname==='/image.php'?!!u.searchParams.get('IMAGE_ID'):!!u.searchParams.get('CHALLENGE_ID'));
+    }catch{return false;}
+}
+let softRouter=null;
+function openNative(raw,originalOnce=false){
+    if(softChild){parent.__dpcSoftNative?.(new URL(raw,location.href).href,originalOnce);return;}
+    if(originalOnce)sessionStorage.setItem('dpc-original-once','1');
+    location.href=raw;
+}
+if(!softChild&&softEligible(location.href)){
+    let pending=null,active=null,baseURL=null,baseScroll=0,serial=0;
+    const baseApp=()=>document.getElementById('dpc-app');
+    const clearPending=()=>{if(!pending)return;clearTimeout(pending.timer);pending.frame.remove();pending=null;};
+    const currentScroll=()=>active?active.frame.contentWindow.scrollY:scrollY;
+    function remember(){
+        try{history.replaceState({...history.state,dpcSoftScroll:currentScroll()},'',location.href);}catch{}
+    }
+    function showBase(y){
+        if(active){active.frame.remove();active=null;}
+        const app=baseApp();if(app){app.style.removeProperty('visibility');app.inert=false;}
+        document.documentElement.classList.remove('dpc-soft-active');
+        requestAnimationFrame(()=>scrollTo(0,y||0));
+    }
+    function navigate(raw,restore=null){
+        const url=new URL(raw,location.href).href;
+        if(!softEligible(url))return false;
+        if(!baseApp())return false;
+        if(!baseURL){baseURL=location.href;baseScroll=scrollY;}
+        if(restore===null)remember();
+        clearPending();
+        const frame=document.createElement('iframe'),name='dpc-soft-'+(++serial)+'-'+Math.random().toString(36).slice(2);
+        frame.name=name;frame.title='DPChallenge';frame.setAttribute('aria-hidden','true');
+        frame.style.cssText='position:fixed!important;inset:0!important;width:100%!important;height:100%!important;border:0!important;margin:0!important;padding:0!important;display:block!important;visibility:hidden!important;pointer-events:none!important;z-index:2147483000!important;background:transparent!important;';
+        const p={frame,name,url,restore,timer:null};pending=p;
+        p.timer=setTimeout(()=>{if(pending!==p)return;clearPending();if(restore!==null)location.reload();else location.href=url;},9000);
+        frame.src=url;document.body.append(frame);
+        return true;
+    }
+    window.__dpcSoftAccept=(win,name)=>!!pending&&pending.name===name&&pending.frame.contentWindow===win;
+    window.__dpcSoftReady=(win,ok)=>{
+        const p=pending;if(!p||p.frame.contentWindow!==win)return;
+        if(!ok){clearPending();if(p.restore!==null)location.reload();else location.href=p.url;return;}
+        clearTimeout(p.timer);pending=null;
+        const finalURL=win.location.href;
+        if(!softEligible(finalURL)){p.frame.remove();location.href=p.url;return;}
+        const state={...win.history.state,dpcSoftPage:true,dpcSoftScroll:p.restore?.dpcSoftScroll||0};
+        try{if(p.restore!==null)history.replaceState({...p.restore,...state},'',finalURL);else history.pushState(state,'',finalURL);}catch{p.frame.remove();location.href=p.url;return;}
+        const old=active;active=p;
+        document.documentElement.classList.add('dpc-soft-active');
+        const app=baseApp();if(app){app.style.setProperty('visibility','hidden','important');app.inert=true;}
+        p.frame.style.setProperty('visibility','visible','important');p.frame.style.setProperty('pointer-events','auto','important');p.frame.removeAttribute('aria-hidden');
+        document.title=win.document.title;
+        if(old)old.frame.remove();
+        if(p.restore!==null)win.scrollTo(0,p.restore?.dpcSoftScroll||0);
+    };
+    window.__dpcSoftNavigate=(win,url)=>active?.frame.contentWindow===win&&navigate(url);
+    window.__dpcSoftNative=(url,originalOnce)=>{clearPending();if(originalOnce)sessionStorage.setItem('dpc-original-once','1');location.href=url;};
+    window.__dpcSoftReplace=(win,url,state)=>{if(active?.frame.contentWindow!==win||!softEligible(url))return;try{history.replaceState({...state,dpcSoftPage:true,dpcSoftScroll:win.scrollY},'',url);}catch{}};
+    addEventListener('popstate',e=>{
+        if(!baseURL)return;
+        clearPending();
+        if(!e.state?.dpcSoftPage){if(location.href===baseURL)showBase(e.state?.dpcSoftScroll??baseScroll);else location.reload();return;}
+        if(!navigate(location.href,e.state))location.reload();
+    });
+    softRouter={navigate};
+}
+if(softChild){
+    const replace=history.replaceState.bind(history);
+    history.replaceState=function(state,title,url){replace(state,title,url);try{parent.__dpcSoftReplace?.(window,location.href,state);}catch{}};
+}
 
-if (sessionStorage.getItem('dpc-original-once')) {
+if (!softChild&&sessionStorage.getItem('dpc-original-once')) {
     sessionStorage.removeItem('dpc-original-once');
     return;
 }
@@ -61,7 +142,9 @@ function revealPage(){
 const bootTimeout=setTimeout(revealPage,8000);
 function boot(){
     try{start();}
-    finally{clearTimeout(bootTimeout);revealPage();}
+    finally{clearTimeout(bootTimeout);revealPage();
+        if(softChild){const ready=!!document.querySelector('#dpc-app')&&document.documentElement.classList.contains('dpc-mobile');requestAnimationFrame(()=>requestAnimationFrame(()=>parent.__dpcSoftReady?.(window,ready)));}
+    }
 }
 
 /* Shared, conservative background request budget. Native navigation and vote writes remain independent. */
@@ -1442,8 +1525,7 @@ html.dpc-viewing body {
     }
 
     function original(url = location.href) {
-        sessionStorage.setItem('dpc-original-once','1');
-        location.href = url;
+        openNative(url,true);
     }
 
     /* ==========================================
@@ -1788,7 +1870,7 @@ html.dpc-viewing body {
                     card.addEventListener('click',e=>{
                         if(e.defaultPrevented||e.target.closest('a,button,input,select,textarea')||window.getSelection()?.toString())return;
                         if(e.ctrlKey||e.metaKey||e.shiftKey||e.altKey)return;
-                        location.href=action.href;
+                        openNative(action.href);
                     });
                 }
                 if(!voting){
@@ -3167,7 +3249,7 @@ html.dpc-viewing body {
                 const rec=slides[d<0?0:1];if(!rec){move(0);return;}
                 busy=true;fallback(rec);move(-d*distance(),true);
                 const [page]=await Promise.all([rec.promise,new Promise(resolve=>setTimeout(resolve,reducedMotion.matches?0:270))]);
-                if(!page){move(0,true);busy=false;location.href=rec.url;return;}
+                if(!page){move(0,true);busy=false;openNative(rec.url);return;}
                 if(!current.isConnected)return;
                 const ratio=rec.preview.naturalWidth&&rec.preview.naturalHeight?rec.preview.naturalWidth/rec.preview.naturalHeight:rec.preview.width&&rec.preview.height?rec.preview.width/rec.preview.height:null;
                 history.replaceState(history.state,'',rec.url);buildPhotoDetail(page,true,d,null,{record:rec.record,thumb:rec.preview.src||null,ratio});
@@ -3892,6 +3974,18 @@ html.dpc-viewing body {
     }
 
     document.addEventListener('click',captureGallery,true);
+    // Let existing click handlers (including gallery context capture) run first.
+    document.addEventListener('click',e=>{
+        if(e.defaultPrevented||e.button!==0||e.ctrlKey||e.metaKey||e.shiftKey||e.altKey)return;
+        const a=e.target.closest?.('#dpc-app a[href]');if(!a||a.hasAttribute('download')||(a.target&&a.target!=='_self'))return;
+        const u=new URL(a.href,location.href);
+        if(u.protocol!=='https:'&&u.protocol!=='http:')return;
+        if(u.pathname===location.pathname&&u.search===location.search&&u.hash&&!u.hash.startsWith('#dpc-gallery='))return;
+        if(softEligible(u.href)){
+            const handled=softChild?parent.__dpcSoftNavigate?.(window,u.href):softRouter?.navigate(u.href);
+            if(handled)e.preventDefault();
+        }else if(softChild){e.preventDefault();openNative(u.href);}
+    });
     if (isForum) { buildForum(); return; }
     if (isSubmit) { buildSubmission(); return; }
     if (isChallengeIndex) { buildChallengeIndex(); return; }
