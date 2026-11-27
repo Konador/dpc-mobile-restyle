@@ -2,7 +2,7 @@
 // ==UserScript==
 // @name DPChallenge Mobile — Editorial Gallery
 // @namespace dpc-mobile
-// @version 6.07
+// @version 6.08
 // @updateURL https://raw.githubusercontent.com/Konador/dpc-mobile-restyle/main/dpc-mobile.user.js
 // @downloadURL https://raw.githubusercontent.com/Konador/dpc-mobile-restyle/main/dpc-mobile.user.js
 // @match *://*.dpchallenge.com/challenge_vote_image.php*
@@ -15,6 +15,7 @@
 // @match *://*.dpchallenge.com/challenge_index.php*
 // @match *://*.dpchallenge.com/challenge_submit.php*
 // @match *://*.dpchallenge.com/challenge_submit_preview.php*
+// @match *://*.dpchallenge.com/challenge_stats.php*
 // @match *://*.dpchallenge.com/forum.php*
 // @match *://*.dpchallenge.com/community_index.php*
 // @match *://*.dpchallenge.com/messaging.php*
@@ -3964,6 +3965,51 @@ html.dpc-viewing body {
         $('#dpc-original').onclick=()=>original();mount();
     }
 
+    function buildLiveEntry(){
+        // Only restyle the native entry/comments view, not update or other actions.
+        const title=document.querySelector('.imagetitle');
+        const form=title?.closest('form');
+        const photo=form?.querySelector('img[src*="/images_challenge/"]');
+        const challenge=form?.querySelector('a[href*="challenge_vote_list.php"]');
+        if(!title||!form||!photo||!challenge)return;
+        const make=(tag,cls,txt)=>{const n=document.createElement(tag);if(cls)n.className=cls;if(txt!==undefined)n.textContent=txt;return n;};
+        const copyLink=(a,label)=>{const n=make('a','',label||a.textContent.trim());n.href=a.href;return n;};
+        const scope=form.parentElement;
+        const originalLink=scope.querySelector('a[href*="challenge_submit_original.php"]');
+        const empty=[...scope.querySelectorAll('center')].find(n=>/^There are no comments on your image yet\.?$/i.test(n.textContent.trim()));
+        const rules=form.querySelector('a[href*="challenge_rules.php"]');
+        const description=form.querySelector('img[src*="description.gif"]');
+        const critique=form.querySelector('#FLAG_CRITIQUE');
+        // Unknown comment markup stays native, so no comments or controls are silently lost.
+        if(!empty)return;
+        app.innerHTML=header+'<main class="dpc-photo-detail dpc-live-entry"></main>'+footer;
+        const body=app.querySelector('main');
+        const label=make('div','dpc-gallery-context-label','Your challenge entry');body.before(label);
+        const gallery=make('section','dpc-detail-gallery'),stage=make('div','dpc-detail-stage');
+        const image=make('img');image.src=photo.src;image.alt=title.textContent.trim();stage.append(image);gallery.append(stage);
+        const caption=make('div','dpc-editorial-credit dpc-photo-caption');
+        caption.append(make('h1','dpc-home-feature-title',title.textContent.trim()));
+        const meta=make('div','dpc-detail-credit');meta.append(copyLink(challenge));caption.append(meta);
+        if(rules){const rule=copyLink(rules);rule.className='dpc-live-rule';caption.append(rule);}
+        gallery.append(caption);body.append(gallery);
+        const section=(name)=>{const sec=make('section','dpc-detail-section');sec.append(make('h2','',name));body.append(sec);return sec;};
+        const desc=description?.title?.replace(/^Challenge Details:\s*/i,'').trim();
+        if(desc){const sec=section('Photographer’s comments');sec.classList.add('dpc-detail-photographer');sec.append(make('div','dpc-detail-prose',desc));}
+        const comments=section('Comments');comments.append(make('p','dpc-detail-prose','There are no comments on your image yet.'));
+        if(critique){
+            const sec=section('Critique Club'),nativeForm=make('form');
+            nativeForm.method=form.method;nativeForm.action=form.action;
+            const checkbox=critique.cloneNode(true);checkbox.removeAttribute('onclick');
+            const row=make('label','dpc-live-critique');row.append(checkbox,make('span','','Request a critique from the DPC Critique Club'));
+            nativeForm.append(row);sec.append(nativeForm);
+            const action=critique.getAttribute('onclick')?.match(/this\.form\.action\s*=\s*['"]([^'"]+)['"]/);
+            checkbox.addEventListener('change',()=>{if(action)nativeForm.action=action[1];nativeForm.submit();});
+        }
+        if(originalLink){const sec=section('Original photograph');sec.append(make('p','dpc-detail-prose','You can submit your original in advance in case your entry is questioned, particularly if you will be away during or shortly after voting.'));const link=copyLink(originalLink,'Submit original');link.className='dpc-detail-action';sec.append(link);}
+        style.textContent += '#dpc-app .dpc-live-entry .dpc-home-feature-title{height:auto;margin:0 0 8px;line-height:1.12;overflow-wrap:anywhere}#dpc-app .dpc-live-entry .dpc-live-rule{font:500 12px/1.5 system-ui,sans-serif;color:var(--muted)}#dpc-app .dpc-live-entry .dpc-live-critique{display:flex;gap:12px;align-items:center;font:400 14px/1.5 system-ui,sans-serif;cursor:pointer}#dpc-app .dpc-live-entry .dpc-live-critique input{width:20px;height:20px;flex:none;accent-color:var(--accent)}#dpc-app .dpc-live-entry .dpc-detail-prose{margin:0 0 8px}html.dpc-light #dpc-app .dpc-live-entry h1,html.dpc-light #dpc-app .dpc-live-entry h2{font-weight:600}';
+        app.querySelector('#dpc-original').onclick=()=>original();mount();
+    }
+
     function buildSubmission(){
         const upload=document.getElementById('upload_container'),submit=document.getElementById('submit'),agreement=document.getElementById('agreement_check');
         const uploadSection=upload?.closest('.divider_container');
@@ -4488,6 +4534,7 @@ html.dpc-viewing body {
     });
     if(location.pathname==='/messaging.php'){buildMessages();return;}
     if (isForum) { buildForum(); return; }
+    if(location.pathname==='/challenge_stats.php'){buildLiveEntry();return;}
     if (isSubmit) { buildSubmission(); return; }
     if (isChallengeIndex) { buildChallengeIndex(); return; }
     if (isProfile) { buildProfile(); return; }
