@@ -2,7 +2,7 @@
 // ==UserScript==
 // @name DPChallenge Mobile — Editorial Gallery
 // @namespace dpc-mobile
-// @version 6.11
+// @version 6.12
 // @updateURL https://raw.githubusercontent.com/Konador/dpc-mobile-restyle/main/dpc-mobile.user.js
 // @downloadURL https://raw.githubusercontent.com/Konador/dpc-mobile-restyle/main/dpc-mobile.user.js
 // @match *://*.dpchallenge.com/challenge_vote_image.php*
@@ -1499,6 +1499,7 @@ html.dpc-viewing body {
         const m=path.match(/^\/images\/(?:user_icon\/)?(1|11|21|31)(_F|_N)?\.gif$/i);
         const label=[im.alt,im.title].join(' ');
         const customId=path.match(/^\/images\/user_icon\/user_id\/(\d+)\.gif$/i)?.[1];
+        if(customId==='2780')return {role:'Member',variant:'',skin:'konador'};
         const councilSkin=({'1031':'general','69684':'chef','100393':'paul'})[customId];
         if(councilSkin)return {role:'Site Council',variant:'',skin:councilSkin};
         if(customId==='19825'||customId==='30861'||customId==='30049')return {role:'Administrator',variant:'',skin:customId==='19825'?'bat':customId==='30861'?'bear':''};
@@ -1520,7 +1521,7 @@ html.dpc-viewing body {
     function dpcRoleData(role,variant='',skin=''){
         const p=dpcRoleProp,k=dpcRoleKeys;
         const rgb=h=>[1,3,5].map(i=>parseInt(h.slice(i,i+2),16)/255);
-        const palette=(skin?({general:['#454477','#181831'],chef:['#ffffff','#c5c9d2'],paul:['#8ce83c','#28920c'],bat:['#383a43','#101116'],bear:['#ffffff','#c9cbd1']})[skin]:null)||({'Registered User':['#c8cbd2','#727783'],'Member':['#a9a3ff','#5047bc'],'Site Council':['#d0a6ed','#7950a8'],'Administrator':['#ffe28b','#b78522']})[role];
+        const palette=(skin?({general:['#454477','#181831'],chef:['#ffffff','#c5c9d2'],paul:['#8ce83c','#28920c'],bat:['#383a43','#101116'],bear:['#ffffff','#c9cbd1'],konador:['#45454d','#17171c']})[skin]:null)||({'Registered User':['#c8cbd2','#727783'],'Member':['#a9a3ff','#5047bc'],'Site Council':['#d0a6ed','#7950a8'],'Administrator':['#ffe28b','#b78522']})[role];
         const tr=(pos=[0,0],anchor=[0,0],scale=[100,100],rot=0)=>({ty:'tr',p:Array.isArray(pos)?p(pos):pos,a:p(anchor),s:Array.isArray(scale)?p(scale):scale,r:typeof rot==='number'?p(rot):rot,o:p(100),sk:p(0),sa:p(0)});
         // Convert the approved SVG's exact cubic/quadratic geometry into Bodymovin paths.
         function outline(start,segments,closed=true){
@@ -1648,6 +1649,60 @@ html.dpc-viewing body {
             const solid=(sh,color,w=0)=>({ty:'gr',it:[sh,{ty:'fl',c:p(rgb(color)),o:p(100),r:1},...(w?[stroke('#121319',w)]:[]),tr()]});
             const form=(start,segments,color,w=0)=>solid(outline(start,segments),color,w);
             const metallic=(x,y,w,h)=>ell(x,y,w,h,'#e9bd46');
+            if(skin==='konador'){
+                const browns=[[0,'#b17b43'],[.48,'#79502e'],[1,'#49301f']];
+                // A compact, unruly silhouette: rounded curls with individually
+                // shaped tips, rather than a helmet or a row of identical circles.
+                const curls=gradient(outline([49,86],[
+                    [[37,80],[34,64],[43,56]],[[28,44],[46,31],[55,35]],
+                    [[42,19],[62,10],[75,19]],[[70,3],[91,0],[101,15]],
+                    [[113,-1],[135,4],[137,18]],[[155,5],[176,19],[167,32]],
+                    [[188,27],[194,47],[181,53]],[[196,64],[185,83],[173,87]],
+                    [[181,99],[164,107],[155,95]],[[150,79],[159,62],[151,49]],
+                    [[138,63],[126,53],[125,42]],[[115,60],[96,65],[99,47]],
+                    [[86,61],[73,63],[69,51]],[[58,63],[67,83],[59,94]],
+                    [[47,101],[39,94],[49,86]]
+                ]),browns,[62,8],[160,100],10);
+                const curlDetails=[];
+                for(const [a,b,c,d] of [
+                    [[57,35],[70,42],[84,33],[81,22]],
+                    [[98,22],[117,17],[122,31],[111,40]],
+                    [[138,25],[152,21],[159,34],[148,41]],
+                    [[166,49],[179,55],[176,69],[166,69]]
+                ])curlDetails.push({ty:'gr',it:[outline(a,[[b,c,d]],false),stroke('#cc9456',4,65),tr()]});
+                const boundaries=[0,30,66,102,222,223,259,295,337,379,421,422,466,510,554];
+                const hp=turnHeadPos.k.map(f=>[f.t,f.s[1]]),hr=turnRot.k.map(f=>[f.t,f.s[0]]);
+                const scales=[],angles=[],positions=[];let v=0,b=0,rv=0,rr=0;
+                for(let t=0;t<=554;t++){
+                    const prev=Math.max(0,t-1);
+                    if(boundaries.includes(t)){v=b=rv=rr=0;}
+                    else{
+                        v=(v+(-(sampleTrack(hp,t)-sampleTrack(hp,prev))*2.5-b)*.28)*.76;b+=v;
+                        rv=(rv+(-(sampleTrack(hr,t)-sampleTrack(hr,prev))*2.7-65*(yawAt(t)-yawAt(prev))-rr)*.24)*.76;rr+=rv;
+                    }
+                    if(t%2===0||boundaries.includes(t)){
+                        const settle=Math.min(1,((boundaries.find(x=>x>=t)??554)-t)/5),yaw=yawAt(t),pitch=pitchAt(t);
+                        angles.push([t,rr*settle+5*yaw]);scales.push([t,[100-10*Math.abs(yaw)-b*.5*settle,100+b*1.5*settle]]);
+                        positions.push([t,[110+12*yaw,65+7*pitch-b*.4*settle]]);
+                    }
+                }
+                costumeHead.push({ty:'gr',it:[...curlDetails,curls,tr(k(positions),[110,65],k(scales),k(angles))]});
+                const beard=gradient(outline([62,98],[
+                    [[72,112],[77,112],[83,113]],[[88,102],[100,101],[110,108]],
+                    [[120,101],[132,102],[137,113]],[[143,112],[148,112],[158,98]],
+                    [[161,119],[145,140],[130,144]],[[118,150],[102,150],[90,144]],
+                    [[75,140],[59,119],[62,98]]
+                ]),browns,[80,103],[131,147],6);
+                // No added mouth; beard is a compact graphic shape under the shades.
+                costumeHead.push({ty:'gr',it:[beard,tr(k([[0,[110,118]],[421,[110,118]],...turnTimes.map(t=>[t,[110+13*yawAt(t),118+4*pitchAt(t)]])]),[110,118],k([[0,[100,100]],[421,[100,100]],...turnTimes.map(t=>[t,[100-13*Math.abs(yawAt(t)),100]])]))]});
+                // Printed flames, not literal fire: bold red/orange/yellow shapes
+                // contained inside the dark shirt, fixed to the torso.
+                const flame=(x,top,w)=>{
+                    const q=(a,b)=>[x+a*w,b];
+                    return gradient(outline(q(-.5,183),[[q(-.48,174),q(-.2,170),q(-.18,163)],[q(-.1,168),q(.04,170),q(.06,top)],[q(.32,top+8),q(.06,top+16),q(.38,174)],[q(.49,179),q(.5,183),q(.5,183)],[q(-.5,183)]]),[[0,'#ed3224'],[.55,'#ff831b'],[1,'#ffdc43']],q(0,top),q(0,183),0);
+                };
+                costumeBody.push(flame(65,163,31),flame(105,151,47),flame(151,158,39));
+            }
             if(skin==='paul'){
                 // Dark shoulder yoke over the original bright green jersey.
                 costumeBody.push(gradient(outline([35,178],[[[35,156],[72,146],[110,139]],[[148,146],[185,156],[185,178]],[[165,164],[110,163]],[[55,164],[35,178]]]),[[0,'#55565d'],[1,'#25262b']],[60,140],[160,174],8));
@@ -1716,10 +1771,10 @@ html.dpc-viewing body {
         const pawnColors=[[0,palette[0]],[1,palette[1]]];
         const pawnHead=gradient(outline([57,82],[[[57,82-c],[110-c,29],[110,29]],[[110+c,29],[163,82-c],[163,82]],[[163,82+c],[110+c,135],[110,135]],[[110-c,135],[57,82+c],[57,82]]]),pawnColors,[72,29],[148,135]);
         const pawnBody=gradient(outline([35,191],[[[35,157],[68,138],[96,124]],[[110,119],[124,124]],[[152,138],[185,157],[185,191]],[[35,191]]]),pawnColors,[65,124],[155,191]);
-        const head={ty:'gr',it:[...(neutral?[...(admin?[shades]:[]),pawnHead]:[...(skin==='bat'?[shades,...costumeHead]:[...costumeHead,admin||skin?shades:eyes]),...(!skin||skin==='bear'?[hair]:[]),face,...tails]),tr(turnHeadPos,[110,130],turnHeadScale,turnRot)]};
+        const head={ty:'gr',it:[...(neutral?[...(admin?[shades]:[]),pawnHead]:[...((skin==='bat'||skin==='konador')?[shades,...costumeHead]:[...costumeHead,admin||skin?shades:eyes]),...(!skin||skin==='bear'?[hair]:[]),face,...tails]),tr(turnHeadPos,[110,130],turnHeadScale,turnRot)]};
         const torso={ty:'gr',it:[...(neutral?[pawnBody]:[...costumeBody,line([66,175],[66,189]),line([154,175],[154,189]),neck,shirt]),tr()]};
         // Extra vertical room for overshoot, without changing the approved artwork.
-        return {v:'5.12.2',fr:30,ip:0,op:555,w:220,h:skin==='general'?235:skin==='chef'?265:205,nm:'DPC approved member character',ddd:0,assets:[],layers:[{ddd:0,ind:1,ty:4,nm:'Character',sr:1,ks:{o:p(100),r:p(0),p:p([0,skin==='general'?30:skin==='chef'?60:0,0]),a:p([0,0,0]),s:p([100,100,100])},ao:0,shapes:[head,torso],ip:0,op:555,st:0,bm:0}]};
+        return {v:'5.12.2',fr:30,ip:0,op:555,w:220,h:skin==='general'?235:skin==='chef'?265:skin==='konador'?240:205,nm:'DPC approved member character',ddd:0,assets:[],layers:[{ddd:0,ind:1,ty:4,nm:'Character',sr:1,ks:{o:p(100),r:p(0),p:p([0,skin==='general'?30:skin==='chef'?60:skin==='konador'?35:0,0]),a:p([0,0,0]),s:p([100,100,100])},ao:0,shapes:[head,torso],ip:0,op:555,st:0,bm:0}]};
     }
     const dpcRoleObserver=typeof IntersectionObserver==='function'?new IntersectionObserver(entries=>{
         for(const e of entries){const state=e.target.dpcRoleState;if(!state)continue;state.visible=e.isIntersecting;if(state.visible)dpcRoleSchedule(e.target,state);else dpcRoleStop(state);}
