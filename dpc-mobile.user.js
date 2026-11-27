@@ -2,7 +2,7 @@
 // ==UserScript==
 // @name DPChallenge Mobile — Editorial Gallery
 // @namespace dpc-mobile
-// @version 6.18
+// @version 6.19
 // @updateURL https://raw.githubusercontent.com/Konador/dpc-mobile-restyle/main/dpc-mobile.user.js
 // @downloadURL https://raw.githubusercontent.com/Konador/dpc-mobile-restyle/main/dpc-mobile.user.js
 // @match *://*.dpchallenge.com/challenge_vote_image.php*
@@ -128,6 +128,7 @@ if(softChild){
 
 if (!softChild&&sessionStorage.getItem('dpc-original-once')) {
     sessionStorage.removeItem('dpc-original-once');
+    if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',nativeSourceButton,{once:true});else nativeSourceButton();
     return;
 }
 
@@ -158,9 +159,16 @@ function revealPage(){
     bootStyle.remove();
 }
 const bootTimeout=setTimeout(revealPage,8000);
+function nativeSourceButton(){
+    if(softChild||!document.body||document.getElementById('dpc-native-source'))return;
+    const button=document.createElement('button');button.id='dpc-native-source';button.type='button';button.textContent='Copy page HTML';
+    button.style.cssText='display:block;margin:16px auto;padding:10px 16px;border:1px solid #777;border-radius:6px;background:#eee;color:#222;font:14px system-ui,sans-serif;cursor:pointer';
+    button.onclick=async()=>{const clone=document.documentElement.cloneNode(true);clone.querySelector('#dpc-native-source')?.remove();const html=clone.outerHTML;try{await navigator.clipboard.writeText(html);button.textContent='HTML copied';}catch{const t=document.createElement('textarea');t.value=html;t.style.cssText='display:block;width:95%;height:180px;margin:auto';button.after(t);t.select();button.textContent='Select and copy HTML below';}};
+    document.body.append(button);
+}
 function boot(){
     try{start();}
-    finally{clearTimeout(bootTimeout);revealPage();
+    finally{clearTimeout(bootTimeout);revealPage();if(!document.documentElement.classList.contains('dpc-mobile'))nativeSourceButton();
         if(softChild){const ready=!!document.querySelector('#dpc-app')&&document.documentElement.classList.contains('dpc-mobile');requestAnimationFrame(()=>requestAnimationFrame(()=>parent.__dpcSoftReady?.(window,ready)));}
     }
 }
@@ -4097,8 +4105,16 @@ html.dpc-viewing body {
         const rules=form.querySelector('a[href*="challenge_rules.php"]');
         const description=form.querySelector('img[src*="description.gif"]');
         const critique=form.querySelector('#FLAG_CRITIQUE');
-        // Unknown comment markup stays native, so no comments or controls are silently lost.
-        if(!empty)return;
+        const thread=scope.querySelector('table.dpc-forum-thread');
+        const records=[];let record=null;
+        if(thread)for(const row of thread.rows){
+            const author=row.querySelector('.dpc-forum-author-details a[href*="profile.php"]');
+            if(author){record={author,source:row,actions:row.querySelector('.dpc-forum-actions')};records.push(record);}
+            if(!record)continue;
+            const message=row.querySelector('.dpc-forum-message .forum-post td');if(message)record.message=message;
+            const helpful=row.querySelector('input[type="checkbox"][id^="helpful_"]');if(helpful)record.helpful=helpful;
+        }
+        if(!empty&&(!records.length||records.some(r=>!r.message||!r.helpful)))return;
         app.innerHTML=header+'<main class="dpc-photo-detail dpc-live-entry"></main>'+footer;
         const body=app.querySelector('main');
         const label=make('div','dpc-gallery-context-label','Your challenge entry');body.before(label);
@@ -4111,7 +4127,22 @@ html.dpc-viewing body {
         const section=(name)=>{const sec=make('section','dpc-detail-section');sec.append(make('h2','',name));body.append(sec);return sec;};
         const desc=description?.title?.replace(/^Challenge Details:\s*/i,'').trim();
         if(desc){const sec=make('div','dpc-detail-photographer dpc-live-note');gallery.append(sec);sec.append(make('div','dpc-detail-prose',desc));}
-        const comments=section('Comments');comments.append(make('p','dpc-detail-prose','No comments yet.'));
+        const comments=section('Comments');
+        if(!records.length)comments.append(make('p','dpc-detail-prose','No comments yet.'));
+        for(const r of records){
+            const card=make('article','dpc-detail-comment'),head=make('div','dpc-detail-comment-head'),meta=make('div');
+            const avatar=r.source.querySelector('.forumpic img');
+            if(avatar){const im=avatar.cloneNode(true);im.removeAttribute('style');im.loading='lazy';head.append(im);}
+            const author=copyLink(r.author);dpcRoleAttach(author,r.source.querySelector('.dpc-forum-author-details'));meta.append(author);
+            if(r.actions){const time=r.actions.cloneNode(true);time.querySelectorAll('span,img,a').forEach(n=>n.remove());meta.append(make('small','',time.textContent.trim()));}
+            head.append(meta);card.append(head);
+            const prose=make('div','dpc-detail-prose');for(const n of r.message.childNodes)prose.append(n.cloneNode(true));card.append(prose);
+            const bar=make('div','dpc-detail-comment-actions'),label=make('label','dpc-live-helpful');
+            // Move the original checkbox, preserving native inline handlers and unique IDs.
+            // The native rating image and rate beacon remain in the original DOM for rateComment.
+            label.append(r.helpful,make('span','','This comment was helpful'));bar.append(label);card.append(bar);comments.append(card);
+        }
+        style.textContent += '#dpc-app .dpc-live-helpful{display:inline-flex;align-items:center;gap:7px;color:var(--muted);font:400 12px/1.4 system-ui,sans-serif;cursor:pointer}#dpc-app .dpc-live-helpful input{width:16px;height:16px;margin:0;accent-color:var(--accent)}#dpc-app .dpc-live-entry .dpc-detail-comment:last-child{border-bottom:0}#dpc-app .dpc-live-entry .dpc-detail-comment .dpc-detail-prose{color:inherit}';
         const tools=(critique||originalLink)?section('Entry options'):null;
         if(critique){
             const sec=tools,nativeForm=make('form');
