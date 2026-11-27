@@ -2,7 +2,7 @@
 // ==UserScript==
 // @name DPChallenge Mobile — Editorial Gallery
 // @namespace dpc-mobile
-// @version 6.13
+// @version 6.14
 // @updateURL https://raw.githubusercontent.com/Konador/dpc-mobile-restyle/main/dpc-mobile.user.js
 // @downloadURL https://raw.githubusercontent.com/Konador/dpc-mobile-restyle/main/dpc-mobile.user.js
 // @match *://*.dpchallenge.com/challenge_vote_image.php*
@@ -1644,7 +1644,7 @@ html.dpc-viewing body {
         const shades={ty:'gr',it:[{ty:'gr',it:[outline([101,82],[[[119,82]]],false),stroke('#121319',7),tr()]},lens(87),lens(133),{ty:'gr',it:[outline([58,78],[[[162,78]]],false),stroke('#121319',6),tr()]},tr(addKeys(eyePos,turnTimes.map(t=>[t,[110+23*yawAt(t),87+19*pitchAt(t)]])),[110,87],k([[0,[100,100]],[421,[100,100]],...turnTimes.map(t=>[t,[100-28*Math.abs(yawAt(t)),100-12*Math.abs(pitchAt(t))]])]))]};
         // Council costume layers use the existing head/torso rig, with independent hat
         // inertia and perspective. The original GIF remains the load-failure fallback.
-        const costumeHead=[],costumeBody=[];
+        const costumeHead=[],costumeBody=[],costumeBehind=[];
         if(skin){
             const solid=(sh,color,w=0)=>({ty:'gr',it:[sh,{ty:'fl',c:p(rgb(color)),o:p(100),r:1},...(w?[stroke('#121319',w)]:[]),tr()]});
             const form=(start,segments,color,w=0)=>solid(outline(start,segments),color,w);
@@ -1700,7 +1700,40 @@ html.dpc-viewing body {
                     for(let t=0;t<=554;t++){const prev=Math.max(0,t-1);if(cuts.includes(t)){v=angle=0;}else{const target=-(sampleTrack(hp,t)-sampleTrack(hp,prev))*(1.5+j*.25)-(sampleTrack(hr,t)-sampleTrack(hr,prev))*1.4;v=(v+(target-angle)*(.20+j*.025))*.73;angle+=v;}if(t%3===0||cuts.includes(t)){const settle=Math.min(1,((cuts.find(x=>x>=t)??554)-t)/5);frames.push([t,angle*settle]);}}
                     const root=[start[0],start[1]];return {ty:'gr',it:[part,tr(root,root,[100,100],k(frames))]};
                 });
-                costumeHead.push(...hairParts,wrapShape(back,.5));
+                // Separate rear silhouette, side/temple locks and crown layers.
+                // Reveal the side facing the viewer and tuck the far side behind the face.
+                const depthTimes=[0,421,...turnTimes];
+                const depthLock=(side,level)=>{
+                    const pt=(x,y)=>[110+side*x,y];
+                    const shape=level===0
+                        ?outline(pt(37,35),[[pt(52,25),pt(65,39),pt(61,51)],[pt(59,63),pt(69,66),pt(63,79)],[pt(58,73),pt(48,77),pt(49,88)],[pt(39,82),pt(44,67),pt(39,59)],[pt(30,49),pt(37,35)]])
+                        :outline(pt(40,60),[[pt(54,50),pt(66,65),pt(57,78)],[pt(52,88),pt(64,93),pt(59,101)],[pt(43,98),pt(40,88),pt(44,78)],[pt(35,72),pt(40,60)]]);
+                    const art=gradient(shape,[[0,level?'#8c6242':'#a77a51'],[1,'#493024']],pt(36,35),pt(62,96),5);
+                    const anchor=pt(42,level?66:41);
+                    const pose=tr(k(depthTimes.map(t=>{
+                        const near=Math.max(0,-side*yawAt(t)),far=Math.max(0,side*yawAt(t));
+                        return [t,[anchor[0]+side*(near*9-far*19),anchor[1]+pitchAt(t)*12]];
+                    })),anchor,k(depthTimes.map(t=>{const near=Math.max(0,-side*yawAt(t)),far=Math.max(0,side*yawAt(t));return [t,[72+near*48-far*42,88+near*18-far*22]];})),k(depthTimes.map(t=>[t,side*(Math.max(0,-side*yawAt(t))*13-Math.max(0,side*yawAt(t))*19)+pitchAt(t)*side*8])));
+                    if(level===1)pose.o=k(depthTimes.map(t=>[t,Math.max(0,-side*yawAt(t))*100]));
+                    return {ty:'gr',it:[art,pose]};
+                };
+                for(const side of [-1,1]){
+                    costumeBehind.push(depthLock(side,0));
+                    costumeHead.push(depthLock(side,1));
+                }
+                // Rear crown stays behind the silver head; separate front roots
+                // provide coverage without a single large front-facing hair slab.
+                costumeBehind.push(wrapShape(back,.25));
+                const crown=gradient(outline([57,48],[[[52,30],[74,14],[90,22]],[[99,9],[119,12],[128,21]],[[147,13],[166,28],[163,46]],[[148,53],[132,43],[121,40]],[[103,49],[83,43],[70,55]],[[61,59],[57,48]]]),browns,[70,15],[150,56],6);
+                costumeHead.unshift(...hairParts,wrapShape(crown,.65));
+                // Reveal additional crown curls when looking down, with separate
+                // depth and occlusion rather than stretching the front fringe.
+                for(const side of [-1,1]){
+                    const x=110+side*20;
+                    const crownLock=wrapShape(gradient(outline([x-12,24],[[[x-13,9],[x+7,9],[x+14,20]],[[x+19,30],[x+6,36],[x-1,29]],[[x-8,35],[x-16,32],[x-12,24]]]),[[0,'#ab8057'],[1,'#60412c']],[x-8,13],[x+10,35],4),.35);
+                    const ct=tr();ct.o=k(depthTimes.map(t=>[t,Math.min(100,Math.max(0,pitchAt(t))*145)]));
+                    costumeHead.unshift({ty:'gr',it:[crownLock,ct]});
+                }
                 const beard=gradient(outline([65,101],[
                     [[73,114],[83,120],[92,121]],[[98,117],[104,118],[110,121]],
                     [[116,118],[122,117],[128,121]],[[137,120],[147,114],[155,101]],
@@ -1790,7 +1823,7 @@ html.dpc-viewing body {
         const pawnColors=[[0,palette[0]],[1,palette[1]]];
         const pawnHead=gradient(outline([57,82],[[[57,82-c],[110-c,29],[110,29]],[[110+c,29],[163,82-c],[163,82]],[[163,82+c],[110+c,135],[110,135]],[[110-c,135],[57,82+c],[57,82]]]),pawnColors,[72,29],[148,135]);
         const pawnBody=gradient(outline([35,191],[[[35,157],[68,138],[96,124]],[[110,119],[124,124]],[[152,138],[185,157],[185,191]],[[35,191]]]),pawnColors,[65,124],[155,191]);
-        const head={ty:'gr',it:[...(neutral?[...(admin?[shades]:[]),pawnHead]:[...((skin==='bat'||skin==='konador')?[shades,...costumeHead]:[...costumeHead,admin||skin?shades:eyes]),...(!skin||skin==='bear'?[hair]:[]),face,...tails]),tr(turnHeadPos,[110,130],turnHeadScale,turnRot)]};
+        const head={ty:'gr',it:[...(neutral?[...(admin?[shades]:[]),pawnHead]:[...((skin==='bat'||skin==='konador')?[shades,...costumeHead]:[...costumeHead,admin||skin?shades:eyes]),...(!skin||skin==='bear'?[hair]:[]),face,...tails,...costumeBehind]),tr(turnHeadPos,[110,130],turnHeadScale,turnRot)]};
         const torso={ty:'gr',it:[...(neutral?[pawnBody]:[...costumeBody,line([66,175],[66,189]),line([154,175],[154,189]),neck,shirt]),tr()]};
         // Extra vertical room for overshoot, without changing the approved artwork.
         return {v:'5.12.2',fr:30,ip:0,op:555,w:220,h:skin==='general'?235:skin==='chef'?265:skin==='konador'?225:205,nm:'DPC approved member character',ddd:0,assets:[],layers:[{ddd:0,ind:1,ty:4,nm:'Character',sr:1,ks:{o:p(100),r:p(0),p:p([0,skin==='general'?30:skin==='chef'?60:skin==='konador'?20:0,0]),a:p([0,0,0]),s:p([100,100,100])},ao:0,shapes:[head,torso],ip:0,op:555,st:0,bm:0}]};
