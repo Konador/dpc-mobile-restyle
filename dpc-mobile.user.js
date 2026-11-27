@@ -2,7 +2,7 @@
 // ==UserScript==
 // @name DPChallenge Mobile — Editorial Gallery
 // @namespace dpc-mobile
-// @version 5.86
+// @version 5.87
 // @updateURL https://raw.githubusercontent.com/Konador/dpc-mobile-restyle/main/dpc-mobile.user.js
 // @downloadURL https://raw.githubusercontent.com/Konador/dpc-mobile-restyle/main/dpc-mobile.user.js
 // @match *://*.dpchallenge.com/challenge_vote_image.php*
@@ -18,6 +18,7 @@
 // @match *://*.dpchallenge.com/forum.php*
 // @match *://*.dpchallenge.com/community_index.php*
 // @match *://*.dpchallenge.com/messaging.php*
+// @require https://cdnjs.cloudflare.com/ajax/libs/bodymovin/5.12.2/lottie_light.min.js
 // @grant none
 // @run-at document-start
 // ==/UserScript==
@@ -1499,27 +1500,69 @@ html.dpc-viewing body {
         if(/\/images\/user_icon\//i.test(path)||/^(?:Site Council|Administrator|Registered User|Member)(?:\s+.*)?$/i.test(label.trim()))return {custom:true};
         return null;
     }
-    let dpcRoleSerial=0;
+    // Original-inspired rounded character, with a shared Bodymovin rig and independent idle actions.
+    const dpcRoleMotion=matchMedia('(prefers-reduced-motion: reduce)');
+    const dpcRoleActive=new Map();
+    const dpcRoleProp=k=>({a:0,k});
+    const dpcRoleKeys=(frames)=>({a:1,k:frames.map(([t,v],i)=>i===frames.length-1?{t,s:Array.isArray(v)?v:[v]}:{t,s:Array.isArray(v)?v:[v],i:{x:.33,y:1},o:{x:.67,y:0}})});
+    function dpcRoleData(role){
+        const p=dpcRoleProp,k=dpcRoleKeys;
+        const rgb=h=>[1,3,5].map(i=>parseInt(h.slice(i,i+2),16)/255);
+        const palette=({'Registered User':['#b8bcc5','#666b78'],'Member':['#8580ee','#36349c'],'Site Council':['#b08add','#633b99'],'Administrator':['#f5ce65','#ac751f']})[role];
+        const tr=(pos=[0,0],anchor=[0,0],scale=[100,100],rot=0)=>({ty:'tr',p:Array.isArray(pos)?p(pos):pos,a:p(anchor),s:Array.isArray(scale)?p(scale):scale,r:typeof rot==='number'?p(rot):rot,o:p(100),sk:p(0),sa:p(0)});
+        const shape=(v,i,o,closed=true)=>({ty:'sh',ks:p({v,i,o,c:closed})});
+        const path=(v,i,o,fill,stroke,width=2)=>({ty:'gr',it:[shape(v,i,o),...(fill?[{ty:'fl',c:p(rgb(fill)),o:p(100),r:1}]:[]),...(stroke?[{ty:'st',c:p(rgb(stroke)),o:p(100),w:p(width),lc:2,lj:2}]:[]),tr()]});
+        const grad=(v,i,o,colors,from,to,stroke,width=2)=>({ty:'gr',it:[shape(v,i,o),{ty:'gf',o:p(100),r:1,t:1,s:p(from),e:p(to),g:{p:colors.length,k:p(colors.flatMap(([x,c])=>[x,...rgb(c)]))}},{ty:'st',c:p(rgb(stroke)),o:p(100),w:p(width),lc:2,lj:2},tr()]});
+        const ell=(x,y,w,h,c)=>({ty:'gr',it:[{ty:'el',p:p([x,y]),s:p([w,h])},{ty:'fl',c:p(rgb(c)),o:p(100),r:1},tr()]});
+        const zero=n=>Array.from({length:n},()=>[0,0]);
+        const line=(v,c,w)=>({ty:'gr',it:[shape(v,zero(v.length),zero(v.length),false),{ty:'st',c:p(rgb(c)),o:p(100),w:p(w),lc:2,lj:2},tr()]});
+        const face=grad([[32,5],[51,17],[50,35],[32,46],[14,35],[13,17]], [[-11,0],[-3,-7],[2,-8],[10,0],[5,6],[-2,7]],[[11,0],[3,7],[-5,6],[-10,0],[-2,-8],[3,-7]],[[0,'#e8e9ec'],[.5,'#b2b7c1'],[1,'#777e8e']],[20,8],[47,45],'#151722',2.6);
+        const hair=grad([[12,32],[11,19],[18,8],[32,4],[46,8],[53,19],[52,32],[47,27],[46,20],[18,20],[17,27]],[[0,0],[0,5],[-4,3],[-7,0],[-4,-3],[0,-5],[0,0],[2,2],[1,1],[4,0],[0,-3]],[[0,-4],[0,-5],[4,-3],[7,0],[4,3],[0,5],[0,0],[-2,-2],[-4,0],[-1,1],[-2,2]],[[0,'#bfc4cd'],[.48,'#9199a8'],[1,'#464c59']],[18,4],[40,30],'#151722',2.4);
+        const band=path([[18,19],[46,19],[47,22],[17,22]],zero(4),zero(4),'#282c36',null);
+        const shine=path([[20,10],[28,7],[39,8],[43,11],[30,10]],[[0,0],[-4,0],[-3,-1],[0,0],[5,0]],[[3,-2],[4,0],[3,1],[0,0],[-5,0]],'#c9ced6',null);
+        const neck=grad([[24,43],[40,43],[40,50],[32,55],[24,50]],zero(5),zero(5),[[0,'#9298a4'],[1,'#d5d8df']],[32,42],[32,55],'#151722',2.2);
+        const shirt=grad([[3,68],[3,60],[11,52],[23,48],[32,55],[41,48],[53,52],[61,60],[61,68]],[[0,0],[0,4],[-5,3],[-4,0],[-3,0],[-3,0],[-4,-2],[0,-4],[0,0]],[[0,0],[0,-4],[5,-3],[3,0],[3,0],[4,0],[5,3],[0,4],[0,0]],[[0,palette[0]],[.55,palette[0]],[1,palette[1]]],[10,49],[56,70],'#151722',2.7);
+        const eyes=[ell(25,30,3.4,3.5,'#646a77'),ell(39,30,3.4,3.5,'#646a77'),ell(24.5,29.4,1.1,1.1,'#d2d5db'),ell(38.5,29.4,1.1,1.1,'#d2d5db'),tr([32,30],[32,30],k([[0,[100,100]],[5,[100,100]],[8,[100,12]],[12,[100,100]],[24,[100,100]],[30,[100,100]],[60,[100,100]],[90,[100,100]]]))];
+        const head=[{ty:'gr',it:eyes},shine,band,hair,face,tr(k([[0,[32,43]],[30,[32,43]],[39,[32,43]],[48,[32,45]],[57,[32,43]],[60,[32,43]],[90,[32,43]]]),[32,43])];
+        // Position is constant for blink/tilt; nod segment moves the head. Tilt is a separate segment.
+        head[head.length-1].p=k([[0,[32,43]],[39,[32,43]],[48,[32,45]],[57,[32,43]],[90,[32,43]]]);
+        head[head.length-1].r=k([[0,0],[60,0],[69,-9],[77,5],[86,0],[90,0]]);
+        return {v:'5.12.2',fr:30,ip:0,op:90,w:64,h:70,nm:'DPC legacy member',ddd:0,assets:[],layers:[{ddd:0,ind:1,ty:4,nm:'Character',sr:1,ks:{o:p(100),r:p(0),p:p([0,0,0]),a:p([0,0,0]),s:p([100,100,100])},ao:0,shapes:[{ty:'gr',it:head},line([[15,62],[15,67]],palette[1],2),line([[49,62],[49,67]],palette[1],2),shirt,neck],ip:0,op:90,st:0,bm:0}]};
+    }
+    const dpcRoleObserver=typeof IntersectionObserver==='function'?new IntersectionObserver(entries=>{
+        for(const e of entries){const state=e.target.dpcRoleState;if(!state)continue;state.visible=e.isIntersecting;if(state.visible)dpcRoleSchedule(e.target,state);else dpcRoleStop(state);}
+    }):null;
+    function dpcRoleStop(state){clearTimeout(state.timer);state.timer=null;if(state.anim){state.anim.resetSegments(true);state.anim.goToAndStop(0,true);}}
+    function dpcRoleSchedule(el,state){
+        if(state.timer||!state.visible||!el.isConnected||document.hidden||dpcRoleMotion.matches||!state.ready)return;
+        state.timer=setTimeout(()=>{state.timer=null;if(!el.isConnected||!state.visible||document.hidden||dpcRoleMotion.matches)return;
+            const segments=[[0,24],[30,60],[60,89]],segment=segments[Math.floor(Math.random()*segments.length)];
+            state.anim.playSegments(segment,true);
+        },3500+Math.random()*12500);
+    }
+    function dpcRoleSweep(){
+        for(const [el,state] of dpcRoleActive){if(!el.isConnected){dpcRoleStop(state);state.anim?.destroy();dpcRoleObserver?.unobserve(el);dpcRoleActive.delete(el);}else if(document.hidden||dpcRoleMotion.matches)dpcRoleStop(state);else dpcRoleSchedule(el,state);}
+    }
+    document.addEventListener('visibilitychange',dpcRoleSweep);dpcRoleMotion.addEventListener?.('change',dpcRoleSweep);
+    let dpcRoleSweepQueued=false;
+    const dpcRoleMutation=new MutationObserver(()=>{if(!dpcRoleSweepQueued){dpcRoleSweepQueued=true;queueMicrotask(()=>{dpcRoleSweepQueued=false;dpcRoleSweep();});}});
     function dpcRoleArtwork(im){
         const info=dpcRoleInfo(im);if(!info)return null;
-        // The reference is the original front-facing character. Keep unreferenced variants intact.
-        if(info.custom||info.variant){const clone=im.cloneNode();clone.removeAttribute('style');clone.removeAttribute('width');clone.removeAttribute('height');clone.classList.add('dpc-role-icon','dpc-role-original');return clone;}
-        const palettes={'Registered User':['#c6c7cc','#8e919b','#626570'],'Member':['#9690f4','#6259c9','#383396'],'Site Council':['#bba0e9','#8b58c1','#55358b'],'Administrator':['#f5dc80','#d2a83d','#92691d']};
-        const [light,mid,dark]=palettes[info.role];
+        const clone=im.cloneNode();clone.removeAttribute('style');clone.removeAttribute('width');clone.removeAttribute('height');clone.classList.add('dpc-role-icon','dpc-role-original');
+        if(info.custom||info.variant||!window.lottie?.loadAnimation)return clone;
         const holder=document.createElement('span');holder.className='dpc-role-icon';holder.title=info.role;holder.setAttribute('role','img');holder.setAttribute('aria-label',info.role);
-        const id='dpc-role-'+(++dpcRoleSerial);
-        holder.innerHTML='<svg viewBox="0 0 24 28" aria-hidden="true"><defs>'+
-            '<linearGradient id="'+id+'-face" x1="0" y1="0" x2=".25" y2="1" gradientUnits="objectBoundingBox"><stop stop-color="#e1e2e6"/><stop offset=".48" stop-color="#b0b4be"/><stop offset="1" stop-color="#777d8a"/></linearGradient>'+
-            '<linearGradient id="'+id+'-hair" x1="0" y1="0" x2="0" y2="1"><stop stop-color="#b3b7c1"/><stop offset=".65" stop-color="#777d89"/><stop offset="1" stop-color="#3d414c"/></linearGradient>'+
-            '<linearGradient id="'+id+'-shirt" x1="0" y1="0" x2="1" y2=".75"><stop stop-color="'+light+'"/><stop offset=".55" stop-color="'+mid+'"/><stop offset="1" stop-color="'+dark+'"/></linearGradient></defs>'+
-            '<g stroke="#111116" stroke-width="1.15" stroke-linejoin="round" stroke-linecap="round">'+
-            '<path d="M.8 27.3V24.4C.8 20.8 4.2 18.1 8.8 17.5H15.2C19.8 18.1 23.2 20.8 23.2 24.4V27.3" fill="url(#'+id+'-shirt)"/>'+
-            '<path d="M8.3 16.2H15.7V18.6Q14.5 20.5 12 21.2Q9.5 20.5 8.3 18.6Z" fill="url(#'+id+'-face)"/>'+
-            '<path d="M3.9 8.3C3.9 3.6 7.2 1 12 1S20.1 3.6 20.1 8.3V10.2C20.1 14.2 16.5 17 12 17S3.9 14.2 3.9 10.2Z" fill="url(#'+id+'-face)"/>'+
-            '<path d="M4 11.4C3.2 9 3.5 5.9 5.1 3.8C6.6 1.8 9 1 12 1S17.4 1.8 18.9 3.8C20.5 5.9 20.8 9 20 11.4Q18.5 10.7 18.1 8.1Q12 6.8 5.9 8.1Q5.5 10.7 4 11.4Z" fill="url(#'+id+'-hair)"/>'+
-            '<path d="M6.3 6.3Q12 5.4 17.7 6.3" stroke="#15151a" stroke-width="1.15"/>'+
-            '<path d="M5.7 25V27.3M18.3 25V27.3" stroke="'+dark+'" stroke-width="1.2" opacity=".8"/>'+
-            '<g class="dpc-role-eyes" stroke="none" fill="#737783"><ellipse cx="9.3" cy="10.5" rx=".66" ry=".77"/><ellipse cx="14.7" cy="10.5" rx=".66" ry=".77"/></g></g></svg>';
+        holder.append(clone);
+        queueMicrotask(()=>{
+            if(!holder.isConnected)return;
+            const host=document.createElement('span');host.className='dpc-role-lottie';holder.append(host);
+            try{
+                const anim=window.lottie.loadAnimation({container:host,renderer:'svg',loop:false,autoplay:false,animationData:dpcRoleData(info.role),rendererSettings:{preserveAspectRatio:'xMidYMid meet',progressiveLoad:false}});
+                const state={anim,visible:!dpcRoleObserver,ready:false,timer:null};holder.dpcRoleState=state;dpcRoleActive.set(holder,state);
+                anim.addEventListener('DOMLoaded',()=>{if(!holder.isConnected)return;state.ready=true;anim.goToAndStop(0,true);clone.remove();dpcRoleSchedule(holder,state);});
+                anim.addEventListener('complete',()=>{anim.resetSegments(true);anim.goToAndStop(0,true);dpcRoleSchedule(holder,state);});
+                dpcRoleObserver?.observe(holder);dpcRoleMutation.observe(app,{childList:true,subtree:true});
+            }catch{host.remove();}
+        });
         return holder;
     }
     function dpcRoleAttach(target,source){
@@ -1527,7 +1570,7 @@ html.dpc-viewing body {
         const im=[...source.querySelectorAll('img')].find(i=>dpcRoleInfo(i));if(!im)return;
         const icon=dpcRoleArtwork(im);if(icon)target.prepend(icon);
     }
-    style.textContent += '#dpc-app .dpc-role-icon{display:inline-flex!important;vertical-align:-.17em;width:16px!important;height:16px!important;min-width:16px;max-width:16px!important;margin:0 4px 0 0;object-fit:contain;align-items:center;justify-content:center;flex:none;line-height:1!important;-webkit-text-size-adjust:none;text-size-adjust:none}#dpc-app .dpc-role-icon svg{width:100%!important;height:100%!important;overflow:visible}#dpc-app .dpc-role-eyes{transform-box:fill-box;transform-origin:center;animation:dpc-role-blink 7s ease infinite}@keyframes dpc-role-blink{0%,46%,50%,100%{transform:scaleY(1)}48%{transform:scaleY(.12)}}@media(prefers-reduced-motion:reduce){#dpc-app .dpc-role-eyes{animation:none}}';
+    style.textContent += '#dpc-app .dpc-role-icon{display:inline-flex!important;vertical-align:-.17em;width:16px!important;height:16px!important;min-width:16px;max-width:16px!important;margin:0 4px 0 0;object-fit:contain;align-items:center;justify-content:center;flex:none;line-height:1!important;-webkit-text-size-adjust:none;text-size-adjust:none}#dpc-app .dpc-role-icon svg{width:100%!important;height:100%!important;overflow:visible}#dpc-app .dpc-role-lottie{display:block;width:100%;height:100%;pointer-events:none}#dpc-app .dpc-role-icon>.dpc-role-original{margin:0!important}';
     function dpcRoleReplace(node){
         for(const im of node.querySelectorAll('img:not(.dpc-role-icon)')){const info=dpcRoleInfo(im);if(info&&!info.custom){const icon=dpcRoleArtwork(im);if(icon)im.replaceWith(icon);}}
     }
