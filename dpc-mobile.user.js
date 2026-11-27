@@ -2,7 +2,7 @@
 // ==UserScript==
 // @name DPChallenge Mobile — Editorial Gallery
 // @namespace dpc-mobile
-// @version 5.56
+// @version 5.57
 // @updateURL https://raw.githubusercontent.com/Konador/dpc-mobile-restyle/main/dpc-mobile.user.js
 // @downloadURL https://raw.githubusercontent.com/Konador/dpc-mobile-restyle/main/dpc-mobile.user.js
 // @match *://*.dpchallenge.com/challenge_vote_image.php*
@@ -2016,7 +2016,59 @@ html.dpc-viewing body {
         if(forumSection.children.length===1)forumSection.append(make('p','dpc-home-meta','No recent forum threads available.'));
         const tabs=make('div','dpc-home-challenge-tabs');tabs.setAttribute('role','tablist');tabs.setAttribute('aria-label','Challenges');
         tabs.classList.add('dpc-home-main-tabs');
+        style.textContent += "#dpc-app .dpc-current-submissions{display:flex;flex-direction:column;gap:6px;margin:0 0 8px;min-width:0}#dpc-app .dpc-current-submission{display:grid;grid-template-columns:54px minmax(0,1fr);gap:9px;align-items:center;padding:8px;border:1px solid var(--line);border-radius:6px;background:#25262e;text-size-adjust:none;-webkit-text-size-adjust:none}html.dpc-light #dpc-app .dpc-current-submission{background:#fff;border-color:#cdd3df}#dpc-app .dpc-current-thumb{display:block;width:54px;height:74px;background:#151515;border-radius:3px;overflow:hidden}#dpc-app .dpc-current-thumb img{display:block;width:100%;height:100%;object-fit:contain}#dpc-app .dpc-current-info{min-width:0}#dpc-app .dpc-current-challenge{display:block;font:600 11px/1.2 system-ui;color:var(--accent);overflow-wrap:anywhere}#dpc-app .dpc-current-title{display:block;font:400 10px/1.3 system-ui;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin:2px 0 5px}#dpc-app .dpc-current-values{display:flex;align-items:center;justify-content:space-between;gap:5px}#dpc-app .dpc-current-metric{display:flex;flex-direction:column;gap:1px;min-width:0;font:400 9px/1.1 system-ui;color:var(--muted);white-space:nowrap}#dpc-app .dpc-current-metric strong,#dpc-app .dpc-current-metric a{font:600 12px/1.2 system-ui;color:inherit;font-variant-numeric:tabular-nums}#dpc-app .dpc-current-metric.score strong{font:italic 700 19px/1 var(--serif),Georgia,serif;color:var(--accent)}#dpc-app .dpc-current-actions{display:flex;align-items:center;justify-content:space-between;gap:4px;margin-top:5px}#dpc-app .dpc-current-updated{font:9px/1.2 system-ui;color:var(--muted)}#dpc-app .dpc-current-update{font:600 10px/1.2 system-ui;color:var(--accent);padding:4px 8px;border:1px solid var(--accent);border-radius:4px;margin-left:auto;white-space:nowrap}";
         body.prepend(tabs,resultsSection,votingSection,entrySection,forumSection);
+        // Current voting submissions: read only the native sidebar, never other photographers' entries.
+        const submissionHead=heading(/^My Submissions\s*:?$/i);
+        const submissionTable=submissionHead?.closest('table');
+        if(submissionTable){
+            const strip=make('div','dpc-current-submissions');
+            strip.setAttribute('aria-label','My current submissions');
+            const seen=new Set();
+            const updateLinks=[...submissionTable.querySelectorAll('a[href]')].filter(a=>/challenge_stats\.php/i.test(safe(a))&&new URL(safe(a)).searchParams.get('action')==='update');
+            for(const center of submissionTable.querySelectorAll('center')){
+                const photo=center.querySelector('a[href*="challenge_stats.php"] img');
+                const detail=photo?.closest('a');
+                const challenge=center.querySelector('a[href*="CHALLENGE_ID="]');
+                if(!detail||!challenge)continue;
+                const id=new URL(safe(detail)).searchParams.get('IMAGE_ID');
+                if(!id||seen.has(id))continue;
+                seen.add(id);
+                const metrics={};let update=null;
+                for(let n=center.nextElementSibling;n&&n.tagName!=='CENTER';n=n.nextElementSibling){
+                    if(n.tagName==='TABLE'){
+                        for(const row of n.rows){
+                            if(row.cells.length<2)continue;
+                            const label=clean(row.cells[0]).replace(/:$/,'').toLowerCase();
+                            metrics[label]={value:clean(row.cells[1]),a:row.cells[1].querySelector('a[href]')};
+                        }
+                    }
+                    const candidate=[...n.querySelectorAll('a[href]')].find(a=>updateLinks.includes(a));
+                    if(candidate)update=candidate;
+                }
+                const card=make('div','dpc-current-submission');
+                const thumb=link(detail,'dpc-current-thumb','');thumb.textContent='';
+                const img=make('img');img.src=photo.src;img.alt=clean(detail);thumb.append(img);
+                const info=make('div','dpc-current-info');
+                info.append(link(challenge,'dpc-current-challenge'));
+                const title=link(detail,'dpc-current-title');info.append(title);
+                const values=make('div','dpc-current-values');
+                for(const [key,label] of [['avg vote','Avg'],['votes','Votes'],['views','Views'],['comments','Comments'],['favorites','Faves']]){
+                    const metric=metrics[key];if(!metric)continue;
+                    const cell=make('div','dpc-current-metric'+(key==='avg vote'?' score':''));
+                    cell.append(make('span','',label));
+                    cell.append(metric.a?link(metric.a,'',metric.value):make('strong','',metric.value));
+                    values.append(cell);
+                }
+                info.append(values);
+                const actions=make('div','dpc-current-actions');
+                if(metrics.updated)actions.append(make('span','dpc-current-updated','Updated '+metrics.updated.value));
+                const nativeUpdate=update||updateLinks[0];
+                if(nativeUpdate){const refresh=link(nativeUpdate,'dpc-current-update','Update');refresh.setAttribute('aria-label','Update submission scores');actions.append(refresh);}
+                info.append(actions);card.append(thumb,info);strip.append(card);
+            }
+            if(strip.children.length)tabs.before(strip);
+        }
         const panels=[resultsSection,votingSection,entrySection,forumSection],buttons=[];
         const labels=['Results',allVoted?'Comment':'Vote','Enter','Forum'];
         panels.forEach((panel,i)=>{
