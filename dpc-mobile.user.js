@@ -2,7 +2,7 @@
 // ==UserScript==
 // @name DPChallenge Mobile — Editorial Gallery
 // @namespace dpc-mobile
-// @version 5.70
+// @version 5.71
 // @updateURL https://raw.githubusercontent.com/Konador/dpc-mobile-restyle/main/dpc-mobile.user.js
 // @downloadURL https://raw.githubusercontent.com/Konador/dpc-mobile-restyle/main/dpc-mobile.user.js
 // @match *://*.dpchallenge.com/challenge_vote_image.php*
@@ -2315,6 +2315,12 @@ html.dpc-viewing body {
 
         if (!fields.Challenge) return;
 
+        // The native divider explicitly identifies own/team entries, which cannot be rated.
+        function ownTeamEntry(cell){
+            const table=cell.closest('.dpc-vote-thumbnail-grid');
+            const divider=table?.previousElementSibling;
+            return !!divider?.matches('.divider')&&/you and your team.s photographs/i.test(divider.textContent);
+        }
         const entries = cells.map(cell => {
             const link = cell.querySelector(
                 'a[href*="challenge_vote_image.php?IMAGE_ID="]'
@@ -2331,7 +2337,7 @@ html.dpc-viewing body {
                 'a[href*="challenge_vote_list_comment.php"] img[src$="/comment.gif"]'
             );
 
-            const rating = Number(selected?.textContent.trim()) || 0;
+            const rating = ownTeamEntry(cell)?-1:Number(selected?.textContent.trim()) || 0;
 
             return {
                 href:link.href,
@@ -2513,7 +2519,7 @@ html.dpc-viewing body {
                             source:new URL(photo.getAttribute('src'),response.url).href,
                             title:link.querySelector('b')?.textContent.trim()
                                 || link.textContent.trim() || 'Photograph',
-                            rating:Number(selected?.textContent.trim())||0,
+                            rating:ownTeamEntry(cell)?-1:Number(selected?.textContent.trim())||0,
                             commented:!!comment &&
                                 !comment.getAttribute('src').includes('comment_none')
                         });
@@ -2538,10 +2544,10 @@ html.dpc-viewing body {
             const filtered=entries.filter(e=>
                 activeRating!==null ? e.rating===activeRating :
                 mode==='unrated' ? e.rating===0 :
-                mode==='comments' ? !e.commented : true
+                mode==='comments' ? e.rating!==-1&&!e.commented : true
             );
 
-            const ordered=[0,10,9,8,7,6,5,4,3,2,1]
+            const ordered=[0,10,9,8,7,6,5,4,3,2,1,-1]
                 .flatMap(r=>filtered.filter(e=>e.rating===r));
 
             const shown=ordered.slice(0,visibleLimit);
@@ -2553,7 +2559,7 @@ html.dpc-viewing body {
 
             container.querySelector('.dpc-empty')?.remove();
 
-            for (const rating of [0,10,9,8,7,6,5,4,3,2,1]) {
+            for (const rating of [0,10,9,8,7,6,5,4,3,2,1,-1]) {
                 const group=shown.filter(e=>e.rating===rating);
                 let section=container.querySelector('[data-group="'+rating+'"]');
 
@@ -2570,7 +2576,7 @@ html.dpc-viewing body {
                 }
 
                 section.querySelector('.dpc-group-name').innerHTML=
-                    rating?'Rated <em>'+rating+'</em>':'Unrated';
+                    rating===-1?"You and your team's <em>photographs</em>":rating?'Rated <em>'+rating+'</em>':'Unrated';
 
                 const count=filtered.filter(e=>e.rating===rating).length;
                 section.querySelector('.dpc-group-count').textContent=
