@@ -2,7 +2,7 @@
 // ==UserScript==
 // @name DPChallenge Mobile — Editorial Gallery
 // @namespace dpc-mobile
-// @version 5.94
+// @version 5.95
 // @updateURL https://raw.githubusercontent.com/Konador/dpc-mobile-restyle/main/dpc-mobile.user.js
 // @downloadURL https://raw.githubusercontent.com/Konador/dpc-mobile-restyle/main/dpc-mobile.user.js
 // @match *://*.dpchallenge.com/challenge_vote_image.php*
@@ -1528,10 +1528,12 @@ html.dpc-viewing body {
         const gradient=(sh,colors,from,to,w=17)=>({ty:'gr',it:[sh,{ty:'gf',o:p(100),r:1,t:1,s:p(from),e:p(to),g:{p:colors.length,k:p(colors.flatMap(([x,c])=>[x,...rgb(c)]))}},stroke('#121319',w),tr()]});
         const ell=(x,y,w,h,c)=>({ty:'gr',it:[{ty:'el',p:p([x,y]),s:p([w,h])},{ty:'fl',c:p(rgb(c)),o:p(100),r:1},tr()]});
         const line=(a,b)=>({ty:'gr',it:[outline(a,[[b]],false),stroke(palette[1],8,80),tr()]});
-        const silver=[[0,'#f0f2f6'],[.5,'#c7cbd5'],[1,'#9299a9']];
+        const admin=role==='Administrator',neutral=variant==='_N';
+        const silver=admin?[[0,'#fff0ae'],[.5,'#e6bb50'],[1,'#b78522']]:[[0,'#f0f2f6'],[.5,'#c7cbd5'],[1,'#9299a9']];
+        const hairColors=admin?[[0,'#c99a35'],[1,'#85601b']]:[[0,'#b5bbc7'],[1,'#697181']];
         const c=53*.5522847498;
         const face=gradient(outline([57,82],[[[57,82-c],[110-c,29],[110,29]],[[110+c,29],[163,82-c],[163,82]],[[163,82+c],[110+c,135],[110,135]],[[110-c,135],[57,82+c],[57,82]]]),silver,[72,29],[148,135]);
-        const hair=gradient(outline([57,82],[[[57,82-c],[110-c,29],[110,29]],[[110+c,29],[163,82-c],[163,82]],[[153,76],[151,58],[145,53]],[[118,76],[88,50],[70,67]],[[65,76],[57,82]]]),[[0,'#b5bbc7'],[1,'#697181']],[68,29],[153,82],14);
+        const hair=gradient(outline([57,82],[[[57,82-c],[110-c,29],[110,29]],[[110+c,29],[163,82-c],[163,82]],[[153,76],[151,58],[145,53]],[[118,76],[88,50],[70,67]],[[65,76],[57,82]]]),hairColors,[68,29],[153,82],14);
         const neck=gradient(outline([89,122],[[[131,122]],[[131,136]],[[110,152]],[[89,136]],[[89,122]]]),silver,[95,122],[125,152]);
         const shirt=gradient(outline([35,185],[[[35,178]],[[35,156],[72,146],[110,139]],[[148,146],[185,156],[185,178]],[[185,185]],[[185,191],[179,191]],[[41,191]],[[35,191],[35,185]]]),[[0,palette[0]],[1,palette[1]]],[50,133],[170,191]);
         // All actions start and finish at the same resting pose, including the single idle loop.
@@ -1592,7 +1594,7 @@ html.dpc-viewing body {
             for(const side of [-1,1]){
                 const root=[110+side*45,69];
                 const point=(x,y)=>[root[0]+side*x,root[1]+y];
-                const tail=gradient(outline(point(0,-5),[[point(17,-5),point(28,9),point(29,23)],[point(30,34),point(38,43),point(41,43)],[point(31,53),point(12,49),point(10,35)],[point(7,22),point(12,12),point(0,-5)]]),[[0,'#b5bbc7'],[1,'#697181']],point(0,0),point(34,49),13);
+                const tail=gradient(outline(point(0,-5),[[point(17,-5),point(28,9),point(29,23)],[point(30,34),point(38,43),point(41,43)],[point(31,53),point(12,49),point(10,35)],[point(7,22),point(12,12),point(0,-5)]]),hairColors,point(0,0),point(34,49),13);
                 const tie=ell(root[0],root[1]+2,13,13,palette[1]);
                 const angles=[],flex=[],positions=[];
                 let angle=0,velocity=0,stretch=0,stretchVelocity=0;
@@ -1624,7 +1626,10 @@ html.dpc-viewing body {
                 tails.push({ty:'gr',it:[tie,tail,tr(k(positions),root,k(flex),k(angles))]});
             }
         }
-        const head={ty:'gr',it:[eyes,hair,face,...tails,tr(turnHeadPos,[110,130],turnHeadScale,turnRot)]};
+        // Sunglasses are a rigid facial accessory: follow gaze projection, not eyelid squash.
+        const lens=(x)=>({ty:'gr',it:[outline([x-16,77],[[[x+16,77]],[[x+16,87],[x+12,96],[x,96]],[[x-12,96],[x-16,87],[x-16,77]]]),{ty:'fl',c:p(rgb('#292319')),o:p(100),r:1},stroke('#121319',6),tr()]});
+        const shades={ty:'gr',it:[{ty:'gr',it:[outline([101,82],[[[119,82]]],false),stroke('#121319',7),tr()]},lens(87),lens(133),{ty:'gr',it:[outline([58,78],[[[162,78]]],false),stroke('#121319',6),tr()]},tr(addKeys(eyePos,turnTimes.map(t=>[t,[110+23*yawAt(t),87+19*pitchAt(t)]])),[110,87],k([[0,[100,100]],[421,[100,100]],...turnTimes.map(t=>[t,[100-28*Math.abs(yawAt(t)),100-12*Math.abs(pitchAt(t))]])]))]};
+        const head={ty:'gr',it:[admin?shades:eyes,...(neutral?[]:[hair]),face,...tails,tr(turnHeadPos,[110,130],turnHeadScale,turnRot)]};
         const torso={ty:'gr',it:[line([66,175],[66,189]),line([154,175],[154,189]),neck,shirt,tr()]};
         // Extra vertical room for overshoot, without changing the approved artwork.
         return {v:'5.12.2',fr:30,ip:0,op:555,w:220,h:205,nm:'DPC approved member character',ddd:0,assets:[],layers:[{ddd:0,ind:1,ty:4,nm:'Character',sr:1,ks:{o:p(100),r:p(0),p:p([0,0,0]),a:p([0,0,0]),s:p([100,100,100])},ao:0,shapes:[head,torso],ip:0,op:555,st:0,bm:0}]};
@@ -1656,7 +1661,7 @@ html.dpc-viewing body {
     function dpcRoleArtwork(im){
         const info=dpcRoleInfo(im);if(!info)return null;
         const clone=im.cloneNode();clone.removeAttribute('style');clone.removeAttribute('width');clone.removeAttribute('height');clone.classList.add('dpc-role-icon','dpc-role-original');
-        if(info.custom||(info.variant&&info.variant!=='_F')||!window.lottie?.loadAnimation)return clone;
+        if(info.custom||!window.lottie?.loadAnimation)return clone;
         const holder=document.createElement('span');holder.className='dpc-role-icon';holder.title=info.role;holder.setAttribute('role','img');holder.setAttribute('aria-label',info.role);
         holder.append(clone);
         queueMicrotask(()=>{
