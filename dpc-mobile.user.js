@@ -2,7 +2,7 @@
 // ==UserScript==
 // @name DPChallenge Mobile — Editorial Gallery
 // @namespace dpc-mobile
-// @version 6.00
+// @version 6.01
 // @updateURL https://raw.githubusercontent.com/Konador/dpc-mobile-restyle/main/dpc-mobile.user.js
 // @downloadURL https://raw.githubusercontent.com/Konador/dpc-mobile-restyle/main/dpc-mobile.user.js
 // @match *://*.dpchallenge.com/challenge_vote_image.php*
@@ -1761,6 +1761,7 @@ html.dpc-viewing body {
         const icon=dpcRoleArtwork(im);if(icon)target.prepend(icon);
     }
     style.textContent += '#dpc-app .dpc-role-icon{display:inline-flex!important;vertical-align:-.17em;width:16px!important;height:16px!important;min-width:16px;max-width:16px!important;margin:0 4px 0 0;object-fit:contain;align-items:center;justify-content:center;flex:none;line-height:1!important;-webkit-text-size-adjust:none;text-size-adjust:none}#dpc-app .dpc-role-icon svg{width:100%!important;height:100%!important;overflow:visible}#dpc-app .dpc-role-lottie{display:block;width:100%;height:100%;pointer-events:none}#dpc-app .dpc-role-icon>.dpc-role-original{margin:0!important}';
+    style.textContent += '#dpc-app .dpc-profile-who .dpc-role-icon{width:1.35em!important;height:1.35em!important;min-width:1.35em;max-width:1.35em!important;margin-right:.25em;vertical-align:-.22em}#dpc-app .dpc-profile-who .dpc-role-icon>.dpc-role-original{width:100%!important;height:100%!important;min-width:0;max-width:100%!important}#dpc-app .dpc-profile-realname{-webkit-text-size-adjust:none!important;text-size-adjust:none!important}';
     function dpcRoleReplace(node){
         for(const im of node.querySelectorAll('img:not(.dpc-role-icon)')){const info=dpcRoleInfo(im);if(info&&!info.custom){const icon=dpcRoleArtwork(im);if(icon)im.replaceWith(icon);}}
     }
@@ -3662,7 +3663,18 @@ html.dpc-viewing body {
         const portrait=summary.querySelector('img[src*="images_profile"]');if(portrait){const img=make('img','dpc-profile-avatar');img.src=portrait.src;img.alt=value('Username');identity.append(img);}
         const who=make('div','dpc-profile-who');identity.append(who);
         who.append(make('h1','',value('Username')||value('Name')||'Photographer'));
-        if(value('Name')&&value('Name')!==value('Username'))who.append(make('div','dpc-profile-realname',value('Name')));
+        const realName=value('Name'),username=value('Username');
+        if(realName&&realName!==username){
+            const name=make('div','dpc-profile-realname',realName);
+            dpcRoleAttach(name,fields.get('Username'));
+            dpcRoleAttach(name,fields.get('Type'));
+            dpcRoleAttach(name,summary);
+            who.append(name);
+        }else{
+            dpcRoleAttach(who.querySelector('h1'),fields.get('Username'));
+            dpcRoleAttach(who.querySelector('h1'),fields.get('Type'));
+            dpcRoleAttach(who.querySelector('h1'),summary);
+        }
         who.append(make('div','dpc-profile-meta',[value('Type'),value('Location')].filter(Boolean).join(' · ')));
         if(value('Registered'))who.append(make('div','dpc-profile-meta','Member since '+value('Registered')));
         if(side.has('Status')){const status=make('div','dpc-profile-status',clean(side.get('Status')));who.append(status);}
