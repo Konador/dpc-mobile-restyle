@@ -2,7 +2,7 @@
 // ==UserScript==
 // @name DPChallenge Mobile — Editorial Gallery
 // @namespace dpc-mobile
-// @version 5.69
+// @version 5.70
 // @updateURL https://raw.githubusercontent.com/Konador/dpc-mobile-restyle/main/dpc-mobile.user.js
 // @downloadURL https://raw.githubusercontent.com/Konador/dpc-mobile-restyle/main/dpc-mobile.user.js
 // @match *://*.dpchallenge.com/challenge_vote_image.php*
@@ -4624,6 +4624,7 @@ html.dpc-viewing body {
         ++generation;
 
         let done=false, returning=false;
+        const finalVote=score!==null&&(!p.nextId||!p.next||(p.progress&&p.index+1===Number(p.progress[2])));
         const submittedComment=dirty?input.value:null;
         const savedScroll=scrollY;
 
@@ -4632,8 +4633,20 @@ html.dpc-viewing body {
             frame.removeEventListener('load',load);
         }
 
+        function verifyFinalVote() {
+            if(done||returning||!finalVote)return false;
+            returning=true;
+            clearTimeout(timer);
+            timer=setTimeout(fail,15000);
+            const url=new URL(imageURL(p.id));
+            url.searchParams.set('_dpc_verify',String(Date.now()));
+            frame.src=url.href;
+            return true;
+        }
+
         function fail() {
             if (done) return;
+            if(verifyFinalVote())return;
             done=true;
             cleanup();
 
@@ -4651,6 +4664,10 @@ html.dpc-viewing body {
                 /* V3.5 — Handle final photograph submission */
                 const responseDoc=frame.contentDocument;
                 const responseURL=new URL(frame.contentWindow.location.href);
+
+                // Native final votes can redirect to different overview URLs.
+                // Verify the exact photograph with a fresh GET, never resubmit.
+                if(finalVote&&!returning&&verifyFinalVote())return;
 
                 if (
                     responseURL.pathname==='/challenge_vote_list.php' &&
@@ -4709,7 +4726,7 @@ html.dpc-viewing body {
                 ) return fail();
 
                 if(stay&&updated.id!==p.id&&!returning){returning=true;frame.src=imageURL(p.id);return;}
-                if(stay){
+                if(stay||finalVote){
                     if(updated.id!==p.id||(score!==null&&updated.selected!==String(score)))return fail();
                     const saved=updated.comment?.defaultValue||'';
                     if(submittedComment!==null&&saved.replace(/\r\n/g,'\n').trim()!==submittedComment.replace(/\r\n/g,'\n').trim()&&!(submittedComment.trim()===''&&/^Enter your comment here/i.test(saved)))return fail();
@@ -4718,6 +4735,7 @@ html.dpc-viewing body {
                 cleanup();
 
                 if (score!==null) await sleep(180);
+                if(finalVote&&!stay){dirty=false;location.href=listURL(p.challengeId);return;}
 
                 const actualDirection=updated.id===p.id
                     ? 0
@@ -4751,6 +4769,7 @@ html.dpc-viewing body {
                 if (after) after();
 
             } catch {
+                if(!done){fail();return;}
                 setBusy(false);
                 scores.forEach(b=>b.classList.remove('pressed'));
                 $('.dpc-current-score').textContent='Check saved rating';
@@ -4758,7 +4777,7 @@ html.dpc-viewing body {
             }
         }
 
-        const timer=setTimeout(fail,15000);
+        let timer=setTimeout(fail,15000);
 
         frame.addEventListener('load',load);
 
