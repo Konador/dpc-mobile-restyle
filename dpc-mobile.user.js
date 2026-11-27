@@ -2,7 +2,7 @@
 // ==UserScript==
 // @name DPChallenge Mobile — Editorial Gallery
 // @namespace dpc-mobile
-// @version 5.98
+// @version 5.99
 // @updateURL https://raw.githubusercontent.com/Konador/dpc-mobile-restyle/main/dpc-mobile.user.js
 // @downloadURL https://raw.githubusercontent.com/Konador/dpc-mobile-restyle/main/dpc-mobile.user.js
 // @match *://*.dpchallenge.com/challenge_vote_image.php*
@@ -3622,7 +3622,8 @@ html.dpc-viewing body {
         const about=make('div','dpc-profile-about-body');
         aboutFold.append(aboutLabel,about);
         body.insertBefore(aboutFold,tabs);
-        style.textContent += '#dpc-app .dpc-profile-about{margin:0 0 16px}#dpc-app .dpc-profile-about>summary{border-left:3px solid var(--accent);padding:12px 14px;font:600 18px/1.3 var(--serif),Georgia,serif;cursor:pointer}#dpc-app .dpc-profile-about-body{padding:0 12px 12px;min-width:0}#dpc-app .dpc-profile-about-body .dpc-profile-prose{overflow-wrap:anywhere}#dpc-app .dpc-profile-about-body .dpc-profile-prose img{max-width:100%;height:auto}#dpc-app .dpc-profile-about-body .dpc-profile-field a.i{font-weight:650}';
+        style.textContent += '#dpc-app .dpc-profile-about-body{padding:0 8px 10px}#dpc-app .dpc-profile-about-body .dpc-profile-info{border:0;background:transparent;padding:0 4px}#dpc-app .dpc-profile-stat-grid .dpc-profile-stat-group{grid-column:1/-1;font-weight:700;color:var(--accent);padding:12px 0 5px;border-bottom:1px solid var(--line)}';
+        style.textContent += '#dpc-app .dpc-profile-about{margin:0 0 16px}#dpc-app .dpc-profile-about>summary{border-left:3px solid var(--accent);padding:12px 14px;font:600 18px/1.3 var(--serif),Georgia,serif;cursor:pointer}#dpc-app .dpc-profile-about-body{padding:0 8px 10px;min-width:0}#dpc-app .dpc-profile-about-body .dpc-profile-prose{overflow-wrap:anywhere}#dpc-app .dpc-profile-about-body .dpc-profile-prose img{max-width:100%;height:auto}#dpc-app .dpc-profile-about-body .dpc-profile-field a.i{font-weight:650}';
         style.textContent += '#dpc-app .dpc-profile-photo{overflow:hidden}#dpc-app .dpc-profile-photo img.dpc-profile-thumb{opacity:0}#dpc-app .dpc-profile-photo img.dpc-profile-thumb.ready{opacity:1}#dpc-app .dpc-profile-photo img.dpc-profile-full-layer{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;opacity:0;transition:opacity 220ms ease;pointer-events:none}#dpc-app .dpc-profile-photo .dpc-overlay-ribbon{z-index:2}@media(prefers-reduced-motion:reduce){#dpc-app .dpc-profile-photo img.dpc-profile-full-layer{transition:none}}';
         const profileFullQueue=[],profileFullCache=new Map();let profileFullActive=false;
         const imageIdFromSrc=src=>photoFilename(src).match(/(?:^|_)(\d+)\.[a-z]+$/i)?.[1];
@@ -3768,28 +3769,43 @@ html.dpc-viewing body {
                 table.append(dt,dd);
             }
             if(key==='Statistics'){
-                // Walk semantic labels and line boundaries, never flatten an entire
-                // nested statistics block into the value of its preceding label.
-                let name='',value='',anchor=null;
-                function flush(){if(name&&value.trim())addStat(name,value,anchor);else if(name)table.append(make('div','dpc-profile-stat-group',name));name='';value='';anchor=null;}
-                function textPart(t){
-                    const pieces=t.split(/(?=(?:Profile Views|Total Image Views|Total Images Viewed|Threads Created)\s*:)/i);
-                    for(const piece of pieces){
-                        const m=piece.match(/^\s*(Profile Views|Total Image Views|Total Images Viewed|Threads Created)\s*:\s*(.*)$/i);
-                        if(m){flush();name=m[1];value=m[2];}else if(name)value+=piece;
+                // Parse individual DOM tokens, including malformed legacy list nesting.
+                let name='',value='',anchor=null,group='',lastComment='';
+                function flush(){
+                    const v=value.trim().replace(/^:\s*/,'').trim();
+                    if(name==='Comments'||name==='Forums'){
+                        group=name;lastComment='';
+                        const dt=make('dt','dpc-profile-stat-group',name);
+                        dt.style.gridColumn='1 / -1';table.append(dt);
+                    }else if(name&&v){
+                        let label=name;
+                        if(group==='Comments'){
+                            if(name==='Made'||name==='Received'){lastComment=name;label='Comments '+name.toLowerCase();}
+                            else if(name==='Helpful')label=lastComment==='Received'?'Helpful received':'Helpful made';
+                        }
+                        addStat(label,v,anchor);
                     }
+                    name='';value='';anchor=null;
+                }
+                function textPart(t){
+                    const re=/(Profile Views|Total Image Views|Total Images Viewed|Threads Created|Comments|Forums|Made|Helpful|Received|Posts)\s*:/gi;
+                    let pos=0;
+                    for(const m of t.matchAll(re)){
+                        if(name)value+=t.slice(pos,m.index);
+                        flush();name=m[1];pos=m.index+m[0].length;
+                    }
+                    if(name)value+=t.slice(pos);
                 }
                 function walk(n){
                     if(n.nodeType===3){textPart(n.textContent);return;}
                     if(n.nodeType!==1||n.matches('script,style,img'))return;
                     if(n.matches('br')){flush();return;}
-                    if(n.matches('li')){
-                        flush();const txt=clean(n),m=txt.match(/^([^:]+):\s*(.*)$/);
-                        if(m&&!n.querySelector('li,ul,ol')){name=m[1];textPart(m[2]);anchor=n.querySelector('a');flush();return;}
-                    }
+                    if(n.matches('li'))flush();
                     if(n.matches('b,strong')&&!n.querySelector('b,strong,li,br')){
-                        flush();const t=clean(n),m=t.match(/^([^:]+):\s*(.+)$/);
-                        if(m){name=m[1];textPart(m[2]);}else name=t.replace(/:$/,'');return;
+                        flush();const t=clean(n),m=t.match(/^([^:]+):\s*(.*)$/);
+                        if(m){name=m[1];value=m[2];}else name=t;
+                        if(name==='Comments'||name==='Forums')flush();
+                        return;
                     }
                     if(n.matches('a')&&name){anchor=n;value+=clean(n);return;}
                     for(const child of n.childNodes)walk(child);
@@ -3797,7 +3813,7 @@ html.dpc-viewing body {
                 }
                 for(const n of source.childNodes)walk(n);flush();
             }
-            if(table.querySelector('dd')&&key==='Statistics'){card.append(table);const full=make('details','dpc-profile-fold');full.append(make('summary','','Original breakdown'));content(full,source);card.append(full);}else content(card,source);sec.append(card);
+            if(table.querySelector('dd')&&key==='Statistics')card.append(table);else content(card,source);sec.append(card);
         }
         if(forum?.matches('table')){const sec=section(about,'Recent forum activity');for(const row of forum.rows){const a=row.querySelector('a[href*="FORUM_THREAD_ID"]');if(!a)continue;const link=safeLink(a);link.className='dpc-home-thread';link.append(make('small','',[clean(row.cells[1]),clean(row.cells[2])].join(' · ')));sec.append(link);}}
         select(0);$('#dpc-original').onclick=()=>original();mount();
