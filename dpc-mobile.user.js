@@ -2,7 +2,7 @@
 // ==UserScript==
 // @name DPChallenge Mobile — Editorial Gallery
 // @namespace dpc-mobile
-// @version 5.58
+// @version 5.59
 // @updateURL https://raw.githubusercontent.com/Konador/dpc-mobile-restyle/main/dpc-mobile.user.js
 // @downloadURL https://raw.githubusercontent.com/Konador/dpc-mobile-restyle/main/dpc-mobile.user.js
 // @match *://*.dpchallenge.com/challenge_vote_image.php*
@@ -2047,6 +2047,7 @@ html.dpc-viewing body {
                     if(candidate)update=candidate;
                 }
                 const card=make('div','dpc-current-submission');
+                card.dataset.imageId=id;
                 const thumb=link(detail,'dpc-current-thumb','');thumb.textContent='';
                 const img=make('img');img.src=photo.src;img.alt=clean(detail);thumb.append(img);
                 const info=make('div','dpc-current-info');
@@ -2056,6 +2057,7 @@ html.dpc-viewing body {
                 for(const [key,label] of [['avg vote','Avg'],['votes','Votes'],['views','Views'],['comments','Comments'],['favorites','Faves']]){
                     const metric=metrics[key];if(!metric)continue;
                     const cell=make('div','dpc-current-metric'+(key==='avg vote'?' score':''));
+                    cell.dataset.metric=key;
                     cell.append(make('span','',label));
                     const rawValue=metric.value.trim();
                     const displayValue=key==='avg vote'&&/^\d+(?:\.\d+)?$/.test(rawValue)?Number(rawValue).toFixed(4):rawValue;
@@ -2072,6 +2074,89 @@ html.dpc-viewing body {
                 info.append(actions);card.append(thumb,info);strip.append(card);
             }
             style.textContent += "#dpc-app .dpc-current-submissions{gap:5px;margin-bottom:8px}#dpc-app .dpc-current-submission{grid-template-columns:48px minmax(0,1fr);gap:9px;padding:7px 8px;align-items:center}#dpc-app .dpc-current-thumb{width:48px!important;height:64px!important;min-width:48px;min-height:64px;max-width:48px;max-height:64px;align-self:center}#dpc-app .dpc-current-thumb img{width:100%!important;height:100%!important;object-fit:contain!important}#dpc-app .dpc-current-info{display:grid;grid-template-columns:minmax(0,1fr) auto;column-gap:7px;row-gap:2px;align-items:center}#dpc-app .dpc-current-challenge{grid-column:1;grid-row:1;font:600 11px/1.2 system-ui,sans-serif;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}#dpc-app .dpc-current-title{grid-column:1;grid-row:2;margin:0;font:400 10px/1.2 system-ui,sans-serif}#dpc-app .dpc-current-values{display:contents}#dpc-app .dpc-current-metric.score{grid-column:2;grid-row:1/span 2;text-align:right;align-self:center;gap:1px}#dpc-app .dpc-current-metric.score span{font:500 9px/1 system-ui,sans-serif}#dpc-app .dpc-current-metric.score strong{font:italic 700 26px/1 var(--serif),Georgia,serif;font-variant-numeric:tabular-nums lining-nums;letter-spacing:-.025em;white-space:nowrap;color:var(--accent)}#dpc-app .dpc-current-secondary{grid-column:1/-1;display:flex;gap:4px 11px;flex-wrap:wrap;align-items:center;margin-top:3px}#dpc-app .dpc-current-secondary .dpc-current-metric{flex-direction:row;align-items:baseline;gap:3px;font:400 9px/1.2 system-ui,sans-serif}#dpc-app .dpc-current-secondary .dpc-current-metric strong,#dpc-app .dpc-current-secondary .dpc-current-metric a{font:600 10px/1.2 system-ui,sans-serif;color:inherit}#dpc-app .dpc-current-actions{grid-column:1/-1;margin:1px 0 0;gap:5px}#dpc-app .dpc-current-updated{font-size:8px}#dpc-app .dpc-current-update{padding:3px 7px;font-size:10px;min-height:25px;display:inline-flex;align-items:center;justify-content:center}";
+            // Refresh the native score endpoint, then read fresh sidebar data without navigating.
+            let updating=false;
+            strip.addEventListener('click',async e=>{
+                const trigger=e.target.closest('.dpc-current-update');
+                if(!trigger||e.ctrlKey||e.metaKey||e.shiftKey||e.altKey)return;
+                e.preventDefault();
+                if(updating)return;
+                updating=true;
+                const buttons=[...strip.querySelectorAll('.dpc-current-update')];
+                buttons.forEach(b=>{b.setAttribute('aria-disabled','true');b.classList.add('dpc-current-busy');b.textContent='Updating…';});
+                let failed=false;
+                try{
+                    const requestURL=new URL(trigger.href,location.href);
+                    if(requestURL.origin!==location.origin)throw Error('Unexpected update origin');
+                    const response=await fetch(requestURL.href,{credentials:'same-origin',cache:'no-store'});
+                    if(!response.ok)throw Error('Update request failed');
+                    let fresh=new DOMParser().parseFromString(await response.text(),'text/html');
+                    const findTable=doc=>[...doc.querySelectorAll('b,strong')].find(b=>/^My Submissions\s*:?$/i.test(b.textContent.trim()))?.closest('table');
+                    let table=findTable(fresh);
+                    if(!table){
+                        const home=await fetch('/index.php',{credentials:'same-origin',cache:'no-store'});
+                        if(!home.ok)throw Error('Could not refresh scores');
+                        fresh=new DOMParser().parseFromString(await home.text(),'text/html');
+                        table=findTable(fresh);
+                    }
+                    if(!table)throw Error('Submission stats not found');
+                    const byId=new Map();
+                    for(const center of table.querySelectorAll('center')){
+                        const detail=center.querySelector('a[href*="challenge_stats.php"] img')?.closest('a');
+                        if(!detail)continue;
+                        const id=new URL(detail.getAttribute('href'),location.href).searchParams.get('IMAGE_ID');
+                        if(!id)continue;
+                        const data={};
+                        for(let n=center.nextElementSibling;n&&n.tagName!=='CENTER';n=n.nextElementSibling){
+                            if(n.tagName!=='TABLE')continue;
+                            for(const row of n.rows){
+                                if(row.cells.length<2)continue;
+                                data[row.cells[0].textContent.trim().replace(/:$/,'').toLowerCase()]=row.cells[1].textContent.trim();
+                            }
+                        }
+                        byId.set(id,data);
+                    }
+                    const cards=[...strip.querySelectorAll('.dpc-current-submission')];
+                    if(!cards.every(card=>{const data=byId.get(card.dataset.imageId);return data&&[...card.querySelectorAll('[data-metric]')].every(cell=>Object.hasOwn(data,cell.dataset.metric));}))throw Error('Incomplete score response');
+                    const reduced=matchMedia('(prefers-reduced-motion: reduce)').matches;
+                    for(const card of cards){
+                        const data=byId.get(card.dataset.imageId);
+                        for(const cell of card.querySelectorAll('[data-metric]')){
+                            const key=cell.dataset.metric, value=cell.querySelector('strong,a');
+                            if(!value||!Object.hasOwn(data,key))continue;
+                            const raw=data[key];
+                            const next=key==='avg vote'&&/^\d+(?:\.\d+)?$/.test(raw)?Number(raw).toFixed(4):raw;
+                            const previous=value.textContent;
+                            if(previous===next)continue;
+                            const from=Number(previous.replace(/,/g,'')),to=Number(next.replace(/,/g,''));
+                            if(!reduced&&Number.isFinite(from)&&Number.isFinite(to)&&previous.trim()&&next.trim()){
+                                const start=performance.now(), duration=key==='avg vote'?650:420;
+                                const tick=now=>{
+                                    const t=Math.min(1,(now-start)/duration);
+                                    const number=from+(to-from)*(1-Math.pow(1-t,3));
+                                    value.textContent=t===1?next:key==='avg vote'?number.toFixed(4):String(Math.round(number));
+                                    if(t<1)requestAnimationFrame(tick);
+                                };
+                                requestAnimationFrame(tick);
+                            }else value.textContent=next;
+                            if(!reduced&&value.animate)value.animate([{transform:'translateY(3px)',opacity:.45},{transform:'translateY(0)',opacity:1}],{duration:450,easing:'ease-out'});
+                            value.classList.remove('dpc-stat-up','dpc-stat-down','dpc-stat-changed');
+                            value.classList.add(key==='avg vote'&&Number.isFinite(from)&&Number.isFinite(to)?to>from?'dpc-stat-up':'dpc-stat-down':'dpc-stat-changed');
+                            setTimeout(()=>value.classList.remove('dpc-stat-up','dpc-stat-down','dpc-stat-changed'),1500);
+                        }
+                        const stamp=card.querySelector('.dpc-current-updated');
+                        if(stamp&&data.updated)stamp.textContent='Updated '+data.updated;
+                    }
+                }catch(err){
+                    failed=true;
+                    console.warn('DPC score refresh:',err);
+                }finally{
+                    buttons.forEach(b=>{b.removeAttribute('aria-disabled');b.classList.remove('dpc-current-busy');b.textContent=failed?'Retry':'Updated';});
+                    setTimeout(()=>{if(!updating)buttons.forEach(b=>b.textContent='Update');},1800);
+                    updating=false;
+                }
+            });
+            style.textContent += '#dpc-app .dpc-current-update.dpc-current-busy{opacity:.65;pointer-events:none;animation:dpc-stat-pulse .8s ease-in-out infinite alternate}#dpc-app .dpc-current-metric :is(strong,a){display:inline-block;transition:color .5s}#dpc-app .dpc-current-metric .dpc-stat-up{color:#66b989!important}#dpc-app .dpc-current-metric .dpc-stat-down{color:#dc7980!important}#dpc-app .dpc-current-metric .dpc-stat-changed{color:var(--accent)!important}@keyframes dpc-stat-pulse{to{opacity:1}}@media(prefers-reduced-motion:reduce){#dpc-app .dpc-current-update.dpc-current-busy{animation:none}}';
             if(strip.children.length)tabs.before(strip);
         }
         const panels=[resultsSection,votingSection,entrySection,forumSection],buttons=[];
