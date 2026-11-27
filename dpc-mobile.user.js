@@ -2,7 +2,7 @@
 // ==UserScript==
 // @name DPChallenge Mobile — Editorial Gallery
 // @namespace dpc-mobile
-// @version 5.92
+// @version 5.93
 // @updateURL https://raw.githubusercontent.com/Konador/dpc-mobile-restyle/main/dpc-mobile.user.js
 // @downloadURL https://raw.githubusercontent.com/Konador/dpc-mobile-restyle/main/dpc-mobile.user.js
 // @match *://*.dpchallenge.com/challenge_vote_image.php*
@@ -1533,7 +1533,7 @@ html.dpc-viewing body {
         const face=gradient(outline([57,82],[[[57,82-c],[110-c,29],[110,29]],[[110+c,29],[163,82-c],[163,82]],[[163,82+c],[110+c,135],[110,135]],[[110-c,135],[57,82+c],[57,82]]]),silver,[72,29],[148,135]);
         const hair=gradient(outline([57,82],[[[57,82-c],[110-c,29],[110,29]],[[110+c,29],[163,82-c],[163,82]],[[153,76],[151,58],[145,53]],[[118,76],[88,50],[70,67]],[[65,76],[57,82]]]),[[0,'#b5bbc7'],[1,'#697181']],[68,29],[153,82],14);
         const neck=gradient(outline([89,122],[[[131,122]],[[131,136]],[[110,152]],[[89,136]],[[89,122]]]),silver,[95,122],[125,152]);
-        const shirt=gradient(outline([35,185],[[[35,173]],[[35,141],[110,133]],[[185,141],[185,173]],[[185,185]],[[185,191],[179,191]],[[41,191]],[[35,191],[35,185]]]),[[0,palette[0]],[1,palette[1]]],[50,133],[170,191]);
+        const shirt=gradient(outline([35,185],[[[35,178]],[[35,156],[72,146],[110,139]],[[148,146],[185,156],[185,178]],[[185,185]],[[185,191],[179,191]],[[41,191]],[[35,191],[35,185]]]),[[0,palette[0]],[1,palette[1]]],[50,133],[170,191]);
         // All actions start and finish at the same resting pose, including the single idle loop.
         // 0-30 blink; 30-66 nod; 66-102 tilt; 102-222 idle; 223-259 shake;
         // 259-295 double blink; 295-337 peek; 337-379 bounce; 379-421 opposite tilt.
@@ -1543,11 +1543,29 @@ html.dpc-viewing body {
         const headPos=k([[0,[110,130]],[5,[110,128]],[9,[110,132]],[16,[110,130]],[30,[110,130]],[36,[110,126]],[44,[110,140]],[50,[110,128]],[58,[110,131]],[66,[110,130]],[72,[110,130]],[80,[110,130]],[90,[110,128]],[97,[110,130]],[102,[110,130]],[132,[110,127]],[162,[110,130]],[192,[110,127]],[222,[110,130]],[223,[110,130]],[229,[113,130]],[236,[105,130]],[243,[115,130]],[250,[108,130]],[259,[110,130]],[267,[110,133]],[271,[110,128]],[280,[110,133]],[284,[110,128]],[295,[110,130]],[303,[107,133]],[310,[115,124]],[321,[115,124]],[330,[109,132]],[337,[110,130]],[345,[110,138]],[352,[110,116]],[359,[110,125]],[364,[110,134]],[371,[110,128]],[379,[110,130]],[385,[110,132]],[395,[110,128]],[405,[110,128]],[413,[110,131]],[421,[110,130]]]);
         const headScale=k([[0,[100,100]],[5,[98,104]],[9,[106,94]],[16,[100,100]],[30,[100,100]],[36,[96,105]],[44,[109,88]],[50,[97,104]],[58,[101,99]],[66,[100,100]],[72,[102,98]],[80,[98,103]],[90,[100,100]],[102,[100,100]],[132,[98,104]],[162,[100,100]],[192,[102,97]],[222,[100,100]],[223,[100,100]],[229,[102,98]],[236,[98,102]],[243,[98,102]],[250,[101,99]],[259,[100,100]],[267,[104,95]],[271,[98,103]],[280,[104,95]],[284,[98,103]],[295,[100,100]],[303,[106,93]],[310,[96,106]],[321,[98,103]],[330,[102,98]],[337,[100,100]],[345,[114,84]],[352,[89,113]],[359,[97,103]],[364,[108,91]],[371,[97,104]],[379,[100,100]],[385,[104,96]],[395,[97,104]],[405,[99,102]],[413,[102,98]],[421,[100,100]]]);
         const rot=k([[0,0],[30,0],[66,0],[72,-5],[80,15],[88,12],[96,-4],[102,0],[132,-3],[162,0],[192,3],[222,0],[223,0],[229,6],[236,-15],[243,15],[250,-7],[259,0],[295,0],[303,-4],[310,8],[321,8],[330,-3],[337,0],[345,-3],[352,4],[364,-3],[379,0],[385,6],[395,-17],[405,-13],[413,5],[421,0]]);
+        // Three faux-3D actions: turn left, turn right, and look up then down.
+        // Yaw/pitch affect the internal facial features independently of the silhouette.
+        const addKeys=(prop,frames)=>{const values=prop.k.map(f=>[f.t,f.s]);return k([...values,...frames]);};
+        const yawFrames=[[0,0],[421,0],[422,0],[428,0.12],[438,-0.85],[449,-0.85],[458,0.12],[466,0],[472,-0.12],[482,0.85],[493,0.85],[502,-0.12],[510,0],[554,0]];
+        const pitchFrames=[[0,0],[510,0],[516,0.12],[526,-0.72],[535,-0.72],[543,0.55],[549,-0.08],[554,0]];
+        const sampleTrack=(frames,t)=>{for(let j=1;j<frames.length;j++){if(t<=frames[j][0]){const a=frames[j-1],b=frames[j],f=Math.max(0,Math.min(1,(t-a[0])/(b[0]-a[0])));return a[1]+(b[1]-a[1])*f;}}return frames.at(-1)[1];};
+        const turnTimes=[...new Set([...yawFrames,...pitchFrames].map(f=>f[0]))].filter(t=>t>=422).sort((a,b)=>a-b);
+        const yawAt=t=>sampleTrack(yawFrames,t),pitchAt=t=>sampleTrack(pitchFrames,t);
+        eyes.it[eyes.it.length-1].p=addKeys(eyePos,turnTimes.map(t=>[t,[110+29*yawAt(t),87+19*pitchAt(t)]]));
+        eyes.it[eyes.it.length-1].s=addKeys(eyeScale,turnTimes.map(t=>[t,[100-28*Math.abs(yawAt(t)),100-12*Math.abs(pitchAt(t))]]));
+        // Morph the fringe inside the circular silhouette, keeping the outer arcs fixed.
+        const fringe=hair.it[0].ks.k;
+        const fringeAt=t=>{const y=yawAt(t),p=pitchAt(t);return {c:fringe.c,v:fringe.v.map((v,j)=>j<3?v.slice():[v[0]+y*(j===3?8:17),v[1]+p*(j===3?8:17)]),i:fringe.i.map(v=>v.slice()),o:fringe.o.map(v=>v.slice())};};
+        const fringeTimes=[0,421,...turnTimes];
+        hair.it[0].ks={a:1,k:fringeTimes.map((t,j)=>j===fringeTimes.length-1?{t,s:[fringeAt(t)]}:{t,s:[fringeAt(t)],i:{x:.33,y:1},o:{x:.67,y:0}})};
+        const turnHeadPos=addKeys(headPos,turnTimes.map(t=>[t,[110+5*yawAt(t),130+4*pitchAt(t)]]));
+        const turnHeadScale=addKeys(headScale,turnTimes.map(t=>[t,[100-3*Math.abs(yawAt(t)),100-3*Math.abs(pitchAt(t))]]));
+        const turnRot=addKeys(rot,turnTimes.map(t=>[t,[2*yawAt(t)]]));
         // Pigtails attach at the temples and follow the head, with independent delayed,
         // damped rotation and tip flex. All action boundaries return to gravity's rest pose.
         const tails=[];
         if(variant==='_F'){
-            const boundaries=[0,30,66,102,222,223,259,295,337,379,421];
+            const boundaries=[0,30,66,102,222,223,259,295,337,379,421,422,466,510,554];
             const sample=(frames,t)=>{for(let j=1;j<frames.length;j++){if(t<=frames[j][0]){const a=frames[j-1],b=frames[j],f=Math.max(0,Math.min(1,(t-a[0])/(b[0]-a[0])));return a[1].map((v,n)=>v+(b[1][n]-v)*f);}}return frames.at(-1)[1];};
             for(const side of [-1,1]){
                 const root=[110+side*45,69];
@@ -1556,26 +1574,26 @@ html.dpc-viewing body {
                 const tie=ell(root[0],root[1]+2,13,13,palette[1]);
                 const angles=[],flex=[];
                 let angle=0,velocity=0,stretch=0,stretchVelocity=0;
-                for(let t=0;t<=421;t++){
+                for(let t=0;t<=554;t++){
                     if(boundaries.includes(t)){angle=velocity=stretch=stretchVelocity=0;}
                     else{
                         const prev=sample(headPos.k.map(x=>[x.t,x.s]),Math.max(0,t-1)),now=sample(headPos.k.map(x=>[x.t,x.s]),t);
                         const rp=sample(rot.k.map(x=>[x.t,x.s]),Math.max(0,t-1))[0],rn=sample(rot.k.map(x=>[x.t,x.s]),t)[0];
-                        const target=-(rn-rp)*5-(now[0]-prev[0])*2.4+side*(now[1]-prev[1])*3.2;
+                        const target=-(rn-rp)*5-(now[0]-prev[0])*2.4+side*(now[1]-prev[1])*3.2-95*(yawAt(t)-yawAt(t-1))+side*55*(pitchAt(t)-pitchAt(t-1));
                         velocity=(velocity+(target-angle)*.24)*.73;angle+=velocity;
-                        const targetStretch=-(now[1]-prev[1])*2.2;
+                        const targetStretch=-(now[1]-prev[1])*2.2+side*8*yawAt(t);
                         stretchVelocity=(stretchVelocity+(targetStretch-stretch)*.22)*.70;stretch+=stretchVelocity;
                     }
-                    const next=boundaries.find(x=>x>=t)??421,settle=Math.min(1,(next-t)/4);
+                    const next=boundaries.find(x=>x>=t)??554,settle=Math.min(1,(next-t)/4);
                     if(t%2===0||boundaries.includes(t)){angles.push([t,Math.max(-34,Math.min(34,angle))*settle]);flex.push([t,[100-stretch*.45*settle,100+stretch*settle]]);}
                 }
                 tails.push({ty:'gr',it:[tie,tail,tr(root,root,k(flex),k(angles))]});
             }
         }
-        const head={ty:'gr',it:[eyes,hair,face,...tails,tr(headPos,[110,130],headScale,rot)]};
+        const head={ty:'gr',it:[eyes,hair,face,...tails,tr(turnHeadPos,[110,130],turnHeadScale,turnRot)]};
         const torso={ty:'gr',it:[line([66,175],[66,189]),line([154,175],[154,189]),neck,shirt,tr()]};
         // Extra vertical room for overshoot, without changing the approved artwork.
-        return {v:'5.12.2',fr:30,ip:0,op:422,w:220,h:205,nm:'DPC approved member character',ddd:0,assets:[],layers:[{ddd:0,ind:1,ty:4,nm:'Character',sr:1,ks:{o:p(100),r:p(0),p:p([0,0,0]),a:p([0,0,0]),s:p([100,100,100])},ao:0,shapes:[head,torso],ip:0,op:422,st:0,bm:0}]};
+        return {v:'5.12.2',fr:30,ip:0,op:555,w:220,h:205,nm:'DPC approved member character',ddd:0,assets:[],layers:[{ddd:0,ind:1,ty:4,nm:'Character',sr:1,ks:{o:p(100),r:p(0),p:p([0,0,0]),a:p([0,0,0]),s:p([100,100,100])},ao:0,shapes:[head,torso],ip:0,op:555,st:0,bm:0}]};
     }
     const dpcRoleObserver=typeof IntersectionObserver==='function'?new IntersectionObserver(entries=>{
         for(const e of entries){const state=e.target.dpcRoleState;if(!state)continue;state.visible=e.isIntersecting;if(state.visible)dpcRoleSchedule(e.target,state);else dpcRoleStop(state);}
@@ -1591,7 +1609,7 @@ html.dpc-viewing body {
         state.timer=setTimeout(()=>{
             state.timer=null;
             if(!state.running||!el.isConnected||!state.visible||document.hidden||dpcRoleMotion.matches)return;
-            const segments=[[0,30],[30,66],[66,102],[223,259],[259,295],[295,337],[337,379],[379,421]];
+            const segments=[[0,30],[30,66],[66,102],[223,259],[259,295],[295,337],[337,379],[379,421],[422,466],[466,510],[510,554]];
             const choices=segments.filter((_,i)=>i!==state.lastAction);const next=choices[Math.floor(Math.random()*choices.length)];state.lastAction=segments.indexOf(next);state.pending=next;
         },450+Math.random()*1600);
     }
