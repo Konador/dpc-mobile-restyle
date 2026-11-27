@@ -2,7 +2,7 @@
 // ==UserScript==
 // @name DPChallenge Mobile — Editorial Gallery
 // @namespace dpc-mobile
-// @version 5.78
+// @version 5.79
 // @updateURL https://raw.githubusercontent.com/Konador/dpc-mobile-restyle/main/dpc-mobile.user.js
 // @downloadURL https://raw.githubusercontent.com/Konador/dpc-mobile-restyle/main/dpc-mobile.user.js
 // @match *://*.dpchallenge.com/challenge_vote_image.php*
@@ -17,6 +17,7 @@
 // @match *://*.dpchallenge.com/challenge_submit_preview.php*
 // @match *://*.dpchallenge.com/forum.php*
 // @match *://*.dpchallenge.com/community_index.php*
+// @match *://*.dpchallenge.com/messaging.php*
 // @grant none
 // @run-at document-start
 // ==/UserScript==
@@ -30,13 +31,14 @@ if(top!==self){
     try{softChild=parent===top&&parent.__dpcSoftAccept?.(window,window.name)===true;}catch{}
     if(!softChild)return;
 }
-const softPaths=new Set(['/','/index.php','/challenge_results.php','/image.php','/profile.php','/forum.php','/community_index.php','/challenge_index.php','/challenge_vote_list.php','/challenge_vote_image.php','/challenge_submit.php','/challenge_submit_preview.php']);
+const softPaths=new Set(['/','/index.php','/challenge_results.php','/image.php','/profile.php','/forum.php','/community_index.php','/challenge_index.php','/challenge_vote_list.php','/challenge_vote_image.php','/challenge_submit.php','/challenge_submit_preview.php','/messaging.php']);
 function softEligible(raw){
     try{
         const u=new URL(raw,location.href);
         if(u.origin!==location.origin||!softPaths.has(u.pathname))return false;
         if(u.hash&&!(u.pathname==='/challenge_index.php'&&/^#[\w-]+$/.test(u.hash))&&!u.hash.startsWith('#dpc-gallery=')&&!(u.pathname==='/forum.php'&&/^#[\w-]+$/.test(u.hash)&&u.hash!=='#post'))return false;
-        if([...u.searchParams.keys()].some(k=>/^(vote|submit|delete|update|logout|next_id|comment)$/i.test(k)||(/^action$/i.test(k)&&u.pathname!=='/forum.php')))return false;
+        if([...u.searchParams.keys()].some(k=>/^(vote|submit|delete|update|logout|next_id|comment)$/i.test(k)||(/^action$/i.test(k)&&!['/forum.php','/messaging.php'].includes(u.pathname))))return false;
+        if(u.pathname==='/messaging.php')return /^(?:|read|sent|compose)$/i.test(u.searchParams.get('action')||'');
         if(u.pathname==='/forum.php')return /^(?:|read|readrecent|list)$/i.test(u.searchParams.get('action')||'');
         if(u.pathname==='/profile.php'||u.pathname==='/community_index.php'||u.pathname==='/challenge_index.php')return !u.searchParams.has('action');
         if(u.pathname==='/challenge_vote_image.php')return !!u.searchParams.get('IMAGE_ID');
@@ -1453,18 +1455,21 @@ html.dpc-viewing body {
             if(destination&&safe(destination)){
                 const icon=make('a','dpc-header-messages');icon.href=safe(destination);
                 icon.innerHTML='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3 7 9 6 9-6"/></svg><span class="dpc-message-dot" aria-hidden="true"></span>';
-                function unread(doc){
-                    const links=[...doc.querySelectorAll('a[href]')].filter(a=>/inbox|private messag|my messages|new messages|unread messages/i.test(clean(a))||safe(a)===icon.href);
-                    for(const a of links){
-                        const label=[clean(a),a.title,a.getAttribute('aria-label'),...[...a.querySelectorAll('img')].map(im=>[im.alt,im.title,im.getAttribute('src')].join(' '))].filter(Boolean).join(' ');
-                        if(/\b(?:[1-9]\d*\s+(?:new|unread)\s+(?:private\s+)?messages?|(?:new|unread)\s+(?:private\s+)?messages?\s*[:(]\s*[1-9]\d*|(?:inbox|my messages)\s*\([1-9]\d*\)|you have (?:a|one|[1-9]\d*) new (?:private\s+)?messages?)\b/i.test(label)||/(?:new[_-]?(?:pm|msg|message|mail)|(?:pm|msg|message|mail)[_-]?new)\.(?:gif|png|svg)/i.test(label))return true;
-                    }
-                    const text=(doc.body?.innerText||doc.body?.textContent||'').replace(/\s+/g,' ');
-                    return /\b(?:you have\s+(?:a|one|[1-9]\d*)\s+(?:new|unread)\s+(?:private\s+)?messages?|[1-9]\d*\s+(?:new|unread)\s+(?:private\s+)?messages?)\b/i.test(text);
+                const applyUnread=active=>{icon.classList.toggle('unread',active);icon.setAttribute('aria-label',active?'Messages — unread messages':'Messages');icon.title=active?'Unread messages':'Messages';};
+                function refreshUnread(){
+                    backgroundFetch('/messaging.php',{credentials:'same-origin',cache:'no-cache'}).then(r=>r.ok?r.text():null).then(html=>{
+                        if(!html)return;
+                        const doc=new DOMParser().parseFromString(html,'text/html');
+                        if(!/Inbox - Private Messaging/i.test(doc.title))return;
+                        const active=[...doc.querySelectorAll('a[href*="action=read"][href*="MESSAGE_ID="] img')].some(im=>/\/folder_new\.gif(?:$|\?)/i.test(im.getAttribute('src')||''));
+                        applyUnread(active);
+                    }).catch(()=>{});
                 }
-                function update(doc){const active=unread(doc);icon.classList.toggle('unread',active);icon.setAttribute('aria-label',active?'Messages — unread messages':'Messages');icon.title=active?'Unread messages':'Messages';}
-                update(document);$('.dpc-header-right').prepend(icon);$('.dpc-header').classList.add('has-messages');
-                addEventListener('pageshow',e=>{if(e.persisted)backgroundFetch(location.href,{credentials:'same-origin',cache:'no-cache'}).then(r=>r.ok?r.text():null).then(html=>{if(html)update(new DOMParser().parseFromString(html,'text/html'));}).catch(()=>{});});
+                applyUnread(false);$('.dpc-header-right').prepend(icon);$('.dpc-header').classList.add('has-messages');
+                refreshUnread();
+                addEventListener('pageshow',refreshUnread);
+                addEventListener('dpc-messages-changed',refreshUnread);
+
             }
         }
         const searchForm=[...document.forms].find(f=>/image.search/i.test(f.action)||/image search/i.test(clean(f)));
@@ -1472,7 +1477,7 @@ html.dpc-viewing body {
         const welcome=(document.body.textContent||'').match(/Welcome back[^\r\n]{0,80}/i);
         if(welcome)menu.prepend(make('div','dpc-home-welcome',welcome[0].split(/\(\s*log out/i)[0].trim()));
         // Mark only destinations actually covered by the userscript's @match paths.
-        const supportedPaths=["/challenge_vote_image.php","/challenge_vote_list.php","/","/index.php","/image.php","/challenge_results.php","/profile.php","/challenge_index.php","/challenge_submit.php","/forum.php","/community_index.php"];
+        const supportedPaths=["/challenge_vote_image.php","/challenge_vote_list.php","/","/index.php","/image.php","/challenge_results.php","/profile.php","/challenge_index.php","/challenge_submit.php","/forum.php","/community_index.php","/messaging.php"];
         let markerId=0;
         for(const a of menu.querySelectorAll('a[href]')){
             let u;try{u=new URL(a.href,location.href);}catch{continue;}
@@ -4024,6 +4029,95 @@ html.dpc-viewing body {
         if(initialPosts.length&&location.hash){const id=decodeURIComponent(location.hash.slice(1));requestAnimationFrame(()=>[...feed.children].find(n=>n.id===id)?.scrollIntoView({block:'start'}));}
     }
 
+
+    function buildMessages(){
+        const action=new URLSearchParams(location.search).get('action')||'';
+        const heading=[...document.querySelectorAll('.divider')].find(n=>/Private Messaging/i.test(n.textContent));
+        const native=heading?.nextElementSibling;if(!native)return;
+        const make=(tag,cls,txt)=>{const n=document.createElement(tag);if(cls)n.className=cls;if(txt!==undefined)n.textContent=txt;return n;};
+        const clean=n=>(n?.textContent||'').replace(/\s+/g,' ').trim();
+        const link=(href,label,cls='')=>{const a=make('a',cls,label);a.href=href;return a;};
+        const readRows=[...native.querySelectorAll('tr[id^="message_"]')].filter(r=>r.cells.length===2);
+        const listRows=[...native.querySelectorAll('tr')].filter(r=>r.cells.length>=6&&r.querySelector('input[type=checkbox]')&&r.querySelector('a[href*="action=read"][href*="MESSAGE_ID="]'));
+        const listing=action===''||action==='sent';
+        const editor=native.querySelector('#message_reply')||[...native.querySelectorAll('form')].find(f=>f.querySelector('textarea'));
+        if(!listing&&!readRows.length&&!editor)return;
+        style.textContent += '#dpc-app .dpc-pm{max-width:780px;margin:auto;padding:14px 12px 32px}#dpc-app .dpc-pm h1{font:500 34px/1.05 var(--serif),Georgia,serif;margin:16px 0 18px;overflow-wrap:anywhere}#dpc-app .dpc-pm-tabs{display:flex;gap:8px;border-bottom:1px solid var(--line);margin-bottom:16px;align-items:center}#dpc-app .dpc-pm-tabs a{padding:10px 8px;font-size:13px;color:var(--muted);text-decoration:none}#dpc-app .dpc-pm-tabs a.active{color:var(--accent);border-bottom:2px solid var(--accent);font-weight:600}#dpc-app .dpc-pm-tabs .compose{margin-left:auto;color:var(--accent)}#dpc-app .dpc-pm-row{display:flex;align-items:center;gap:12px;padding:13px 10px;border-bottom:1px solid var(--line);position:relative}#dpc-app .dpc-pm-row.unread{background:color-mix(in srgb,var(--accent) 8%,transparent)}#dpc-app .dpc-pm-row a{color:inherit;text-decoration:none;min-width:0;flex:1}#dpc-app .dpc-pm-row h2{font:500 24px/1.12 var(--serif),Georgia,serif;margin:4px 0;overflow-wrap:anywhere}#dpc-app .dpc-pm-row.unread h2{font-weight:700}#dpc-app .dpc-pm-meta{display:flex;justify-content:space-between;gap:10px;color:var(--muted);font-size:11px;align-items:center}#dpc-app .dpc-pm-person{font-size:13px;font-weight:600;color:var(--accent)}#dpc-app .dpc-pm-unread{width:8px;height:8px;background:#e35e75;border-radius:50%;flex:none}#dpc-app .dpc-pm-tools{display:flex;gap:8px;flex-wrap:wrap;margin:12px 0}#dpc-app .dpc-pm-tools button,#dpc-app .dpc-pm-tools a,#dpc-app .dpc-pm form input[type=submit],#dpc-app .dpc-pm form input[type=button]{border:1px solid var(--line);background:transparent;color:var(--accent);padding:9px 12px;border-radius:5px;text-decoration:none;font:500 12px system-ui}#dpc-app .dpc-pm-message{padding:14px;margin:10px 12px 10px 0;border:1px solid var(--line);background:#25262e;border-radius:9px;overflow-wrap:anywhere}#dpc-app .dpc-pm-message.own{margin:10px 0 10px 20px;background:#202a3b}html.dpc-light #dpc-app .dpc-pm-message{background:#fff}html.dpc-light #dpc-app .dpc-pm-message.own{background:#e6edf9}#dpc-app .dpc-pm-author{display:flex;align-items:center;gap:9px;margin-bottom:12px}#dpc-app .dpc-pm-avatar{width:34px;height:34px;object-fit:cover;border-radius:50%}#dpc-app .dpc-pm-author a{font-weight:600;color:var(--accent);text-decoration:none}#dpc-app .dpc-pm-author small{display:block;font-size:10px;color:var(--muted)}#dpc-app .dpc-pm-prose{font:400 14px/1.55 system-ui;overflow-wrap:anywhere}#dpc-app .dpc-pm-prose img{max-width:100%;height:auto}#dpc-app .dpc-pm-prose a{color:var(--accent)}#dpc-app .dpc-pm-actions{display:flex;gap:16px;justify-content:flex-end;margin-top:12px;font-size:11px}#dpc-app .dpc-pm-actions a{color:var(--muted);text-decoration:none}#dpc-app .dpc-pm-editor{border-top:2px solid var(--line);margin-top:20px;padding-top:16px}#dpc-app .dpc-pm-editor form,#dpc-app .dpc-pm-editor table{width:100%!important;max-width:100%;box-sizing:border-box}#dpc-app .dpc-pm-editor textarea{width:100%!important;min-height:130px;height:150px!important;box-sizing:border-box;background:transparent;color:inherit;border:1px solid var(--line);border-radius:6px;padding:12px;font:16px/1.5 system-ui;resize:vertical}#dpc-app .dpc-pm-editor input[type=text],#dpc-app .dpc-pm-editor .token-input-list{max-width:100%!important;box-sizing:border-box;color:inherit;background:transparent;border:1px solid var(--line)}#dpc-app .dpc-pm-editor .dpc-message-compose td{padding:5px 0}#dpc-app .dpc-pm-editor input[type=submit]{background:var(--accent);color:#111115;font-weight:700}#dpc-app .dpc-pm-editor .token-input-dropdown{max-width:100%!important}#dpc-app .dpc-pm-pagination{display:flex;gap:12px;justify-content:center;margin:16px 0;font-size:12px}#dpc-app .dpc-pm-pagination a{color:var(--accent)}';
+        app.innerHTML=header+'<main class="dpc-pm"></main>'+footer;
+        const body=$('.dpc-pm'),tabs=make('nav','dpc-pm-tabs');body.append(tabs);
+        tabs.append(link('/messaging.php','Inbox',action===''?'active':''),link('/messaging.php?action=sent','Sent',action==='sent'?'active':''),link('/messaging.php?action=compose','+ Compose','compose'+(action==='compose'?' active':'')));
+        const title=clean(heading).replace(/\s*-\s*Private Messaging\s*$/i,'');
+        body.append(make('h1','',listing?(action==='sent'?'Sent messages':'Inbox'):title||'New message'));
+        const nativeForm=name=>document.forms.namedItem(name);
+        function submitNative(form){if(!form)return;if(softChild)form.target='_top';HTMLFormElement.prototype.submit.call(form);}
+        function pagination(){
+            const nav=make('nav','dpc-pm-pagination'),seen=new Set();
+            for(const a of native.querySelectorAll('a[href*="page="]')){
+                const u=new URL(a.href,location.href);if(u.pathname!=='/messaging.php'||seen.has(u.href))continue;
+                const im=a.querySelector('img[src*="/images/page/"]'),label=im?(im.src.match(/\/(prev|next|\d+)[a-z]*\.gif/i)?.[1]||'Page'):clean(a);
+                if(!im&&!/reverse/i.test(label))continue;
+                seen.add(u.href);nav.append(link(u.href,label==='prev'?'Previous':label==='next'?'Next':label.replace(/[()]/g,'')));
+            }
+            if(nav.children.length)body.append(nav);
+        }
+        if(listing){
+            const tools=make('div','dpc-pm-tools'),selected=[];
+            const remove=make('button','','Delete selected');remove.type='button';remove.disabled=true;
+            const select=make('button','','Select');select.type='button';let selecting=false;
+            const list=make('section','dpc-pm-list');body.append(tools,list);tools.append(select,remove);remove.hidden=true;
+            for(const row of listRows){
+                const cells=row.cells,subject=row.querySelector('a[href*="action=read"][href*="MESSAGE_ID="]'),originalCheck=row.querySelector('input[type=checkbox]');
+                const unread=!!subject.querySelector('img[src$="/folder_new.gif"]'),card=make('article','dpc-pm-row'+(unread?' unread':''));
+                const check=make('input');check.type='checkbox';check.value=originalCheck.value;check.hidden=true;check.setAttribute('aria-label','Select '+clean(subject));selected.push(check);
+                check.onchange=()=>remove.disabled=!selected.some(c=>c.checked);card.append(check);
+                if(unread)card.append(make('span','dpc-pm-unread'));
+                const a=link(subject.href,'');const meta=make('div','dpc-pm-meta');
+                meta.append(make('span','dpc-pm-person',clean(action==='sent'?cells[2]:cells[1])),make('span','',clean(cells[5])));
+                a.append(meta,make('h2','',clean(subject)),make('div','dpc-pm-meta',clean(cells[4])));card.append(a);list.append(card);
+            }
+            if(!listRows.length)list.append(make('p','dpc-pm-meta','No messages.'));
+            select.onclick=()=>{selecting=!selecting;select.textContent=selecting?'Cancel':'Select';remove.hidden=!selecting;for(const c of selected){c.hidden=!selecting;c.checked=false;}remove.disabled=true;};
+            remove.onclick=()=>{const ids=selected.filter(c=>c.checked).map(c=>c.value);if(!ids.length||!confirm('Delete the selected messages?'))return;const f=nativeForm('deleteForm');if(f?.elements.ids){f.elements.ids.value=ids.join(',');submitNative(f);}};
+            pagination();
+        }else{
+            const me=[...document.querySelectorAll('a[href="/profile.php"]')].find(a=>clean(a)&&/Welcome back/i.test(a.parentElement.textContent));
+            const myName=clean(me).toLowerCase();
+            const info=native.querySelector('#message_info');
+            if(info){
+                const recipients=[...info.querySelectorAll('a[href*="profile.php"]')].map(a=>clean(a)).filter(n=>n.toLowerCase()!==myName);
+                if(recipients.length)body.append(make('p','dpc-pm-person',[...new Set(recipients)].join(', ')));
+                const details=make('details','dpc-pm-editor');details.append(make('summary','','Participants and message options'));details.append(info);body.append(details);
+            }
+            pagination();
+            for(const row of readRows){
+                const author=row.cells[0].querySelector('a[href*="profile.php"]'),avatar=row.cells[0].querySelector('img[src*="images_profile"]'),time=row.cells[0].querySelector('span');
+                const content=row.cells[1].querySelector('table td');if(!content)continue;
+                const card=make('article','dpc-pm-message'+(myName&&clean(author).toLowerCase()===myName?' own':''));
+                const head=make('div','dpc-pm-author');if(avatar){const im=avatar.cloneNode();im.removeAttribute('style');im.className='dpc-pm-avatar';head.append(im);}
+                const who=make('div');if(author)who.append(link(author.href,clean(author)));who.append(make('small','',clean(time)));head.append(who);card.append(head);
+                const prose=make('div','dpc-pm-prose');
+                for(const n of content.childNodes){if(n.nodeType===1&&n.matches('.dpc-msg-actions,script,style'))continue;prose.append(n.cloneNode(true));}
+                card.append(prose);const actions=make('div','dpc-pm-actions');
+                for(const a of content.querySelectorAll('.dpc-msg-links a')){
+                    const label=clean(a),b=link(a.href,label);
+                    if(label==='Reply'||label==='Quote')b.onclick=e=>{e.preventDefault();const ta=editor?.querySelector('textarea');if(!ta)return;if(label==='Quote'){const selected=window.getSelection()?.toString();ta.value+='[quote='+clean(author)+']'+(selected||prose.innerText.trim())+'[/quote]\n\n';}ta.focus();ta.setSelectionRange(ta.value.length,ta.value.length);};
+                    actions.append(b);
+                }
+                card.append(actions);body.append(card);
+            }
+            if(readRows.length)pagination();
+            if(editor){
+                const section=make('section','dpc-pm-editor');section.append(make('h2','',readRows.length?'Reply':'Compose message'));body.append(section);
+                const cancel=editor.querySelector('input[value="Cancel"]');if(cancel)cancel.onclick=()=>browsePage('/messaging.php');
+                section.append(editor);
+            }
+            const del=[...document.querySelectorAll('a[onclick]')].find(a=>/^Delete This Message$/i.test(clean(a)));
+            if(del){const t=make('div','dpc-pm-tools'),button=make('button','','Delete conversation');button.type='button';button.onclick=()=>{const f=nativeForm('deleteForm'),match=del.getAttribute('onclick')?.match(/ids\.value\s*=\s*['"](\d+)['"]/);if(!f||!match||!confirm('Delete this message?'))return;f.elements.ids.value=match[1];submitNative(f);};t.append(button);body.append(t);}
+        }
+        $('#dpc-original').onclick=()=>original();mount();
+        if(softChild)try{parent.dispatchEvent(new Event('dpc-messages-changed'));}catch{}
+    }
+
     document.addEventListener('click',captureGallery,true);
     // Forms must leave staged frames through the normal top-level browser flow.
     if(softChild)document.addEventListener('submit',e=>{
@@ -4042,6 +4136,7 @@ html.dpc-viewing body {
             if(handled)e.preventDefault();
         }else if(softChild){e.preventDefault();openNative(u.href);}
     });
+    if(location.pathname==='/messaging.php'){buildMessages();return;}
     if (isForum) { buildForum(); return; }
     if (isSubmit) { buildSubmission(); return; }
     if (isChallengeIndex) { buildChallengeIndex(); return; }
