@@ -2,7 +2,7 @@
 // ==UserScript==
 // @name DPChallenge Mobile — Editorial Gallery
 // @namespace dpc-mobile
-// @version 5.67
+// @version 5.68
 // @updateURL https://raw.githubusercontent.com/Konador/dpc-mobile-restyle/main/dpc-mobile.user.js
 // @downloadURL https://raw.githubusercontent.com/Konador/dpc-mobile-restyle/main/dpc-mobile.user.js
 // @match *://*.dpchallenge.com/challenge_vote_image.php*
@@ -2158,6 +2158,7 @@ html.dpc-viewing body {
             style.textContent += '#dpc-app .dpc-current-info{align-content:end;align-items:end;row-gap:3px}#dpc-app .dpc-current-title{grid-row:1;grid-column:1;font:600 15px/1.12 var(--serif),Georgia,serif;font-optical-sizing:none;font-variation-settings:"opsz" 12,"wght" 600;-webkit-text-stroke:.22px currentColor;letter-spacing:-.015em;max-width:none}#dpc-app .dpc-current-challenge{grid-row:2;grid-column:1;font:500 10px/1.25 system-ui,sans-serif}#dpc-app .dpc-current-metric.score{align-self:end}#dpc-app .dpc-current-secondary{grid-row:3}#dpc-app .dpc-current-actions{grid-row:4}';
             style.textContent += '#dpc-app .dpc-current-info{grid-template-columns:minmax(0,1fr) max-content;grid-template-rows:minmax(0,1fr) auto auto;align-content:stretch;align-items:start;column-gap:8px;row-gap:4px}#dpc-app .dpc-current-title{grid-row:1;grid-column:1;align-self:start;line-height:1.04;font-size:18px;min-width:0}#dpc-app .dpc-current-metric.score{grid-row:1;grid-column:2;align-self:start}#dpc-app .dpc-current-challenge{grid-row:2;grid-column:1/-1;align-self:end}#dpc-app .dpc-current-secondary{grid-row:3;grid-column:1;align-self:end;margin:0;gap:2px 6px}#dpc-app .dpc-current-actions{grid-row:3;grid-column:2;align-self:end;margin:0}#dpc-app .dpc-current-thumb{align-self:stretch;height:100%!important;min-height:0;aspect-ratio:1}';
             style.textContent += '#dpc-app .dpc-current-secondary{min-width:0;flex-wrap:nowrap;white-space:nowrap;gap:0 var(--stat-gap,6px);overflow:hidden}#dpc-app .dpc-current-secondary .dpc-current-metric{flex:0 0 auto;white-space:nowrap;gap:var(--stat-inner-gap,3px);font-size:var(--stat-size,9px)!important}#dpc-app .dpc-current-secondary .dpc-current-metric :is(span,strong,a){font-size:var(--stat-size,9px)!important;white-space:nowrap}';
+            style.textContent += '#dpc-app .dpc-current-info{grid-template-rows:minmax(0,1fr) auto auto;row-gap:3px}#dpc-app .dpc-current-title{align-self:end}#dpc-app .dpc-current-challenge{align-self:end;grid-column:1}#dpc-app .dpc-current-secondary{align-self:end}#dpc-app .dpc-current-actions{grid-row:2/span 2;align-self:end}';
             if(strip.children.length){
                 tabs.before(strip);
                 const fitStats=row=>{
