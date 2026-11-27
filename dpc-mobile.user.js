@@ -2,7 +2,7 @@
 // ==UserScript==
 // @name DPChallenge Mobile — Editorial Gallery
 // @namespace dpc-mobile
-// @version 6.10
+// @version 6.11
 // @updateURL https://raw.githubusercontent.com/Konador/dpc-mobile-restyle/main/dpc-mobile.user.js
 // @downloadURL https://raw.githubusercontent.com/Konador/dpc-mobile-restyle/main/dpc-mobile.user.js
 // @match *://*.dpchallenge.com/challenge_vote_image.php*
@@ -3713,7 +3713,7 @@ html.dpc-viewing body {
         style.textContent += '#dpc-app .dpc-profile-about-body{padding:0 8px 10px}#dpc-app .dpc-profile-about-body .dpc-profile-info{border:0;background:transparent;padding:0 4px}#dpc-app .dpc-profile-stat-grid .dpc-profile-stat-group{grid-column:1/-1;font-weight:700;color:var(--accent);padding:12px 0 5px;border-bottom:1px solid var(--line)}';
         style.textContent += '#dpc-app .dpc-profile-about{margin:0 0 16px}#dpc-app .dpc-profile-about>summary{border-left:3px solid var(--accent);padding:12px 14px;font:600 18px/1.3 var(--serif),Georgia,serif;cursor:pointer}#dpc-app .dpc-profile-about-body{padding:0 8px 10px;min-width:0}#dpc-app .dpc-profile-about-body .dpc-profile-prose{overflow-wrap:anywhere}#dpc-app .dpc-profile-about-body .dpc-profile-prose img{max-width:100%;height:auto}#dpc-app .dpc-profile-about-body .dpc-profile-field a.i{font-weight:650}';
         style.textContent += '#dpc-app .dpc-profile-photo{overflow:hidden}#dpc-app .dpc-profile-photo img.dpc-profile-thumb{opacity:0}#dpc-app .dpc-profile-photo img.dpc-profile-thumb.ready{opacity:1}#dpc-app .dpc-profile-photo img.dpc-profile-full-layer{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;opacity:0;transition:opacity 220ms ease;pointer-events:none}#dpc-app .dpc-profile-photo .dpc-overlay-ribbon{z-index:2}@media(prefers-reduced-motion:reduce){#dpc-app .dpc-profile-photo img.dpc-profile-full-layer{transition:none}}';
-        style.textContent += '#dpc-app .dpc-profile-about>summary{margin:0;padding:10px 12px;border-left:3px solid var(--accent)}#dpc-app .dpc-profile-about-body{padding:12px 0 0;min-width:0}#dpc-app .dpc-profile-about-body .dpc-profile-section{margin:0 0 18px}#dpc-app .dpc-profile-about-body .dpc-profile-section>h2{border-left:0!important;padding:0 0 8px!important;margin:0 0 10px!important;font-size:23px!important;line-height:1.2!important;-webkit-text-size-adjust:none!important;text-size-adjust:none!important}#dpc-app .dpc-profile-about-body .dpc-profile-info{padding:0!important}#dpc-app .dpc-profile-about-body .dpc-profile-section:last-child{margin-bottom:0}';
+        style.textContent += '#dpc-app .dpc-profile-about>summary{margin:0;padding:10px 12px;border-left:3px solid var(--accent)}#dpc-app .dpc-profile-about-body{padding:16px 4px 4px;min-width:0}#dpc-app .dpc-profile-about-body .dpc-profile-section{margin:0 0 18px}#dpc-app .dpc-profile-about-body .dpc-profile-section>h2{border-left:0!important;padding:0 0 8px 12px!important;margin:0 0 10px!important;font-size:23px!important;line-height:1.2!important;-webkit-text-size-adjust:none!important;text-size-adjust:none!important}#dpc-app .dpc-profile-about-body .dpc-profile-info{padding:0!important}#dpc-app .dpc-profile-about-body .dpc-profile-section:last-child{margin-bottom:0}';
         const profileFullQueue=[],profileFullCache=new Map();let profileFullActive=false;
         const imageIdFromSrc=src=>photoFilename(src).match(/(?:^|_)(\d+)\.[a-z]+$/i)?.[1];
         async function revealProfileFull(im,src){
