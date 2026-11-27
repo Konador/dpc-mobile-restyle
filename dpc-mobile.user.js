@@ -2,7 +2,7 @@
 // ==UserScript==
 // @name DPChallenge Mobile — Editorial Gallery
 // @namespace dpc-mobile
-// @version 5.55
+// @version 5.56
 // @updateURL https://raw.githubusercontent.com/Konador/dpc-mobile-restyle/main/dpc-mobile.user.js
 // @downloadURL https://raw.githubusercontent.com/Konador/dpc-mobile-restyle/main/dpc-mobile.user.js
 // @match *://*.dpchallenge.com/challenge_vote_image.php*
@@ -1400,6 +1400,12 @@ html.dpc-viewing body {
 
     function mount() {
         buildSharedMenu();
+        // Explicit home navigation creates a fresh history entry; Back restores the old one.
+        for(const a of app.querySelectorAll('.dpc-brand,.dpc-home-menu a[href]')){
+            const u=new URL(a.href,location.href);
+            if(u.origin!==location.origin||!['/','/index.php'].includes(u.pathname)||u.search||u.hash)continue;
+            a.href='/index.php?dpc_home=results';
+        }
         document.body.append(app);
         root.classList.add('dpc-mobile');
         let pressedLink=null,loadingLink=null,feedbackTimer=null,pressPoint=null;
@@ -2021,7 +2027,7 @@ html.dpc-viewing body {
         });
         const viewport=make('div','dpc-home-carousel'),track=make('div','dpc-home-carousel-track');
         tabs.after(viewport);viewport.append(track);panels.forEach(panel=>{panel.hidden=false;track.append(panel);});
-        let selectedTab=0;try{const saved=Number(sessionStorage.getItem('dpc-home-challenge-tab'));if(Number.isInteger(saved)&&saved>=0&&saved<panels.length)selectedTab=saved;}catch{}
+        let selectedTab=0;const savedHome=history.state?.dpcHome;const navigationType=performance.getEntriesByType('navigation')[0]?.type;const restoreHome=navigationType==='back_forward'||navigationType==='reload';if(restoreHome&&Number.isInteger(savedHome?.tab)&&savedHome.tab>=0&&savedHome.tab<panels.length)selectedTab=savedHome.tab;
         let gesture=null,suppressClickUntil=0,settleTimer=null;
         const motion=matchMedia('(prefers-reduced-motion: reduce)');
         function fitHeight(dragging=false){
@@ -2043,7 +2049,7 @@ html.dpc-viewing body {
             panels.forEach((panel,i)=>{panel.hidden=false;panel.inert=i!==selectedTab;panel.setAttribute('aria-hidden',String(i!==selectedTab));buttons[i].classList.toggle('active',i===selectedTab);buttons[i].setAttribute('aria-selected',String(i===selectedTab));buttons[i].tabIndex=i===selectedTab?0:-1;});
             positionHome(0,animate);
             if(animate&&!motion.matches){fitHeight();settleTimer=setTimeout(()=>fitHeight(),290);}else fitHeight();
-            try{sessionStorage.setItem('dpc-home-challenge-tab',String(selectedTab));}catch{}
+            try{history.replaceState({...history.state,dpcHome:{tab:selectedTab,y:scrollY}},'',location.href);}catch{}
         }
         viewport.addEventListener('touchstart',e=>{
             if(e.touches.length!==1||e.target.closest('.dpc-home-hero,.dpc-results-rail,input,textarea,select,[contenteditable]'))return;
@@ -2079,7 +2085,10 @@ html.dpc-viewing body {
             fitHeight(!!gesture&&gesture.axis==='x');
         });panels.forEach(p=>homeResize.observe(p));homeResize.observe(viewport);
         selectHomeTab(selectedTab,false);
-        requestAnimationFrame(()=>fitHeight());
+        const saveHome=()=>{try{history.replaceState({...history.state,dpcHome:{tab:selectedTab,y:scrollY}},'',location.href);}catch{}};
+        addEventListener('pagehide',saveHome);
+        document.addEventListener('click',e=>{if(e.target.closest?.('a[href]'))saveHome();},true);
+        requestAnimationFrame(()=>{fitHeight();if(restoreHome&&savedHome)requestAnimationFrame(()=>scrollTo(0,savedHome.y||0));else scrollTo(0,0);});
         $('#dpc-original').onclick=()=>original();
         mount();
     }
