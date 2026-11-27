@@ -2,7 +2,7 @@
 // ==UserScript==
 // @name DPChallenge Mobile — Editorial Gallery
 // @namespace dpc-mobile
-// @version 5.82
+// @version 5.83
 // @updateURL https://raw.githubusercontent.com/Konador/dpc-mobile-restyle/main/dpc-mobile.user.js
 // @downloadURL https://raw.githubusercontent.com/Konador/dpc-mobile-restyle/main/dpc-mobile.user.js
 // @match *://*.dpchallenge.com/challenge_vote_image.php*
@@ -4039,6 +4039,7 @@ html.dpc-viewing body {
         const link=(href,label,cls='')=>{const a=make('a',cls,label);a.href=href;return a;};
         const readRows=[...native.querySelectorAll('tr[id^="message_"]')].filter(r=>r.cells.length===2);
         const listRows=[...native.querySelectorAll('tr')].filter(r=>r.cells.length>=6&&r.querySelector('input[type=checkbox]')&&r.querySelector('a[href*="action=read"][href*="MESSAGE_ID="]'));
+        style.textContent += '#dpc-app .dpc-pm,#dpc-app .dpc-pm *,#dpc-app .dpc-footer,#dpc-app .dpc-footer *{-webkit-text-size-adjust:none!important;text-size-adjust:none!important}#dpc-app .dpc-pm-editor h2{font:600 16px/1.3 system-ui!important;margin:0 0 12px!important}#dpc-app .dpc-pm-editor .dpc-pm-format{gap:4px;margin:4px 0 10px}#dpc-app .dpc-pm-editor .dpc-pm-format-tool{font-size:11px!important;min-height:30px;padding:3px 7px;box-sizing:border-box}#dpc-app .dpc-pm-editor textarea{font:400 14px/1.5 system-ui!important;height:150px!important;min-height:130px}#dpc-app .dpc-pm-editor :is(input[type=submit],input[type=button],button){font:600 12px/1.3 system-ui!important;padding:9px 12px!important;min-height:36px;border:1px solid var(--line);border-radius:5px;background:transparent!important;color:var(--accent)!important}#dpc-app .dpc-pm-editor .dpc-pm-primary{background:var(--accent)!important;color:#111115!important;border-color:var(--accent)!important}html.dpc-light #dpc-app .dpc-pm-editor .dpc-pm-primary{color:white!important}#dpc-app .dpc-pm-editor :is(td,label,.labelcell){color:var(--muted)!important;font-size:12px!important}#dpc-app .dpc-pm-delete{margin-top:20px;padding-top:12px;border-top:1px solid var(--line)}#dpc-app .dpc-pm-delete button{border:0!important;padding:6px 0!important;color:#db858b!important;font:500 11px/1.4 system-ui!important}html.dpc-light #dpc-app .dpc-pm-delete button{color:#a44650!important}#dpc-app .dpc-footer{font-size:11px!important;line-height:1.5!important}#dpc-app .dpc-footer-mark{font-size:17px!important}';
         const listing=action===''||action==='sent';
         const editor=native.querySelector('#message_reply')||[...native.querySelectorAll('form')].find(f=>f.querySelector('textarea'));
         if(!listing&&!readRows.length&&!editor)return;
@@ -4127,10 +4128,18 @@ html.dpc-viewing body {
                 }
                 const textarea=editor.querySelector('textarea');
                 if(toolbar.children.length&&textarea)textarea.before(toolbar);
+                if(readRows.length){
+                    for(const label of editor.querySelectorAll('label,b,strong,span,td')){
+                        if(label.children.length===0&&/^Reply Message:\s*$/i.test(clean(label)))label.textContent='';
+                    }
+                }
+                for(const control of editor.querySelectorAll('input[type=submit],input[type=button],button')){
+                    if(/^(Send Reply|Send Message|Send)$/i.test((control.value||control.textContent||'').trim()))control.classList.add('dpc-pm-primary');
+                }
                 section.append(editor);
             }
             const del=[...document.querySelectorAll('a[onclick]')].find(a=>/^Delete This Message$/i.test(clean(a)));
-            if(del){const t=make('div','dpc-pm-tools'),button=make('button','','Delete conversation');button.type='button';button.onclick=()=>{const f=nativeForm('deleteForm'),match=del.getAttribute('onclick')?.match(/ids\.value\s*=\s*['"](\d+)['"]/);if(!f||!match||!confirm('Delete this message?'))return;f.elements.ids.value=match[1];submitNative(f);};t.append(button);body.append(t);}
+            if(del){const t=make('div','dpc-pm-tools dpc-pm-delete'),button=make('button','','Delete conversation');button.type='button';button.onclick=()=>{const f=nativeForm('deleteForm'),match=del.getAttribute('onclick')?.match(/ids\.value\s*=\s*['"](\d+)['"]/);if(!f||!match||!confirm('Delete this message?'))return;f.elements.ids.value=match[1];submitNative(f);};t.append(button);body.append(t);}
         }
         $('#dpc-original').onclick=()=>original();mount();
         if(softChild)try{parent.dispatchEvent(new Event('dpc-messages-changed'));}catch{}
