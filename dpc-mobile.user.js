@@ -2,7 +2,7 @@
 // ==UserScript==
 // @name DPChallenge Mobile — Editorial Gallery
 // @namespace dpc-mobile
-// @version 5.97
+// @version 5.98
 // @updateURL https://raw.githubusercontent.com/Konador/dpc-mobile-restyle/main/dpc-mobile.user.js
 // @downloadURL https://raw.githubusercontent.com/Konador/dpc-mobile-restyle/main/dpc-mobile.user.js
 // @match *://*.dpchallenge.com/challenge_vote_image.php*
@@ -3616,7 +3616,13 @@ html.dpc-viewing body {
         function panel(label){const p=make('div','dpc-profile-panel');const i=panels.length;const b=make('button','dpc-home-challenge-tab');const words=label.split(' ');b.append(words.slice(0,-1).join(' ')+(words.length>1?' ':''),make('em','',words.at(-1)));b.type='button';b.setAttribute('role','tab');b.id='dpc-profile-tab-'+i;p.id='dpc-profile-panel-'+i;b.setAttribute('aria-controls',p.id);p.setAttribute('aria-labelledby',b.id);p.setAttribute('role','tabpanel');tabs.append(b);body.append(p);panels.push(p);buttons.push(b);b.onclick=()=>select(i);return p;}
         function select(i){panels.forEach((p,j)=>{p.hidden=i!==j;buttons[j].classList.toggle('active',i===j);buttons[j].setAttribute('aria-selected',String(i===j));});}
         function section(parent,label){const sec=make('section','dpc-profile-section');sec.append(heading(label));parent.append(sec);return sec;}
-        const overview=panel('Overview'),history=panel('Challenge entries'),portfolio=panel('Portfolio'),about=panel('About');
+        const overview=panel('Overview'),history=panel('Challenge entries'),portfolio=panel('Portfolio');
+        const aboutFold=make('details','dpc-profile-card dpc-profile-fold dpc-profile-about');
+        const aboutLabel=make('summary','','About');
+        const about=make('div','dpc-profile-about-body');
+        aboutFold.append(aboutLabel,about);
+        body.insertBefore(aboutFold,tabs);
+        style.textContent += '#dpc-app .dpc-profile-about{margin:0 0 16px}#dpc-app .dpc-profile-about>summary{border-left:3px solid var(--accent);padding:12px 14px;font:600 18px/1.3 var(--serif),Georgia,serif;cursor:pointer}#dpc-app .dpc-profile-about-body{padding:0 12px 12px;min-width:0}#dpc-app .dpc-profile-about-body .dpc-profile-prose{overflow-wrap:anywhere}#dpc-app .dpc-profile-about-body .dpc-profile-prose img{max-width:100%;height:auto}#dpc-app .dpc-profile-about-body .dpc-profile-field a.i{font-weight:650}';
         style.textContent += '#dpc-app .dpc-profile-photo{overflow:hidden}#dpc-app .dpc-profile-photo img.dpc-profile-thumb{opacity:0}#dpc-app .dpc-profile-photo img.dpc-profile-thumb.ready{opacity:1}#dpc-app .dpc-profile-photo img.dpc-profile-full-layer{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;opacity:0;transition:opacity 220ms ease;pointer-events:none}#dpc-app .dpc-profile-photo .dpc-overlay-ribbon{z-index:2}@media(prefers-reduced-motion:reduce){#dpc-app .dpc-profile-photo img.dpc-profile-full-layer{transition:none}}';
         const profileFullQueue=[],profileFullCache=new Map();let profileFullActive=false;
         const imageIdFromSrc=src=>photoFilename(src).match(/(?:^|_)(\d+)\.[a-z]+$/i)?.[1];
@@ -3748,7 +3754,7 @@ html.dpc-viewing body {
         }
         listing(history,nativeLists[0]);listing(portfolio,nativeLists[1]);
         for(const [label,keys] of [['Biography',['Biography']],['Profile details',['Age','Gender','Type','Location','Registered','Renewal Date','Credit','Referral link','URL']],['Camera equipment',['Cameras','Lenses']],['Signature',['Signature']]]){
-            const available=keys.filter(k=>fields.has(k)&&value(k));if(!available.length)continue;const sec=section(about,label),card=make('div','dpc-profile-card dpc-profile-info'+(label==='Profile details'?' dpc-profile-fields-grid':''));sec.append(card);
+            const available=keys.filter(k=>fields.has(k)&&(value(k)||fields.get(k).querySelector('img')));if(!available.length)continue;const sec=section(about,label),card=make('div','dpc-profile-card dpc-profile-info'+(label==='Profile details'?' dpc-profile-fields-grid':''));sec.append(card);
             for(const key of available){const field=make('div','dpc-profile-field'+(/Referral link|URL/.test(key)?' wide':''));if(available.length>1||key!==label)field.append(make('h3','',key));const p=make('div','dpc-profile-prose');content(p,fields.get(key));field.append(p);card.append(field);}
         }
         for(const [key,label] of [['Statistics','Full statistics'],['Favorites','Favourites']]){
