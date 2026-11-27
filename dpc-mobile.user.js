@@ -2,7 +2,7 @@
 // ==UserScript==
 // @name DPChallenge Mobile — Editorial Gallery
 // @namespace dpc-mobile
-// @version 5.90
+// @version 5.91
 // @updateURL https://raw.githubusercontent.com/Konador/dpc-mobile-restyle/main/dpc-mobile.user.js
 // @downloadURL https://raw.githubusercontent.com/Konador/dpc-mobile-restyle/main/dpc-mobile.user.js
 // @match *://*.dpchallenge.com/challenge_vote_image.php*
@@ -1525,13 +1525,13 @@ html.dpc-viewing body {
             return {ty:'sh',ks:p({v,i,o,c:closed})};
         }
         const stroke=(c,w,opacity=100)=>({ty:'st',c:p(rgb(c)),o:p(opacity),w:p(w),lc:2,lj:2});
-        const gradient=(sh,colors,from,to,w=6.5)=>({ty:'gr',it:[sh,{ty:'gf',o:p(100),r:1,t:1,s:p(from),e:p(to),g:{p:colors.length,k:p(colors.flatMap(([x,c])=>[x,...rgb(c)]))}},stroke('#292c36',w),tr()]});
+        const gradient=(sh,colors,from,to,w=11)=>({ty:'gr',it:[sh,{ty:'gf',o:p(100),r:1,t:1,s:p(from),e:p(to),g:{p:colors.length,k:p(colors.flatMap(([x,c])=>[x,...rgb(c)]))}},stroke('#121319',w),tr()]});
         const ell=(x,y,w,h,c)=>({ty:'gr',it:[{ty:'el',p:p([x,y]),s:p([w,h])},{ty:'fl',c:p(rgb(c)),o:p(100),r:1},tr()]});
-        const line=(a,b)=>({ty:'gr',it:[outline(a,[[b]],false),stroke(palette[1],4.5,55),tr()]});
+        const line=(a,b)=>({ty:'gr',it:[outline(a,[[b]],false),stroke(palette[1],6,70),tr()]});
         const silver=[[0,'#f0f2f6'],[.5,'#c7cbd5'],[1,'#9299a9']];
         const c=53*.5522847498;
         const face=gradient(outline([57,82],[[[57,82-c],[110-c,29],[110,29]],[[110+c,29],[163,82-c],[163,82]],[[163,82+c],[110+c,135],[110,135]],[[110-c,135],[57,82+c],[57,82]]]),silver,[72,29],[148,135]);
-        const hair=gradient(outline([57,82],[[[57,82-c],[110-c,29],[110,29]],[[110+c,29],[163,82-c],[163,82]],[[153,76],[151,58],[145,53]],[[118,76],[88,50],[70,67]],[[65,76],[57,82]]]),[[0,'#b5bbc7'],[1,'#697181']],[68,29],[153,82],5.5);
+        const hair=gradient(outline([57,82],[[[57,82-c],[110-c,29],[110,29]],[[110+c,29],[163,82-c],[163,82]],[[153,76],[151,58],[145,53]],[[118,76],[88,50],[70,67]],[[65,76],[57,82]]]),[[0,'#b5bbc7'],[1,'#697181']],[68,29],[153,82],9);
         const neck=gradient(outline([89,122],[[[131,122]],[[131,136]],[[110,152]],[[89,136]],[[89,122]]]),silver,[95,122],[125,152]);
         const shirt=gradient(outline([35,185],[[[35,173]],[[35,141],[110,133]],[[185,141],[185,173]],[[185,185]],[[185,191],[179,191]],[[41,191]],[[35,191],[35,185]]]),[[0,palette[0]],[1,palette[1]]],[50,133],[170,191]);
         // All actions start and finish at the same resting pose, including the single idle loop.
@@ -1555,7 +1555,7 @@ html.dpc-viewing body {
     function dpcRoleSchedule(el,state){
         if(!state.visible||!el.isConnected||document.hidden||dpcRoleMotion.matches||!state.ready)return;
         if(!state.running){
-            state.running=true;state.anim.loop=true;state.anim.playSegments([102,223],true);
+            state.running=true;state.anim.loop=true;state.anim.playSegments([102,223],true);state.anim.setSpeed(1.6);
             if(!state.started){state.started=true;state.anim.goToAndPlay(Math.random()*120,true);}
         }
         if(state.timer||state.action||state.pending)return;
@@ -1564,7 +1564,7 @@ html.dpc-viewing body {
             if(!state.running||!el.isConnected||!state.visible||document.hidden||dpcRoleMotion.matches)return;
             const segments=[[0,30],[30,66],[66,102],[223,259],[259,295],[295,337],[337,379],[379,421]];
             const choices=segments.filter((_,i)=>i!==state.lastAction);const next=choices[Math.floor(Math.random()*choices.length)];state.lastAction=segments.indexOf(next);state.pending=next;
-        },3000+Math.random()*9000);
+        },450+Math.random()*1600);
     }
     function dpcRoleSweep(){
         for(const [el,state] of dpcRoleActive){if(!el.isConnected){dpcRoleStop(state);state.anim?.destroy();dpcRoleObserver?.unobserve(el);dpcRoleActive.delete(el);}else if(document.hidden||dpcRoleMotion.matches)dpcRoleStop(state);else dpcRoleSchedule(el,state);}
@@ -1587,7 +1587,7 @@ html.dpc-viewing body {
                 anim.addEventListener('DOMLoaded',()=>{if(!holder.isConnected)return;state.ready=true;anim.goToAndStop(0,true);clone.remove();dpcRoleSchedule(holder,state);});
                 anim.addEventListener('loopComplete',()=>{
                     if(!state.pending||!state.running||!state.visible||document.hidden||dpcRoleMotion.matches)return;
-                    const segment=state.pending;state.pending=null;state.action=true;anim.loop=false;anim.playSegments(segment,true);
+                    const segment=state.pending;state.pending=null;state.action=true;anim.loop=false;anim.setSpeed(1.12);anim.playSegments(segment,true);
                 });
                 anim.addEventListener('complete',()=>{state.action=false;state.running=false;dpcRoleSchedule(holder,state);});
                 dpcRoleObserver?.observe(holder);dpcRoleMutation.observe(app,{childList:true,subtree:true});
