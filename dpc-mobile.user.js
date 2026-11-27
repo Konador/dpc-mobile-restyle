@@ -2,7 +2,7 @@
 // ==UserScript==
 // @name DPChallenge Mobile — Editorial Gallery
 // @namespace dpc-mobile
-// @version 6.19
+// @version 6.20
 // @updateURL https://raw.githubusercontent.com/Konador/dpc-mobile-restyle/main/dpc-mobile.user.js
 // @downloadURL https://raw.githubusercontent.com/Konador/dpc-mobile-restyle/main/dpc-mobile.user.js
 // @match *://*.dpchallenge.com/challenge_vote_image.php*
@@ -1650,6 +1650,8 @@ html.dpc-viewing body {
         // Sunglasses are a rigid facial accessory: follow gaze projection, not eyelid squash.
         const lens=(x)=>({ty:'gr',it:[outline([x-16,77],[[[x+16,77]],[[x+16,87],[x+12,96],[x,96]],[[x-12,96],[x-16,87],[x-16,77]]]),{ty:'fl',c:p(rgb(skin==='bear'?'#d92935':skin==='bat'?'#f7f8fc':'#292319')),o:p(100),r:1},stroke('#121319',6),tr()]});
         const shades={ty:'gr',it:[{ty:'gr',it:[outline([101,82],[[[119,82]]],false),stroke('#121319',7),tr()]},lens(87),lens(133),{ty:'gr',it:[outline([58,78],[[[162,78]]],false),stroke('#121319',6),tr()]},tr(addKeys(eyePos,turnTimes.map(t=>[t,[110+23*yawAt(t),87+19*pitchAt(t)]])),[110,87],k([[0,[100,100]],[421,[100,100]],...turnTimes.map(t=>[t,[100-28*Math.abs(yawAt(t)),100-12*Math.abs(pitchAt(t))]])]))]};
+        // Lower only the stock administrator eyewear, preserving all keyframes and strokes.
+        if(admin&&!skin){const pos=shades.it.at(-1).p;for(const frame of pos.k)frame.s[1]+=8;}
         // Council costume layers use the existing head/torso rig, with independent hat
         // inertia and perspective. The original GIF remains the load-failure fallback.
         const costumeHead=[],costumeBody=[],costumeBehind=[];
@@ -1898,6 +1900,8 @@ html.dpc-viewing body {
     style.textContent += '#dpc-app .dpc-role-icon{display:inline-flex!important;vertical-align:-.17em;width:16px!important;height:16px!important;min-width:16px;max-width:16px!important;margin:0 4px 0 0;object-fit:contain;align-items:center;justify-content:center;flex:none;line-height:1!important;-webkit-text-size-adjust:none;text-size-adjust:none}#dpc-app .dpc-role-icon svg{width:100%!important;height:100%!important;overflow:visible}#dpc-app .dpc-role-lottie{display:block;width:100%;height:100%;pointer-events:none}#dpc-app .dpc-role-icon>.dpc-role-original{margin:0!important}';
     style.textContent += '#dpc-app .dpc-profile-who .dpc-role-icon{width:1.35em!important;height:1.35em!important;min-width:1.35em;max-width:1.35em!important;margin-right:.25em;vertical-align:-.22em}#dpc-app .dpc-profile-who .dpc-role-icon>.dpc-role-original{width:100%!important;height:100%!important;min-width:0;max-width:100%!important}#dpc-app .dpc-profile-realname{-webkit-text-size-adjust:none!important;text-size-adjust:none!important}';
     style.textContent += '#dpc-app .dpc-role-konador{width:28px!important;height:28px!important;min-width:28px!important;max-width:28px!important;vertical-align:-.28em;margin-right:2px}#dpc-app .dpc-role-konador>.dpc-role-original{width:100%!important;height:100%!important;min-width:0;max-width:100%!important}';
+    // Keep SVG clip geometry invisible and prevent page-level box decoration leaking into the rig.
+    style.textContent += '#dpc-app .dpc-role-icon:not(img),#dpc-app .dpc-role-lottie,#dpc-app .dpc-role-lottie svg{border:0!important;outline:0!important;box-shadow:none!important;background:transparent!important}#dpc-app .dpc-role-lottie svg{display:block;overflow:hidden!important}#dpc-app .dpc-role-lottie svg clipPath rect{stroke:none!important;fill:#fff!important}';
     function dpcRoleReplace(node){
         for(const im of node.querySelectorAll('img:not(.dpc-role-icon)')){const info=dpcRoleInfo(im);if(info&&!info.custom){const icon=dpcRoleArtwork(im);if(icon)im.replaceWith(icon);}}
     }
