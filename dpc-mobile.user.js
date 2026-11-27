@@ -2,7 +2,7 @@
 // ==UserScript==
 // @name DPChallenge Mobile — Editorial Gallery
 // @namespace dpc-mobile
-// @version 5.59
+// @version 5.60
 // @updateURL https://raw.githubusercontent.com/Konador/dpc-mobile-restyle/main/dpc-mobile.user.js
 // @downloadURL https://raw.githubusercontent.com/Konador/dpc-mobile-restyle/main/dpc-mobile.user.js
 // @match *://*.dpchallenge.com/challenge_vote_image.php*
@@ -2157,6 +2157,7 @@ html.dpc-viewing body {
                 }
             });
             style.textContent += '#dpc-app .dpc-current-update.dpc-current-busy{opacity:.65;pointer-events:none;animation:dpc-stat-pulse .8s ease-in-out infinite alternate}#dpc-app .dpc-current-metric :is(strong,a){display:inline-block;transition:color .5s}#dpc-app .dpc-current-metric .dpc-stat-up{color:#66b989!important}#dpc-app .dpc-current-metric .dpc-stat-down{color:#dc7980!important}#dpc-app .dpc-current-metric .dpc-stat-changed{color:var(--accent)!important}@keyframes dpc-stat-pulse{to{opacity:1}}@media(prefers-reduced-motion:reduce){#dpc-app .dpc-current-update.dpc-current-busy{animation:none}}';
+            style.textContent += '#dpc-app .dpc-current-metric.score>span{position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%);white-space:nowrap}#dpc-app .dpc-current-title{font:500 11px/1.3 system-ui,sans-serif;color:var(--ink,#e4e3e8);overflow-wrap:anywhere}#dpc-app .dpc-current-actions{display:flex;justify-content:flex-end;align-items:center;gap:7px}#dpc-app .dpc-current-actions .dpc-current-updated{font:400 8px/1.2 system-ui,sans-serif;text-align:right;margin:0;flex:0 1 auto}#dpc-app .dpc-current-actions .dpc-current-update{flex:none;margin:0}';
             if(strip.children.length)tabs.before(strip);
         }
         const panels=[resultsSection,votingSection,entrySection,forumSection],buttons=[];
