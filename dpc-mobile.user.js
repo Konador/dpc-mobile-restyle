@@ -2,7 +2,7 @@
 // ==UserScript==
 // @name DPChallenge Mobile — Editorial Gallery
 // @namespace dpc-mobile
-// @version 6.09
+// @version 6.10
 // @updateURL https://raw.githubusercontent.com/Konador/dpc-mobile-restyle/main/dpc-mobile.user.js
 // @downloadURL https://raw.githubusercontent.com/Konador/dpc-mobile-restyle/main/dpc-mobile.user.js
 // @match *://*.dpchallenge.com/challenge_vote_image.php*
@@ -43,7 +43,7 @@ function softEligible(raw){
         if(u.pathname==='/messaging.php')return /^(?:|read|sent|compose)$/i.test(u.searchParams.get('action')||'');
         if(u.pathname==='/forum.php')return /^(?:|read|readrecent|list)$/i.test(u.searchParams.get('action')||'');
         if(u.pathname==='/profile.php'||u.pathname==='/community_index.php'||u.pathname==='/challenge_index.php')return !u.searchParams.has('action');
-        if(u.pathname==='/challenge_vote_image.php')return !!u.searchParams.get('IMAGE_ID');
+        if(u.pathname==='/challenge_vote_image.php')return false; // Voting uses its own native same-origin action frames.
         if(/^\/challenge_(?:vote_list|submit|submit_preview)\.php$/.test(u.pathname))return !!u.searchParams.get('CHALLENGE_ID');
         return u.pathname==='/'||u.pathname==='/index.php'||(u.pathname==='/image.php'?!!u.searchParams.get('IMAGE_ID'):!!u.searchParams.get('CHALLENGE_ID'));
     }catch{return false;}
@@ -5221,55 +5221,39 @@ html.dpc-viewing body {
         // Use a same-origin frame for the first photograph too,
         // so the visible page can remain in place during voting.
 
-        if (!p.frame) {
-            const frame=document.createElement('iframe');
-            frame.tabIndex=-1;
-
-            const loaded=await new Promise(resolve=>{
-                let finished=false;
-
-                function finish(value) {
-                    if (finished) return;
-                    finished=true;
-                    clearTimeout(timer);
-                    frame.removeEventListener('load',load);
-                    resolve(value);
-                }
-
-                function load() {
-                    try {
-                        const q=read(
-                            frame.contentDocument,
-                            frame.contentWindow,
-                            frame
-                        );
-
-                        finish(q&&q.id===p.id?q:null);
-                    } catch {
-                        finish(null);
+        if (!p.frame || !p.frame.isConnected) {
+            let frame,loaded=null,reason='Voting page timed out';
+            // Retry only the read-only preparation GET, never a native write.
+            for(let attempt=0;attempt<2&&!loaded;attempt++){
+                frame=document.createElement('iframe');
+                frame.tabIndex=-1;
+                loaded=await new Promise(resolve=>{
+                    let finished=false;
+                    function finish(value){
+                        if(finished)return;finished=true;
+                        clearTimeout(timer);frame.removeEventListener('load',load);resolve(value);
                     }
-                }
-
-                const timer=setTimeout(()=>finish(null),10000);
-
-                frame.addEventListener('load',load);
-                frame.src=imageURL(p.id);
-                engine.append(frame);
-            });
-
-            if (!loaded) {
-                frame.remove();
-
-                if (after||stay) {
-                    status('Could not save. Please try again.');
-                    setBusy(false);
-                    return;
-                }
-
-                if(dirty){status('Could not safely save comment. Please try again.');setBusy(false);return;}
-                if(p.comment)p.comment.value=p.comment.defaultValue;
-                if(softChild){status('Could not safely save. Please try again.');setBusy(false);return;}
-                link.click();
+                    function load(){
+                        try{
+                            const url=new URL(frame.contentWindow.location.href);
+                            if(url.protocol==='about:')return;
+                            if(url.origin!==location.origin||url.searchParams.get('IMAGE_ID')!==p.id){reason='Voting page redirected';return finish(null);}
+                            const q=read(frame.contentDocument,frame.contentWindow,frame);
+                            if(q&&q.id===p.id&&q.challengeId===p.challengeId&&(!dirty||q.comment))return finish(q);
+                            reason='Native voting form unavailable';finish(null);
+                        }catch{reason='Native voting page inaccessible';finish(null);}
+                    }
+                    const timer=setTimeout(()=>finish(null),15000);
+                    frame.addEventListener('load',load);
+                    const url=new URL(p.win.location.href);
+                    if(attempt)url.searchParams.set('_dpc_prepare',String(Date.now()));
+                    frame.src=url.href;engine.append(frame);
+                });
+                if(!loaded)frame.remove();
+            }
+            if(!loaded){
+                status(reason+'. Nothing submitted; try again.');
+                setBusy(false);
                 return;
             }
 
