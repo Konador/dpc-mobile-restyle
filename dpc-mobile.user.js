@@ -2,7 +2,7 @@
 // ==UserScript==
 // @name DPChallenge Mobile — Editorial Gallery
 // @namespace dpc-mobile
-// @version 5.61
+// @version 5.62
 // @updateURL https://raw.githubusercontent.com/Konador/dpc-mobile-restyle/main/dpc-mobile.user.js
 // @downloadURL https://raw.githubusercontent.com/Konador/dpc-mobile-restyle/main/dpc-mobile.user.js
 // @match *://*.dpchallenge.com/challenge_vote_image.php*
@@ -2026,6 +2026,18 @@ html.dpc-viewing body {
             strip.setAttribute('aria-label','My current submissions');
             const seen=new Set();
             const updateLinks=[...submissionTable.querySelectorAll('a[href]')].filter(a=>/challenge_stats\.php/i.test(safe(a))&&new URL(safe(a)).searchParams.get('action')==='update');
+            // Use document order, not sibling relationships: legacy tables may be wrapped by the browser or site theme.
+            const readSubmissionMetrics=(table,center)=>{
+                const next=[...table.querySelectorAll('center')].find(c=>c!==center&&(center.compareDocumentPosition(c)&4)&&c.querySelector('a[href*="challenge_stats.php"] img'));
+                const metrics={};
+                for(const row of table.querySelectorAll('tr')){
+                    if(row.cells.length!==2||!(center.compareDocumentPosition(row)&4)||(next&&!(row.compareDocumentPosition(next)&4)))continue;
+                    const label=row.cells[0].textContent.replace(/\s+/g,' ').trim().replace(/\s*:\s*$/,'').toLowerCase();
+                    if(!['avg vote','votes','views','comments','favorites','updated'].includes(label))continue;
+                    metrics[label]={value:row.cells[1].textContent.replace(/\s+/g,' ').trim(),a:row.cells[1].querySelector('a[href]')};
+                }
+                return metrics;
+            };
             for(const center of submissionTable.querySelectorAll('center')){
                 const photo=center.querySelector('a[href*="challenge_stats.php"] img');
                 const detail=photo?.closest('a');
@@ -2034,15 +2046,8 @@ html.dpc-viewing body {
                 const id=new URL(safe(detail)).searchParams.get('IMAGE_ID');
                 if(!id||seen.has(id))continue;
                 seen.add(id);
-                const metrics={};let update=null;
+                const metrics=readSubmissionMetrics(submissionTable,center);let update=null;
                 for(let n=center.nextElementSibling;n&&n.tagName!=='CENTER';n=n.nextElementSibling){
-                    if(n.tagName==='TABLE'){
-                        for(const row of n.rows){
-                            if(row.cells.length<2)continue;
-                            const label=clean(row.cells[0]).replace(/:$/,'').toLowerCase();
-                            metrics[label]={value:clean(row.cells[1]),a:row.cells[1].querySelector('a[href]')};
-                        }
-                    }
                     const candidate=[...n.querySelectorAll('a[href]')].find(a=>updateLinks.includes(a));
                     if(candidate)update=candidate;
                 }
@@ -2055,7 +2060,7 @@ html.dpc-viewing body {
                 const title=link(detail,'dpc-current-title');info.append(title);
                 const values=make('div','dpc-current-values');
                 for(const [key,label] of [['avg vote','Avg'],['votes','Votes'],['views','Views'],['comments','Comments'],['favorites','Faves']]){
-                    const metric=metrics[key];if(!metric)continue;
+                    const metric=metrics[key]||{value:'—',a:null};
                     const cell=make('div','dpc-current-metric'+(key==='avg vote'?' score':''));
                     cell.dataset.metric=key;
                     cell.append(make('span','',label));
@@ -2068,7 +2073,7 @@ html.dpc-viewing body {
                 for(const metric of [...values.children])if(!metric.classList.contains('score'))secondary.append(metric);
                 info.append(values,secondary);
                 const actions=make('div','dpc-current-actions');
-                if(metrics.updated)actions.append(make('span','dpc-current-updated','Updated '+metrics.updated.value));
+                actions.append(make('span','dpc-current-updated',metrics.updated?'Updated '+metrics.updated.value:''));
                 const nativeUpdate=update||updateLinks[0];
                 if(nativeUpdate){const refresh=link(nativeUpdate,'dpc-current-update','Update');refresh.setAttribute('aria-label','Update submission scores');actions.append(refresh);}
                 info.append(actions);card.append(thumb,info);strip.append(card);
@@ -2106,14 +2111,7 @@ html.dpc-viewing body {
                         if(!detail)continue;
                         const id=new URL(detail.getAttribute('href'),location.href).searchParams.get('IMAGE_ID');
                         if(!id)continue;
-                        const data={};
-                        for(let n=center.nextElementSibling;n&&n.tagName!=='CENTER';n=n.nextElementSibling){
-                            if(n.tagName!=='TABLE')continue;
-                            for(const row of n.rows){
-                                if(row.cells.length<2)continue;
-                                data[row.cells[0].textContent.trim().replace(/:$/,'').toLowerCase()]=row.cells[1].textContent.trim();
-                            }
-                        }
+                        const data=Object.fromEntries(Object.entries(readSubmissionMetrics(table,center)).map(([k,v])=>[k,v.value]));
                         byId.set(id,data);
                     }
                     const cards=[...strip.querySelectorAll('.dpc-current-submission')];
