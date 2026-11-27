@@ -2,7 +2,7 @@
 // ==UserScript==
 // @name DPChallenge Mobile — Editorial Gallery
 // @namespace dpc-mobile
-// @version 5.71
+// @version 5.72
 // @updateURL https://raw.githubusercontent.com/Konador/dpc-mobile-restyle/main/dpc-mobile.user.js
 // @downloadURL https://raw.githubusercontent.com/Konador/dpc-mobile-restyle/main/dpc-mobile.user.js
 // @match *://*.dpchallenge.com/challenge_vote_image.php*
@@ -33,46 +33,61 @@ if (sessionStorage.getItem('dpc-original-once')) {
 }
 
 
-/* V2.9 — Prevent original website flashing */
-const bootRoot = document.documentElement;
-const bootStyle = document.createElement('style');
-let bootLight = false;
-
-try {
-    bootLight = localStorage.getItem('dpc-theme') === 'light';
-} catch {}
-
-bootStyle.textContent =
-    'html,body{background:' +
-    (bootLight ? '#f5f6f8' : '#111115') +
-    '!important;color-scheme:' +
-    (bootLight ? 'light' : 'dark') +
-    ';} html:not(.dpc-mobile) body{opacity:0!important;visibility:hidden!important;}';
-
-if (bootRoot) bootRoot.append(bootStyle);
-else {
-    const earlyBootObserver=new MutationObserver(()=>{
-        if(document.documentElement){document.documentElement.append(bootStyle);earlyBootObserver.disconnect();}
-    });
-    earlyBootObserver.observe(document,{childList:true});
+/* Branded, theme-aware boot cover. Keep native content hidden until mount. */
+const bootStyle=document.createElement('style');
+let bootLight=false,bootCover=null,bootRevealed=false,earlyBootObserver=null;
+try{bootLight=localStorage.getItem('dpc-theme')==='light';}catch{}
+const bootBackground=bootLight?'#f5f6f8':'#111115';
+bootStyle.textContent=`
+html.dpc-booting,html.dpc-booting body{background:${bootBackground}!important;color-scheme:${bootLight?'light':'dark'}; }
+html.dpc-booting:not(.dpc-mobile) body{visibility:hidden!important;opacity:0!important}
+html #dpc-boot-cover{position:fixed!important;inset:0!important;width:100%!important;height:100%!important;z-index:2147483647!important;display:flex!important;align-items:center;justify-content:center;flex-direction:column;gap:16px;background:${bootBackground}!important;color:${bootLight?'#405d9d':'#8da5df'};opacity:1;visibility:visible!important;pointer-events:auto;transition:opacity .22s ease;box-sizing:border-box}
+#dpc-boot-cover svg{width:48px;height:65px;animation:dpc-boot-breathe 1.35s ease-in-out infinite}
+#dpc-boot-cover .dpc-boot-brand{font:400 28px/1 Georgia,serif;color:${bootLight?'#25262e':'#f0edf0'};letter-spacing:-1.2px}
+#dpc-boot-cover .dpc-boot-brand em{font-size:12px;letter-spacing:0;color:${bootLight?'#405d9d':'#8da5df'};margin-left:4px}
+#dpc-boot-cover .dpc-boot-track{width:76px;height:2px;overflow:hidden;background:currentColor;opacity:.65;position:relative;border-radius:2px;background-color:${bootLight?'#dce2ee':'#303442'}}
+#dpc-boot-cover .dpc-boot-track:after{content:"";position:absolute;left:0;top:0;width:40%;height:100%;background:currentColor;animation:dpc-boot-sweep 1.05s ease-in-out infinite}
+@keyframes dpc-boot-breathe{50%{opacity:.55;transform:scale(.95)}}
+@keyframes dpc-boot-sweep{0%{transform:translateX(-100%)}100%{transform:translateX(350%)}}
+@media(prefers-reduced-motion:reduce){#dpc-boot-cover,#dpc-boot-cover *{animation:none!important;transition:none!important}#dpc-boot-cover .dpc-boot-track:after{animation:none}}
+`;
+function installBootCover(){
+    const root=document.documentElement;
+    if(!root||bootRevealed)return;
+    root.classList.add('dpc-booting');
+    root.append(bootStyle);
+    bootCover=document.createElement('div');
+    bootCover.id='dpc-boot-cover';
+    bootCover.setAttribute('role','status');
+    bootCover.setAttribute('aria-label','Loading DPChallenge');
+    bootCover.innerHTML=`<svg viewBox="0 0 40 54" aria-hidden="true"><mask id="dpc-boot-shutter-mask"><circle cx="20" cy="20" r="18.5" fill="white"/><path d="M20 12 L26.928 16 L26.928 24 L20 28 L13.072 24 L13.072 16 Z" fill="black"/><path d="M20 12 L41 24.124" stroke="black" stroke-width="1.7" transform="rotate(0 20 20)"/><path d="M20 12 L41 24.124" stroke="black" stroke-width="1.7" transform="rotate(60 20 20)"/><path d="M20 12 L41 24.124" stroke="black" stroke-width="1.7" transform="rotate(120 20 20)"/><path d="M20 12 L41 24.124" stroke="black" stroke-width="1.7" transform="rotate(180 20 20)"/><path d="M20 12 L41 24.124" stroke="black" stroke-width="1.7" transform="rotate(240 20 20)"/><path d="M20 12 L41 24.124" stroke="black" stroke-width="1.7" transform="rotate(300 20 20)"/></mask><circle cx="20" cy="20" r="18.5" fill="currentColor" mask="url(#dpc-boot-shutter-mask)"/><path d="M8 34 A20.2 20.2 0 0 0 19 40.2 L13 52 L10 46 L3 48 Z M21 40.2 A20.2 20.2 0 0 0 32 34 L37 48 L30 46 L27 52 Z" fill="currentColor"/></svg><div class="dpc-boot-brand">DPChallenge<em>restyle</em></div><div class="dpc-boot-track"></div>`;
+    root.append(bootCover);
+    earlyBootObserver?.disconnect();
 }
-
-function revealPage() {
-    bootStyle.remove();
+if(document.documentElement)installBootCover();
+else{earlyBootObserver=new MutationObserver(installBootCover);earlyBootObserver.observe(document,{childList:true});}
+function revealPage(){
+    if(bootRevealed)return;
+    bootRevealed=true;
+    earlyBootObserver?.disconnect();
+    document.documentElement?.classList.remove('dpc-booting');
+    if(!bootCover){bootStyle.remove();return;}
+    const finish=()=>{bootCover?.remove();bootStyle.remove();};
+    bootCover.style.opacity='0';
+    bootCover.style.pointerEvents='none';
+    setTimeout(finish,matchMedia('(prefers-reduced-motion: reduce)').matches?0:260);
 }
-
-// Fail-safe: never leave the website permanently hidden.
-const bootTimeout = setTimeout(revealPage, 8000);
-
-function boot() {
-    try {
-        start();
-    } finally {
+const bootTimeout=setTimeout(revealPage,8000);
+function boot(){
+    try{start();}
+    finally{
         clearTimeout(bootTimeout);
-        revealPage();
+        if(document.documentElement.classList.contains('dpc-mobile')&&!document.hidden){
+            requestAnimationFrame(()=>requestAnimationFrame(revealPage));
+            setTimeout(revealPage,350);
+        }else revealPage();
     }
 }
-
 
 /* Shared, conservative background request budget. Native navigation and vote writes remain independent. */
 const dpcCooldownKey='dpc-background-cooldown-v1',dpcStartKey='dpc-background-last-start-v1';
