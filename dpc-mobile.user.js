@@ -2,7 +2,7 @@
 // ==UserScript==
 // @name DPChallenge Mobile — Editorial Gallery
 // @namespace dpc-mobile
-// @version 5.96
+// @version 5.97
 // @updateURL https://raw.githubusercontent.com/Konador/dpc-mobile-restyle/main/dpc-mobile.user.js
 // @downloadURL https://raw.githubusercontent.com/Konador/dpc-mobile-restyle/main/dpc-mobile.user.js
 // @match *://*.dpchallenge.com/challenge_vote_image.php*
@@ -1635,8 +1635,13 @@ html.dpc-viewing body {
         // Sunglasses are a rigid facial accessory: follow gaze projection, not eyelid squash.
         const lens=(x)=>({ty:'gr',it:[outline([x-16,77],[[[x+16,77]],[[x+16,87],[x+12,96],[x,96]],[[x-12,96],[x-16,87],[x-16,77]]]),{ty:'fl',c:p(rgb('#292319')),o:p(100),r:1},stroke('#121319',6),tr()]});
         const shades={ty:'gr',it:[{ty:'gr',it:[outline([101,82],[[[119,82]]],false),stroke('#121319',7),tr()]},lens(87),lens(133),{ty:'gr',it:[outline([58,78],[[[162,78]]],false),stroke('#121319',6),tr()]},tr(addKeys(eyePos,turnTimes.map(t=>[t,[110+23*yawAt(t),87+19*pitchAt(t)]])),[110,87],k([[0,[100,100]],[421,[100,100]],...turnTimes.map(t=>[t,[100-28*Math.abs(yawAt(t)),100-12*Math.abs(pitchAt(t))]])]))]};
-        const head={ty:'gr',it:[admin?shades:eyes,...(neutral?[]:[hair]),face,...tails,tr(turnHeadPos,[110,130],turnHeadScale,turnRot)]};
-        const torso={ty:'gr',it:[line([66,175],[66,189]),line([154,175],[154,189]),neck,shirt,tr()]};
+        // Neutral icons are abstract pawns, not bald human characters. Use one
+        // continuous body mass, no face, collar, shoulder seams or separate neck.
+        const pawnColors=[[0,palette[0]],[1,palette[1]]];
+        const pawnHead=gradient(outline([57,82],[[[57,82-c],[110-c,29],[110,29]],[[110+c,29],[163,82-c],[163,82]],[[163,82+c],[110+c,135],[110,135]],[[110-c,135],[57,82+c],[57,82]]]),pawnColors,[72,29],[148,135]);
+        const pawnBody=gradient(outline([35,191],[[[35,157],[68,138],[96,124]],[[110,119],[124,124]],[[152,138],[185,157],[185,191]],[[35,191]]]),pawnColors,[65,124],[155,191]);
+        const head={ty:'gr',it:[...(neutral&&!admin?[pawnHead]:[admin?shades:eyes,...(neutral?[]:[hair]),face,...tails]),tr(turnHeadPos,[110,130],turnHeadScale,turnRot)]};
+        const torso={ty:'gr',it:[...(neutral&&!admin?[pawnBody]:[line([66,175],[66,189]),line([154,175],[154,189]),neck,shirt]),tr()]};
         // Extra vertical room for overshoot, without changing the approved artwork.
         return {v:'5.12.2',fr:30,ip:0,op:555,w:220,h:205,nm:'DPC approved member character',ddd:0,assets:[],layers:[{ddd:0,ind:1,ty:4,nm:'Character',sr:1,ks:{o:p(100),r:p(0),p:p([0,0,0]),a:p([0,0,0]),s:p([100,100,100])},ao:0,shapes:[head,torso],ip:0,op:555,st:0,bm:0}]};
     }
