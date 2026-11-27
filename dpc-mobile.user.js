@@ -2,7 +2,7 @@
 // ==UserScript==
 // @name DPChallenge Mobile — Editorial Gallery
 // @namespace dpc-mobile
-// @version 5.93
+// @version 5.94
 // @updateURL https://raw.githubusercontent.com/Konador/dpc-mobile-restyle/main/dpc-mobile.user.js
 // @downloadURL https://raw.githubusercontent.com/Konador/dpc-mobile-restyle/main/dpc-mobile.user.js
 // @match *://*.dpchallenge.com/challenge_vote_image.php*
@@ -1555,7 +1555,29 @@ html.dpc-viewing body {
         eyes.it[eyes.it.length-1].s=addKeys(eyeScale,turnTimes.map(t=>[t,[100-28*Math.abs(yawAt(t)),100-12*Math.abs(pitchAt(t))]]));
         // Morph the fringe inside the circular silhouette, keeping the outer arcs fixed.
         const fringe=hair.it[0].ks.k;
-        const fringeAt=t=>{const y=yawAt(t),p=pitchAt(t);return {c:fringe.c,v:fringe.v.map((v,j)=>j<3?v.slice():[v[0]+y*(j===3?8:17),v[1]+p*(j===3?8:17)]),i:fringe.i.map(v=>v.slice()),o:fringe.o.map(v=>v.slice())};};
+        const fringeAt=t=>{
+            const y=yawAt(t),pitch=pitchAt(t);
+            // Project the hairline onto a sphere; the outer scalp stays circular.
+            const project=([x,z])=>{
+                const u=(x-110)/53,v=(z-82)/53,d=Math.sqrt(Math.max(0,1-u*u-v*v));
+                const a=y*.92,b=-pitch*.68;
+                const xx=u*Math.cos(a)+d*Math.sin(a),depth=d*Math.cos(a)-u*Math.sin(a);
+                return [110+53*xx,82+53*(v*Math.cos(b)-depth*Math.sin(b))];
+            };
+            const vertices=fringe.v.map((v,j)=>j<3?v.slice():project(v));
+            const handles=(list)=>list.map((h,j)=>{
+                if(j<3)return h.slice();
+                const v=fringe.v[j],q=project([v[0]+h[0],v[1]+h[1]]);
+                return [q[0]-vertices[j][0],q[1]-vertices[j][1]];
+            });
+            const incoming=handles(fringe.i),outgoing=handles(fringe.o);
+            // The two temple joins remain on the circumference. Curve handles
+            // adjacent to the fringe compress as the far side disappears.
+            const squeeze=1-.45*Math.abs(y);
+            outgoing[2]=fringe.o[2].map(x=>x*squeeze);
+            incoming[0]=fringe.i[0].map(x=>x*squeeze);
+            return {c:fringe.c,v:vertices,i:incoming,o:outgoing};
+        };
         const fringeTimes=[0,421,...turnTimes];
         hair.it[0].ks={a:1,k:fringeTimes.map((t,j)=>j===fringeTimes.length-1?{t,s:[fringeAt(t)]}:{t,s:[fringeAt(t)],i:{x:.33,y:1},o:{x:.67,y:0}})};
         const turnHeadPos=addKeys(headPos,turnTimes.map(t=>[t,[110+5*yawAt(t),130+4*pitchAt(t)]]));
@@ -1572,22 +1594,34 @@ html.dpc-viewing body {
                 const point=(x,y)=>[root[0]+side*x,root[1]+y];
                 const tail=gradient(outline(point(0,-5),[[point(17,-5),point(28,9),point(29,23)],[point(30,34),point(38,43),point(41,43)],[point(31,53),point(12,49),point(10,35)],[point(7,22),point(12,12),point(0,-5)]]),[[0,'#b5bbc7'],[1,'#697181']],point(0,0),point(34,49),13);
                 const tie=ell(root[0],root[1]+2,13,13,palette[1]);
-                const angles=[],flex=[];
+                const angles=[],flex=[],positions=[];
                 let angle=0,velocity=0,stretch=0,stretchVelocity=0;
                 for(let t=0;t<=554;t++){
                     if(boundaries.includes(t)){angle=velocity=stretch=stretchVelocity=0;}
                     else{
-                        const prev=sample(headPos.k.map(x=>[x.t,x.s]),Math.max(0,t-1)),now=sample(headPos.k.map(x=>[x.t,x.s]),t);
-                        const rp=sample(rot.k.map(x=>[x.t,x.s]),Math.max(0,t-1))[0],rn=sample(rot.k.map(x=>[x.t,x.s]),t)[0];
-                        const target=-(rn-rp)*5-(now[0]-prev[0])*2.4+side*(now[1]-prev[1])*3.2-95*(yawAt(t)-yawAt(t-1))+side*55*(pitchAt(t)-pitchAt(t-1));
+                        const prev=sample(turnHeadPos.k.map(x=>[x.t,x.s]),Math.max(0,t-1)),now=sample(turnHeadPos.k.map(x=>[x.t,x.s]),t);
+                        const rp=sample(turnRot.k.map(x=>[x.t,x.s]),Math.max(0,t-1))[0],rn=sample(turnRot.k.map(x=>[x.t,x.s]),t)[0];
+                        const target=-(rn-rp)*5-(now[0]-prev[0])*2.4+side*(now[1]-prev[1])*3.2-185*(yawAt(t)-yawAt(t-1))+side*115*(pitchAt(t)-pitchAt(t-1));
                         velocity=(velocity+(target-angle)*.24)*.73;angle+=velocity;
                         const targetStretch=-(now[1]-prev[1])*2.2+side*8*yawAt(t);
                         stretchVelocity=(stretchVelocity+(targetStretch-stretch)*.22)*.70;stretch+=stretchVelocity;
                     }
                     const next=boundaries.find(x=>x>=t)??554,settle=Math.min(1,(next-t)/4);
-                    if(t%2===0||boundaries.includes(t)){angles.push([t,Math.max(-34,Math.min(34,angle))*settle]);flex.push([t,[100-stretch*.45*settle,100+stretch*settle]]);}
+                    if(t%2===0||boundaries.includes(t)){
+                        const yaw=yawAt(t),pitch=pitchAt(t);
+                        // Looking towards +x exposes the left side of the head;
+                        // the opposite tail retreats behind the head silhouette.
+                        const depth=-side*yaw,near=Math.max(0,depth),far=Math.max(0,-depth);
+                        const a=yaw*.92;
+                        const u=side*45/53,v=(69-82)/53,d=-Math.sqrt(Math.max(0,1-u*u-v*v))*.25;
+                        const x=110+53*(u*Math.cos(a)+d*Math.sin(a));
+                        const y=root[1]+pitch*(13+side*yaw*4);
+                        positions.push([t,[x,y]]);
+                        angles.push([t,Math.max(-46,Math.min(46,angle))*settle+side*(near*13-far*19)+pitch*side*9]);
+                        flex.push([t,[Math.max(38,100+near*14-far*68-stretch*.45*settle),Math.max(55,100+near*12-far*42+stretch*settle-pitch*10)]]);
+                    }
                 }
-                tails.push({ty:'gr',it:[tie,tail,tr(root,root,k(flex),k(angles))]});
+                tails.push({ty:'gr',it:[tie,tail,tr(k(positions),root,k(flex),k(angles))]});
             }
         }
         const head={ty:'gr',it:[eyes,hair,face,...tails,tr(turnHeadPos,[110,130],turnHeadScale,turnRot)]};
