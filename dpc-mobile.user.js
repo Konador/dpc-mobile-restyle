@@ -2,7 +2,7 @@
 // ==UserScript==
 // @name DPChallenge Mobile — Editorial Gallery
 // @namespace dpc-mobile
-// @version 5.57
+// @version 5.58
 // @updateURL https://raw.githubusercontent.com/Konador/dpc-mobile-restyle/main/dpc-mobile.user.js
 // @downloadURL https://raw.githubusercontent.com/Konador/dpc-mobile-restyle/main/dpc-mobile.user.js
 // @match *://*.dpchallenge.com/challenge_vote_image.php*
@@ -2057,16 +2057,21 @@ html.dpc-viewing body {
                     const metric=metrics[key];if(!metric)continue;
                     const cell=make('div','dpc-current-metric'+(key==='avg vote'?' score':''));
                     cell.append(make('span','',label));
-                    cell.append(metric.a?link(metric.a,'',metric.value):make('strong','',metric.value));
+                    const rawValue=metric.value.trim();
+                    const displayValue=key==='avg vote'&&/^\d+(?:\.\d+)?$/.test(rawValue)?Number(rawValue).toFixed(4):rawValue;
+                    cell.append(metric.a?link(metric.a,'',displayValue):make('strong','',displayValue));
                     values.append(cell);
                 }
-                info.append(values);
+                const secondary=make('div','dpc-current-secondary');
+                for(const metric of [...values.children])if(!metric.classList.contains('score'))secondary.append(metric);
+                info.append(values,secondary);
                 const actions=make('div','dpc-current-actions');
                 if(metrics.updated)actions.append(make('span','dpc-current-updated','Updated '+metrics.updated.value));
                 const nativeUpdate=update||updateLinks[0];
                 if(nativeUpdate){const refresh=link(nativeUpdate,'dpc-current-update','Update');refresh.setAttribute('aria-label','Update submission scores');actions.append(refresh);}
                 info.append(actions);card.append(thumb,info);strip.append(card);
             }
+            style.textContent += "#dpc-app .dpc-current-submissions{gap:5px;margin-bottom:8px}#dpc-app .dpc-current-submission{grid-template-columns:48px minmax(0,1fr);gap:9px;padding:7px 8px;align-items:center}#dpc-app .dpc-current-thumb{width:48px!important;height:64px!important;min-width:48px;min-height:64px;max-width:48px;max-height:64px;align-self:center}#dpc-app .dpc-current-thumb img{width:100%!important;height:100%!important;object-fit:contain!important}#dpc-app .dpc-current-info{display:grid;grid-template-columns:minmax(0,1fr) auto;column-gap:7px;row-gap:2px;align-items:center}#dpc-app .dpc-current-challenge{grid-column:1;grid-row:1;font:600 11px/1.2 system-ui,sans-serif;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}#dpc-app .dpc-current-title{grid-column:1;grid-row:2;margin:0;font:400 10px/1.2 system-ui,sans-serif}#dpc-app .dpc-current-values{display:contents}#dpc-app .dpc-current-metric.score{grid-column:2;grid-row:1/span 2;text-align:right;align-self:center;gap:1px}#dpc-app .dpc-current-metric.score span{font:500 9px/1 system-ui,sans-serif}#dpc-app .dpc-current-metric.score strong{font:italic 700 26px/1 var(--serif),Georgia,serif;font-variant-numeric:tabular-nums lining-nums;letter-spacing:-.025em;white-space:nowrap;color:var(--accent)}#dpc-app .dpc-current-secondary{grid-column:1/-1;display:flex;gap:4px 11px;flex-wrap:wrap;align-items:center;margin-top:3px}#dpc-app .dpc-current-secondary .dpc-current-metric{flex-direction:row;align-items:baseline;gap:3px;font:400 9px/1.2 system-ui,sans-serif}#dpc-app .dpc-current-secondary .dpc-current-metric strong,#dpc-app .dpc-current-secondary .dpc-current-metric a{font:600 10px/1.2 system-ui,sans-serif;color:inherit}#dpc-app .dpc-current-actions{grid-column:1/-1;margin:1px 0 0;gap:5px}#dpc-app .dpc-current-updated{font-size:8px}#dpc-app .dpc-current-update{padding:3px 7px;font-size:10px;min-height:25px;display:inline-flex;align-items:center;justify-content:center}";
             if(strip.children.length)tabs.before(strip);
         }
         const panels=[resultsSection,votingSection,entrySection,forumSection],buttons=[];
