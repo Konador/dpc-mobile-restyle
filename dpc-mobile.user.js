@@ -2,7 +2,7 @@
 // ==UserScript==
 // @name DPChallenge Mobile — Editorial Gallery
 // @namespace dpc-mobile
-// @version 6.08
+// @version 6.09
 // @updateURL https://raw.githubusercontent.com/Konador/dpc-mobile-restyle/main/dpc-mobile.user.js
 // @downloadURL https://raw.githubusercontent.com/Konador/dpc-mobile-restyle/main/dpc-mobile.user.js
 // @match *://*.dpchallenge.com/challenge_vote_image.php*
@@ -3988,16 +3988,16 @@ html.dpc-viewing body {
         const gallery=make('section','dpc-detail-gallery'),stage=make('div','dpc-detail-stage');
         const image=make('img');image.src=photo.src;image.alt=title.textContent.trim();stage.append(image);gallery.append(stage);
         const caption=make('div','dpc-editorial-credit dpc-photo-caption');
-        caption.append(make('h1','dpc-home-feature-title',title.textContent.trim()));
-        const meta=make('div','dpc-detail-credit');meta.append(copyLink(challenge));caption.append(meta);
-        if(rules){const rule=copyLink(rules);rule.className='dpc-live-rule';caption.append(rule);}
+        const heading=make('h1','dpc-home-feature-title');caption.append(heading);
+        const meta=make('div','dpc-detail-credit dpc-live-meta');meta.append(copyLink(challenge));if(rules){const rule=copyLink(rules);rule.className='dpc-live-rule';meta.append(rule);}caption.append(meta);
         gallery.append(caption);body.append(gallery);
         const section=(name)=>{const sec=make('section','dpc-detail-section');sec.append(make('h2','',name));body.append(sec);return sec;};
         const desc=description?.title?.replace(/^Challenge Details:\s*/i,'').trim();
-        if(desc){const sec=section('Photographer’s comments');sec.classList.add('dpc-detail-photographer');sec.append(make('div','dpc-detail-prose',desc));}
-        const comments=section('Comments');comments.append(make('p','dpc-detail-prose','There are no comments on your image yet.'));
+        if(desc){const sec=make('div','dpc-detail-photographer dpc-live-note');gallery.append(sec);sec.append(make('div','dpc-detail-prose',desc));}
+        const comments=section('Comments');comments.append(make('p','dpc-detail-prose','No comments yet.'));
+        const tools=(critique||originalLink)?section('Entry options'):null;
         if(critique){
-            const sec=section('Critique Club'),nativeForm=make('form');
+            const sec=tools,nativeForm=make('form');
             nativeForm.method=form.method;nativeForm.action=form.action;
             const checkbox=critique.cloneNode(true);checkbox.removeAttribute('onclick');
             const row=make('label','dpc-live-critique');row.append(checkbox,make('span','','Request a critique from the DPC Critique Club'));
@@ -4005,9 +4005,10 @@ html.dpc-viewing body {
             const action=critique.getAttribute('onclick')?.match(/this\.form\.action\s*=\s*['"]([^'"]+)['"]/);
             checkbox.addEventListener('change',()=>{if(action)nativeForm.action=action[1];nativeForm.submit();});
         }
-        if(originalLink){const sec=section('Original photograph');sec.append(make('p','dpc-detail-prose','You can submit your original in advance in case your entry is questioned, particularly if you will be away during or shortly after voting.'));const link=copyLink(originalLink,'Submit original');link.className='dpc-detail-action';sec.append(link);}
-        style.textContent += '#dpc-app .dpc-live-entry .dpc-home-feature-title{height:auto;margin:0 0 8px;line-height:1.12;overflow-wrap:anywhere}#dpc-app .dpc-live-entry .dpc-live-rule{font:500 12px/1.5 system-ui,sans-serif;color:var(--muted)}#dpc-app .dpc-live-entry .dpc-live-critique{display:flex;gap:12px;align-items:center;font:400 14px/1.5 system-ui,sans-serif;cursor:pointer}#dpc-app .dpc-live-entry .dpc-live-critique input{width:20px;height:20px;flex:none;accent-color:var(--accent)}#dpc-app .dpc-live-entry .dpc-detail-prose{margin:0 0 8px}html.dpc-light #dpc-app .dpc-live-entry h1,html.dpc-light #dpc-app .dpc-live-entry h2{font-weight:600}';
+        if(originalLink){const sec=make('div','dpc-live-original');tools.append(sec);const link=copyLink(originalLink,'Submit original');link.className='dpc-detail-action';sec.append(link,make('p','dpc-detail-prose','Optional — upload in advance if you may be unavailable during validation.'));}
+        style.textContent += '#dpc-app .dpc-live-entry .dpc-home-feature-title{margin:0;line-height:1.04}#dpc-app .dpc-live-entry .dpc-live-rule{font:500 12px/1.5 system-ui,sans-serif;color:var(--muted)}#dpc-app .dpc-live-entry .dpc-live-critique{display:flex;gap:12px;align-items:center;font:400 14px/1.5 system-ui,sans-serif;cursor:pointer}#dpc-app .dpc-live-entry .dpc-live-critique input{width:20px;height:20px;flex:none;accent-color:var(--accent)}#dpc-app .dpc-live-entry .dpc-detail-prose{margin:0 0 8px}html.dpc-light #dpc-app .dpc-live-entry h2{font-weight:600}#dpc-app .dpc-live-entry .dpc-live-meta{display:flex;align-items:baseline;justify-content:space-between;flex-wrap:wrap;gap:5px 12px}#dpc-app .dpc-live-entry .dpc-live-note{border-top:1px solid var(--line);padding:12px 0 0;margin-top:12px}#dpc-app .dpc-live-entry .dpc-detail-section{margin:0 0 12px;padding:12px}#dpc-app .dpc-live-entry .dpc-detail-section h2{font-size:20px;margin:0 0 9px}#dpc-app .dpc-live-entry .dpc-live-original{border-top:1px solid var(--line);margin-top:12px;padding-top:12px;display:grid;gap:8px}#dpc-app .dpc-live-entry .dpc-detail-prose:last-child{margin-bottom:0}';
         app.querySelector('#dpc-original').onclick=()=>original();mount();
+        const fit=()=>editorialTypeset(heading,title.textContent.trim(),0,false);fit();document.fonts?.ready.then(fit);let lastWidth=heading.clientWidth;addEventListener('resize',()=>{if(heading.clientWidth!==lastWidth){lastWidth=heading.clientWidth;fit();}});
     }
 
     function buildSubmission(){
