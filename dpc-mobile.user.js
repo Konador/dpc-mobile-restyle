@@ -2,7 +2,7 @@
 // ==UserScript==
 // @name DPChallenge Mobile — Editorial Gallery
 // @namespace dpc-mobile
-// @version 5.77
+// @version 5.78
 // @updateURL https://raw.githubusercontent.com/Konador/dpc-mobile-restyle/main/dpc-mobile.user.js
 // @downloadURL https://raw.githubusercontent.com/Konador/dpc-mobile-restyle/main/dpc-mobile.user.js
 // @match *://*.dpchallenge.com/challenge_vote_image.php*
@@ -30,15 +30,17 @@ if(top!==self){
     try{softChild=parent===top&&parent.__dpcSoftAccept?.(window,window.name)===true;}catch{}
     if(!softChild)return;
 }
-const softPaths=new Set(['/','/index.php','/challenge_results.php','/image.php','/profile.php','/forum.php','/community_index.php']);
+const softPaths=new Set(['/','/index.php','/challenge_results.php','/image.php','/profile.php','/forum.php','/community_index.php','/challenge_index.php','/challenge_vote_list.php','/challenge_vote_image.php','/challenge_submit.php','/challenge_submit_preview.php']);
 function softEligible(raw){
     try{
         const u=new URL(raw,location.href);
         if(u.origin!==location.origin||!softPaths.has(u.pathname))return false;
-        if(u.hash&&!u.hash.startsWith('#dpc-gallery=')&&!(u.pathname==='/forum.php'&&/^#[\w-]+$/.test(u.hash)&&u.hash!=='#post'))return false;
-        if([...u.searchParams.keys()].some(k=>/^(vote|submit|delete|update|logout)$/i.test(k)||(/^action$/i.test(k)&&u.pathname!=='/forum.php')))return false;
+        if(u.hash&&!(u.pathname==='/challenge_index.php'&&/^#[\w-]+$/.test(u.hash))&&!u.hash.startsWith('#dpc-gallery=')&&!(u.pathname==='/forum.php'&&/^#[\w-]+$/.test(u.hash)&&u.hash!=='#post'))return false;
+        if([...u.searchParams.keys()].some(k=>/^(vote|submit|delete|update|logout|next_id|comment)$/i.test(k)||(/^action$/i.test(k)&&u.pathname!=='/forum.php')))return false;
         if(u.pathname==='/forum.php')return /^(?:|read|readrecent|list)$/i.test(u.searchParams.get('action')||'');
-        if(u.pathname==='/profile.php'||u.pathname==='/community_index.php')return !u.searchParams.has('action');
+        if(u.pathname==='/profile.php'||u.pathname==='/community_index.php'||u.pathname==='/challenge_index.php')return !u.searchParams.has('action');
+        if(u.pathname==='/challenge_vote_image.php')return !!u.searchParams.get('IMAGE_ID');
+        if(/^\/challenge_(?:vote_list|submit|submit_preview)\.php$/.test(u.pathname))return !!u.searchParams.get('CHALLENGE_ID');
         return u.pathname==='/'||u.pathname==='/index.php'||(u.pathname==='/image.php'?!!u.searchParams.get('IMAGE_ID'):!!u.searchParams.get('CHALLENGE_ID'));
     }catch{return false;}
 }
@@ -3397,7 +3399,7 @@ html.dpc-viewing body {
         function select(i){panels.forEach((p,j)=>{p.hidden=i!==j;buttons[j].classList.toggle('active',i===j);buttons[j].setAttribute('aria-selected',String(i===j));});}
         function section(parent,label){const sec=make('section','dpc-profile-section');sec.append(heading(label));parent.append(sec);return sec;}
         const overview=panel('Overview'),history=panel('Challenge entries'),portfolio=panel('Portfolio'),about=panel('About');
-        style.textContent += '#dpc-app .dpc-profile-photo{overflow:hidden}#dpc-app .dpc-profile-photo img.dpc-profile-full-layer{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;opacity:0;transition:opacity 220ms ease;pointer-events:none}#dpc-app .dpc-profile-photo .dpc-overlay-ribbon{z-index:2}@media(prefers-reduced-motion:reduce){#dpc-app .dpc-profile-photo img.dpc-profile-full-layer{transition:none}}';
+        style.textContent += '#dpc-app .dpc-profile-photo{overflow:hidden}#dpc-app .dpc-profile-photo img.dpc-profile-thumb{opacity:0}#dpc-app .dpc-profile-photo img.dpc-profile-thumb.ready{opacity:1}#dpc-app .dpc-profile-photo img.dpc-profile-full-layer{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;opacity:0;transition:opacity 220ms ease;pointer-events:none}#dpc-app .dpc-profile-photo .dpc-overlay-ribbon{z-index:2}@media(prefers-reduced-motion:reduce){#dpc-app .dpc-profile-photo img.dpc-profile-full-layer{transition:none}}';
         const profileFullQueue=[],profileFullCache=new Map();let profileFullActive=false;
         const imageIdFromSrc=src=>photoFilename(src).match(/(?:^|_)(\d+)\.[a-z]+$/i)?.[1];
         async function revealProfileFull(im,src){
@@ -3408,6 +3410,8 @@ html.dpc-viewing body {
             if(!im.isConnected||!layer.naturalWidth)return false;
             const parent=im.parentElement;
             if(parent.querySelector('.dpc-profile-full-layer'))return true;
+            if(!im.complete)await Promise.race([im.decode().catch(()=>{}),new Promise(resolve=>setTimeout(resolve,600))]);
+            if(!im.isConnected)return false;
             parent.append(layer);
             if(matchMedia('(prefers-reduced-motion: reduce)').matches)layer.style.opacity='1';
             else requestAnimationFrame(()=>requestAnimationFrame(()=>{layer.style.opacity='1';}));
@@ -3415,7 +3419,7 @@ html.dpc-viewing body {
         }
         async function upgradeProfileThumb(im){
             const href=im.dataset.href,thumb=im.dataset.src,id=photoCacheId(href);
-            if(!id||imageIdFromSrc(thumb)!==id||!im.isConnected)return;
+            if(!id||!im.isConnected)return;
             const cached=sharedPhotoRead(href);
             if(cached&&imageIdFromSrc(cached.full)===id&&await revealProfileFull(im,cached.full))return;
             let pending=profileFullCache.get(id);
@@ -3443,7 +3447,28 @@ html.dpc-viewing body {
         }
         document.addEventListener('visibilitychange',pumpProfileFull);
         const imageObserver=new IntersectionObserver(items=>{for(const item of items){if(!item.isIntersecting)continue;imageObserver.unobserve(item.target);const im=item.target;if(im.dataset.href)profileFullQueue.push(im);}pumpProfileFull();},{rootMargin:'450px'});
-        function thumbnail(im,src,href){if(src){im.dataset.src=src;im.src=src;im.decoding='async';if(href)im.dataset.href=href;imageObserver.observe(im);}}
+        function thumbnail(im,src,href){
+            if(!src)return;
+            const original=new URL(src,location.href).href;
+            im.classList.add('dpc-profile-thumb');
+            im.loading='eager';im.decoding='async';
+            im.dataset.src=original;
+            if(href)im.dataset.href=href;
+            let fallback=false;
+            im.addEventListener('load',()=>{if(im.naturalWidth)im.classList.add('ready');});
+            im.addEventListener('error',()=>{
+                if(fallback||!href)return;
+                fallback=true;
+                const u=new URL(original),id=photoCacheId(href);
+                if(id&&u.pathname.includes('/images_challenge/')&&imageIdFromSrc(original)===id){
+                    const alternate=u.pathname.replace(/\/\d+\/(?=[^/]+$)/,'/120/');
+                    if(alternate!==u.pathname){u.pathname=alternate;im.src=u.href;}
+                }
+            });
+            im.src=original;
+            if(im.complete&&im.naturalWidth)im.classList.add('ready');
+            imageObserver.observe(im);
+        }
         function gallery(source,label){
             if(!source)return;const sec=section(overview,label),grid=make('div','dpc-profile-gallery');sec.append(grid);
             for(const td of source.querySelectorAll('td')){const a=td.querySelector('.dpc-winning-entry-image a[href]'),im=a?.querySelector('img');if(!im)continue;
@@ -3754,7 +3779,7 @@ html.dpc-viewing body {
             hideNumericNames();
         }
         const fallback=make('a','dpc-submit-rules-link','Use original upload page');fallback.href=location.href;fallback.onclick=e=>{e.preventDefault();original();};uploadCard.append(fallback);
-        const cancel=uploadSection.querySelector('input[type=button][value=Cancel]');if(cancel){cancel.onclick=()=>{location.href='/challenge_index.php#submit';};const actions=make('div','dpc-upload-actions');submit.before(actions);actions.append(submit,cancel);}
+        const cancel=uploadSection.querySelector('input[type=button][value=Cancel]');if(cancel){cancel.onclick=()=>{browsePage('/challenge_index.php#submit');};const actions=make('div','dpc-upload-actions');submit.before(actions);actions.append(submit,cancel);}
         for(const node of [...uploadSection.childNodes]){if(node.nodeType===1&&node.tagName==='BR')node.remove();}
         const spacer=upload.nextElementSibling;if(spacer?.tagName==='DIV'&&spacer.style.clear==='both')spacer.remove();
         if(classic){classic.classList.add('dpc-profile-card','dpc-submit-card','dpc-classic-upload');body.append(classic);}
@@ -4003,7 +4028,7 @@ html.dpc-viewing body {
     // Forms must leave staged frames through the normal top-level browser flow.
     if(softChild)document.addEventListener('submit',e=>{
         const form=e.target;if(!(form instanceof HTMLFormElement))return;
-        form.target='_top';
+        if(!form.target||form.target==='_self')form.target='_top';
     },true);
     // Let existing click handlers (including gallery context capture) run first.
     document.addEventListener('click',e=>{
@@ -4750,6 +4775,7 @@ html.dpc-viewing body {
 
                 if(dirty){status('Could not safely save comment. Please try again.');setBusy(false);return;}
                 if(p.comment)p.comment.value=p.comment.defaultValue;
+                if(softChild){status('Could not safely save. Please try again.');setBusy(false);return;}
                 link.click();
                 return;
             }
@@ -4861,7 +4887,7 @@ html.dpc-viewing body {
                     if (after) {
                         after();
                     } else {
-                        location.href=listURL(p.challengeId);
+                        browsePage(listURL(p.challengeId));
                     }
                     return;
                 }
@@ -4887,7 +4913,7 @@ html.dpc-viewing body {
                 cleanup();
 
                 if (score!==null) await sleep(180);
-                if(finalVote&&!stay){dirty=false;location.href=listURL(p.challengeId);return;}
+                if(finalVote&&!stay){dirty=false;browsePage(listURL(p.challengeId));return;}
 
                 const actualDirection=updated.id===p.id
                     ? 0
@@ -5026,7 +5052,7 @@ html.dpc-viewing body {
 
     $('.dpc-overview').onclick=e=>{
         e.stopPropagation();
-        if(isPreview){location.href=$('.dpc-challenge').href;return;}
+        if(isPreview){browsePage($('.dpc-challenge').href);return;}
 
         if (busy||!current.challengeId) return;
 
@@ -5050,7 +5076,7 @@ html.dpc-viewing body {
                 } catch {}
             }
 
-            location.href=destination;
+            browsePage(destination);
         };
 
         if (dirty) {
@@ -5248,8 +5274,8 @@ html.dpc-viewing body {
 
         root.classList.add('dpc-viewing');
 
-        history.pushState(
-            {dpcViewer:true},'',location.href
+        if(!softChild)history.pushState(
+            {...history.state,dpcViewer:true},'',location.href
         );
 
         requestAnimationFrame(render);
@@ -5273,7 +5299,7 @@ html.dpc-viewing body {
 
         hide();
 
-        if (history.state?.dpcViewer) history.back();
+        if (!softChild&&history.state?.dpcViewer) history.back();
     }
 
     stage.onclick=e=>{
