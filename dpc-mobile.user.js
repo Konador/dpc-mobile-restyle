@@ -2,7 +2,7 @@
 // ==UserScript==
 // @name DPChallenge Mobile — Editorial Gallery
 // @namespace dpc-mobile
-// @version 5.66
+// @version 5.67
 // @updateURL https://raw.githubusercontent.com/Konador/dpc-mobile-restyle/main/dpc-mobile.user.js
 // @downloadURL https://raw.githubusercontent.com/Konador/dpc-mobile-restyle/main/dpc-mobile.user.js
 // @match *://*.dpchallenge.com/challenge_vote_image.php*
@@ -2157,8 +2157,27 @@ html.dpc-viewing body {
             style.textContent += '#dpc-app .dpc-current-submission{padding:0!important;gap:0;overflow:hidden;grid-template-columns:clamp(88px,26vw,116px) minmax(0,1fr);align-items:stretch}#dpc-app .dpc-current-thumb{position:relative;align-self:start;margin:0!important;padding:0!important;border:0!important;border-radius:0!important;overflow:hidden;aspect-ratio:1}#dpc-app .dpc-current-thumb img{position:absolute;inset:0;display:block!important;margin:0!important;padding:0!important;border:0!important;border-radius:0!important;object-fit:cover!important}#dpc-app .dpc-current-info{min-width:0;padding:8px 9px 7px 10px;grid-template-columns:minmax(0,1fr) max-content;column-gap:12px;align-content:center}#dpc-app .dpc-current-title{min-width:0;max-width:140px;white-space:normal!important;overflow-wrap:anywhere;line-height:1.3}#dpc-app .dpc-current-metric.score{min-width:0;align-self:start}#dpc-app .dpc-current-actions{margin-top:2px}#dpc-app .dpc-current-secondary{margin-top:3px}';
             style.textContent += '#dpc-app .dpc-current-info{align-content:end;align-items:end;row-gap:3px}#dpc-app .dpc-current-title{grid-row:1;grid-column:1;font:600 15px/1.12 var(--serif),Georgia,serif;font-optical-sizing:none;font-variation-settings:"opsz" 12,"wght" 600;-webkit-text-stroke:.22px currentColor;letter-spacing:-.015em;max-width:none}#dpc-app .dpc-current-challenge{grid-row:2;grid-column:1;font:500 10px/1.25 system-ui,sans-serif}#dpc-app .dpc-current-metric.score{align-self:end}#dpc-app .dpc-current-secondary{grid-row:3}#dpc-app .dpc-current-actions{grid-row:4}';
             style.textContent += '#dpc-app .dpc-current-info{grid-template-columns:minmax(0,1fr) max-content;grid-template-rows:minmax(0,1fr) auto auto;align-content:stretch;align-items:start;column-gap:8px;row-gap:4px}#dpc-app .dpc-current-title{grid-row:1;grid-column:1;align-self:start;line-height:1.04;font-size:18px;min-width:0}#dpc-app .dpc-current-metric.score{grid-row:1;grid-column:2;align-self:start}#dpc-app .dpc-current-challenge{grid-row:2;grid-column:1/-1;align-self:end}#dpc-app .dpc-current-secondary{grid-row:3;grid-column:1;align-self:end;margin:0;gap:2px 6px}#dpc-app .dpc-current-actions{grid-row:3;grid-column:2;align-self:end;margin:0}#dpc-app .dpc-current-thumb{align-self:stretch;height:100%!important;min-height:0;aspect-ratio:1}';
+            style.textContent += '#dpc-app .dpc-current-secondary{min-width:0;flex-wrap:nowrap;white-space:nowrap;gap:0 var(--stat-gap,6px);overflow:hidden}#dpc-app .dpc-current-secondary .dpc-current-metric{flex:0 0 auto;white-space:nowrap;gap:var(--stat-inner-gap,3px);font-size:var(--stat-size,9px)!important}#dpc-app .dpc-current-secondary .dpc-current-metric :is(span,strong,a){font-size:var(--stat-size,9px)!important;white-space:nowrap}';
             if(strip.children.length){
                 tabs.before(strip);
+                const fitStats=row=>{
+                    if(!row.clientWidth)return;
+                    for(let size=9;size>=3;size-=.25){
+                        row.style.setProperty('--stat-size',size+'px');
+                        row.style.setProperty('--stat-gap',Math.min(6,size*.55)+'px');
+                        row.style.setProperty('--stat-inner-gap',Math.min(3,size*.25)+'px');
+                        if(row.scrollWidth<=row.clientWidth)break;
+                    }
+                };
+                const statRows=[...strip.querySelectorAll('.dpc-current-secondary')];
+                const statResize=new ResizeObserver(entries=>{for(const entry of entries)fitStats(entry.target);});
+                const statMutation=new MutationObserver(records=>{
+                    const rows=new Set(records.map(record=>(record.target.nodeType===1?record.target:record.target.parentElement)?.closest('.dpc-current-secondary')).filter(Boolean));
+                    rows.forEach(fitStats);
+                });
+                for(const row of statRows){statResize.observe(row);statMutation.observe(row,{childList:true,characterData:true,subtree:true});}
+                requestAnimationFrame(()=>statRows.forEach(fitStats));
+                document.fonts?.ready.then(()=>statRows.forEach(fitStats));
                 const fitTitles=()=>{
                     for(const card of strip.children){
                         const title=card.querySelector('.dpc-current-title'),info=card.querySelector('.dpc-current-info'),thumb=card.querySelector('.dpc-current-thumb');
