@@ -2,7 +2,7 @@
 // ==UserScript==
 // @name DPChallenge Mobile — Editorial Gallery
 // @namespace dpc-mobile
-// @version 6.06
+// @version 6.07
 // @updateURL https://raw.githubusercontent.com/Konador/dpc-mobile-restyle/main/dpc-mobile.user.js
 // @downloadURL https://raw.githubusercontent.com/Konador/dpc-mobile-restyle/main/dpc-mobile.user.js
 // @match *://*.dpchallenge.com/challenge_vote_image.php*
@@ -1673,8 +1673,8 @@ html.dpc-viewing body {
                 if(skin==='general'){
                     // Broad bicorne with a flattened crown and extended, almost
                     // horizontal brim; the legacy gold piping traces the outside.
-                    const hatOutline=outline([14,65],[[[14,56]],[[30,56]],[[49,45],[56,17],[80,13]],[[140,13]],[[164,17],[171,45],[190,56]],[[206,56]],[[206,65]],[[14,65]]]);
-                    const navyInset=outline([35,55],[[[55,42],[64,24],[83,23]],[[137,23]],[[156,24],[165,42],[185,55]],[[35,55]]]);
+                    const hatOutline=outline([14,65],[[[14,56]],[[30,56]],[[30,25],[66,2],[110,2]],[[154,2],[190,25],[190,56]],[[206,56]],[[206,65]],[[14,65]]]);
+                    const navyInset=outline([43,55],[[[43,30],[73,14],[110,14]],[[147,14],[177,30],[177,55]],[[43,55]]]);
                     hatShapes.push(metallic(139,34,21,21));
                     hatShapes.push(gradient(navyInset,[[0,'#51517f'],[1,'#17182d']],[75,26],[155,66],4));
                     hatShapes.push(gradient(hatOutline,[[0,'#ffe577'],[1,'#b88019']],[72,15],[155,75],9));
