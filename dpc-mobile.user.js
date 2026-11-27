@@ -2,7 +2,7 @@
 // ==UserScript==
 // @name DPChallenge Mobile — Editorial Gallery
 // @namespace dpc-mobile
-// @version 5.85
+// @version 5.86
 // @updateURL https://raw.githubusercontent.com/Konador/dpc-mobile-restyle/main/dpc-mobile.user.js
 // @downloadURL https://raw.githubusercontent.com/Konador/dpc-mobile-restyle/main/dpc-mobile.user.js
 // @match *://*.dpchallenge.com/challenge_vote_image.php*
@@ -1512,12 +1512,12 @@ html.dpc-viewing body {
             '<linearGradient id="'+id+'-face" x1="0" y1="0" x2=".25" y2="1" gradientUnits="objectBoundingBox"><stop stop-color="#e1e2e6"/><stop offset=".48" stop-color="#b0b4be"/><stop offset="1" stop-color="#777d8a"/></linearGradient>'+
             '<linearGradient id="'+id+'-hair" x1="0" y1="0" x2="0" y2="1"><stop stop-color="#b3b7c1"/><stop offset=".65" stop-color="#777d89"/><stop offset="1" stop-color="#3d414c"/></linearGradient>'+
             '<linearGradient id="'+id+'-shirt" x1="0" y1="0" x2="1" y2=".75"><stop stop-color="'+light+'"/><stop offset=".55" stop-color="'+mid+'"/><stop offset="1" stop-color="'+dark+'"/></linearGradient></defs>'+
-            '<g stroke="#111116" stroke-width="1.45" stroke-linejoin="round">'+
-            '<path d="M.8 27.3V22.8L5.9 18.2 9 17.5H15L18.1 18.2 23.2 22.8V27.3" fill="url(#'+id+'-shirt)"/>'+
-            '<path d="M8.3 16.2H15.7V18.7L12 21.5 8.3 18.7Z" fill="url(#'+id+'-face)"/>'+
-            '<path d="M4 6.7L8.6 1.2H15.4L20 6.7V11.8L16.3 15.8 14.8 16.8H9.2L7.7 15.8 4 11.8Z" fill="url(#'+id+'-face)"/>'+
-            '<path d="M4 11.8V6.7L8.6 1.2H15.4L20 6.7V11.8L18.3 10.5V7.6H5.7V10.5Z" fill="url(#'+id+'-hair)"/>'+
-            '<path d="M6.3 6.3H17.7" stroke="#15151a" stroke-width="1.15"/>'+
+            '<g stroke="#111116" stroke-width="1.15" stroke-linejoin="round" stroke-linecap="round">'+
+            '<path d="M.8 27.3V24.4C.8 20.8 4.2 18.1 8.8 17.5H15.2C19.8 18.1 23.2 20.8 23.2 24.4V27.3" fill="url(#'+id+'-shirt)"/>'+
+            '<path d="M8.3 16.2H15.7V18.6Q14.5 20.5 12 21.2Q9.5 20.5 8.3 18.6Z" fill="url(#'+id+'-face)"/>'+
+            '<path d="M3.9 8.3C3.9 3.6 7.2 1 12 1S20.1 3.6 20.1 8.3V10.2C20.1 14.2 16.5 17 12 17S3.9 14.2 3.9 10.2Z" fill="url(#'+id+'-face)"/>'+
+            '<path d="M4 11.4C3.2 9 3.5 5.9 5.1 3.8C6.6 1.8 9 1 12 1S17.4 1.8 18.9 3.8C20.5 5.9 20.8 9 20 11.4Q18.5 10.7 18.1 8.1Q12 6.8 5.9 8.1Q5.5 10.7 4 11.4Z" fill="url(#'+id+'-hair)"/>'+
+            '<path d="M6.3 6.3Q12 5.4 17.7 6.3" stroke="#15151a" stroke-width="1.15"/>'+
             '<path d="M5.7 25V27.3M18.3 25V27.3" stroke="'+dark+'" stroke-width="1.2" opacity=".8"/>'+
             '<g class="dpc-role-eyes" stroke="none" fill="#737783"><ellipse cx="9.3" cy="10.5" rx=".66" ry=".77"/><ellipse cx="14.7" cy="10.5" rx=".66" ry=".77"/></g></g></svg>';
         return holder;
@@ -1527,7 +1527,7 @@ html.dpc-viewing body {
         const im=[...source.querySelectorAll('img')].find(i=>dpcRoleInfo(i));if(!im)return;
         const icon=dpcRoleArtwork(im);if(icon)target.prepend(icon);
     }
-    style.textContent += '#dpc-app .dpc-role-icon{display:inline-flex!important;vertical-align:-.17em;width:16px!important;height:16px!important;min-width:16px;max-width:16px!important;margin:0 4px 0 0;object-fit:contain;align-items:center;justify-content:center;flex:none;line-height:1!important;-webkit-text-size-adjust:none;text-size-adjust:none}#dpc-app .dpc-role-icon svg{width:100%!important;height:100%!important;overflow:visible}#dpc-app .dpc-role-eyes{transform-origin:12px 11px;animation:dpc-role-blink 7s ease infinite}@keyframes dpc-role-blink{0%,46%,50%,100%{transform:scaleY(1)}48%{transform:scaleY(.12)}}@media(prefers-reduced-motion:reduce){#dpc-app .dpc-role-eyes{animation:none}}';
+    style.textContent += '#dpc-app .dpc-role-icon{display:inline-flex!important;vertical-align:-.17em;width:16px!important;height:16px!important;min-width:16px;max-width:16px!important;margin:0 4px 0 0;object-fit:contain;align-items:center;justify-content:center;flex:none;line-height:1!important;-webkit-text-size-adjust:none;text-size-adjust:none}#dpc-app .dpc-role-icon svg{width:100%!important;height:100%!important;overflow:visible}#dpc-app .dpc-role-eyes{transform-box:fill-box;transform-origin:center;animation:dpc-role-blink 7s ease infinite}@keyframes dpc-role-blink{0%,46%,50%,100%{transform:scaleY(1)}48%{transform:scaleY(.12)}}@media(prefers-reduced-motion:reduce){#dpc-app .dpc-role-eyes{animation:none}}';
     function dpcRoleReplace(node){
         for(const im of node.querySelectorAll('img:not(.dpc-role-icon)')){const info=dpcRoleInfo(im);if(info&&!info.custom){const icon=dpcRoleArtwork(im);if(icon)im.replaceWith(icon);}}
     }
