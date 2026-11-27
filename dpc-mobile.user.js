@@ -2,7 +2,7 @@
 // ==UserScript==
 // @name DPChallenge Mobile — Editorial Gallery
 // @namespace dpc-mobile
-// @version 5.84
+// @version 5.85
 // @updateURL https://raw.githubusercontent.com/Konador/dpc-mobile-restyle/main/dpc-mobile.user.js
 // @downloadURL https://raw.githubusercontent.com/Konador/dpc-mobile-restyle/main/dpc-mobile.user.js
 // @match *://*.dpchallenge.com/challenge_vote_image.php*
@@ -1499,15 +1499,27 @@ html.dpc-viewing body {
         if(/\/images\/user_icon\//i.test(path)||/^(?:Site Council|Administrator|Registered User|Member)(?:\s+.*)?$/i.test(label.trim()))return {custom:true};
         return null;
     }
+    let dpcRoleSerial=0;
     function dpcRoleArtwork(im){
         const info=dpcRoleInfo(im);if(!info)return null;
-        if(info.custom){const clone=im.cloneNode();clone.removeAttribute('style');clone.removeAttribute('width');clone.removeAttribute('height');clone.classList.add('dpc-role-icon','dpc-role-original');return clone;}
-        const palettes={'Registered User':['#a9afb9','#686f7c','#d9dde3'],'Member':['#78b4ef','#326db0','#c3e2ff'],'Site Council':['#ba9aef','#7951bd','#e5d7ff'],'Administrator':['#f3c45d','#b77a24','#ffe8aa']};
-        const [light,dark,shine]=palettes[info.role];
+        // The reference is the original front-facing character. Keep unreferenced variants intact.
+        if(info.custom||info.variant){const clone=im.cloneNode();clone.removeAttribute('style');clone.removeAttribute('width');clone.removeAttribute('height');clone.classList.add('dpc-role-icon','dpc-role-original');return clone;}
+        const palettes={'Registered User':['#c6c7cc','#8e919b','#626570'],'Member':['#9690f4','#6259c9','#383396'],'Site Council':['#bba0e9','#8b58c1','#55358b'],'Administrator':['#f5dc80','#d2a83d','#92691d']};
+        const [light,mid,dark]=palettes[info.role];
         const holder=document.createElement('span');holder.className='dpc-role-icon';holder.title=info.role;holder.setAttribute('role','img');holder.setAttribute('aria-label',info.role);
-        const female=info.variant==='_F',neutral=info.variant==='_N';
-        const hair=female?'M5 15C1 9 4 2 12 2S23 9 19 17L16 16 16 8 8 8 8 16Z':neutral?'M5 9C5 2 18 1 19 9L15 11 4 10Z':'M5 10C3 5 7 2 12 2L16 1 16 4 20 5 19 10 14 6 9 9Z';
-        holder.innerHTML='<svg viewBox="0 0 24 24" aria-hidden="true"><g stroke="#242630" stroke-width="1.15" stroke-linejoin="round"><path fill="'+dark+'" d="M3 22v-3c0-5 4-7 9-7s9 2 9 7v3Z"/><path fill="'+light+'" stroke="none" d="M5 21v-3c1-3 4-4 7-4s6 1 7 4v3Z"/><path fill="'+dark+'" d="'+hair+'"/><circle cx="12" cy="10" r="5.8" fill="'+shine+'"/><path fill="'+light+'" d="'+hair+'"/><g class="dpc-role-eyes" stroke="none" fill="#282b35"><ellipse cx="10" cy="10.8" rx=".7" ry="1"/><ellipse cx="14" cy="10.8" rx=".7" ry="1"/></g></g></svg>';
+        const id='dpc-role-'+(++dpcRoleSerial);
+        holder.innerHTML='<svg viewBox="0 0 24 28" aria-hidden="true"><defs>'+
+            '<linearGradient id="'+id+'-face" x1="0" y1="0" x2=".25" y2="1" gradientUnits="objectBoundingBox"><stop stop-color="#e1e2e6"/><stop offset=".48" stop-color="#b0b4be"/><stop offset="1" stop-color="#777d8a"/></linearGradient>'+
+            '<linearGradient id="'+id+'-hair" x1="0" y1="0" x2="0" y2="1"><stop stop-color="#b3b7c1"/><stop offset=".65" stop-color="#777d89"/><stop offset="1" stop-color="#3d414c"/></linearGradient>'+
+            '<linearGradient id="'+id+'-shirt" x1="0" y1="0" x2="1" y2=".75"><stop stop-color="'+light+'"/><stop offset=".55" stop-color="'+mid+'"/><stop offset="1" stop-color="'+dark+'"/></linearGradient></defs>'+
+            '<g stroke="#111116" stroke-width="1.45" stroke-linejoin="round">'+
+            '<path d="M.8 27.3V22.8L5.9 18.2 9 17.5H15L18.1 18.2 23.2 22.8V27.3" fill="url(#'+id+'-shirt)"/>'+
+            '<path d="M8.3 16.2H15.7V18.7L12 21.5 8.3 18.7Z" fill="url(#'+id+'-face)"/>'+
+            '<path d="M4 6.7L8.6 1.2H15.4L20 6.7V11.8L16.3 15.8 14.8 16.8H9.2L7.7 15.8 4 11.8Z" fill="url(#'+id+'-face)"/>'+
+            '<path d="M4 11.8V6.7L8.6 1.2H15.4L20 6.7V11.8L18.3 10.5V7.6H5.7V10.5Z" fill="url(#'+id+'-hair)"/>'+
+            '<path d="M6.3 6.3H17.7" stroke="#15151a" stroke-width="1.15"/>'+
+            '<path d="M5.7 25V27.3M18.3 25V27.3" stroke="'+dark+'" stroke-width="1.2" opacity=".8"/>'+
+            '<g class="dpc-role-eyes" stroke="none" fill="#737783"><ellipse cx="9.3" cy="10.5" rx=".66" ry=".77"/><ellipse cx="14.7" cy="10.5" rx=".66" ry=".77"/></g></g></svg>';
         return holder;
     }
     function dpcRoleAttach(target,source){
