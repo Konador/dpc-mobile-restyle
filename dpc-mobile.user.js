@@ -2,7 +2,7 @@
 // ==UserScript==
 // @name DPChallenge Mobile — Editorial Gallery
 // @namespace dpc-mobile
-// @version 6.15
+// @version 6.16
 // @updateURL https://raw.githubusercontent.com/Konador/dpc-mobile-restyle/main/dpc-mobile.user.js
 // @downloadURL https://raw.githubusercontent.com/Konador/dpc-mobile-restyle/main/dpc-mobile.user.js
 // @match *://*.dpchallenge.com/challenge_vote_image.php*
@@ -2152,6 +2152,8 @@ html.dpc-viewing body {
                 for(const cell of page.querySelectorAll('.dpc-vote-thumbnail-cell')){
                     const link=cell.querySelector('a[href*="challenge_vote_image.php?IMAGE_ID="]');
                     if(!link||!cell.querySelector('.dpc-vote-thumbnail-image img'))continue;
+                    const divider=cell.closest('.dpc-vote-thumbnail-grid')?.previousElementSibling;
+                    if(divider?.matches('.divider')&&/you and your team.s photographs/i.test(divider.textContent))continue;
                     const imageId=new URL(link.getAttribute('href'),url).searchParams.get('IMAGE_ID');
                     if(!imageId)continue;
                     seen.set(imageId,!!cell.querySelector('a[href*="challenge_vote_list_comment.php"] img[src$="/comment.gif"]'));
