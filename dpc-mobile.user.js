@@ -2,7 +2,7 @@
 // ==UserScript==
 // @name DPChallenge Mobile — Editorial Gallery
 // @namespace dpc-mobile
-// @version 6.04
+// @version 6.05
 // @updateURL https://raw.githubusercontent.com/Konador/dpc-mobile-restyle/main/dpc-mobile.user.js
 // @downloadURL https://raw.githubusercontent.com/Konador/dpc-mobile-restyle/main/dpc-mobile.user.js
 // @match *://*.dpchallenge.com/challenge_vote_image.php*
@@ -1659,7 +1659,7 @@ html.dpc-viewing body {
                     costumeBody.push({ty:'gr',it:[outline(pt(0,190),[[pt(6,180),pt(17,178)],[pt(29,184),pt(37,173)],[pt(34,168)]],false),stroke('#e9bd46',8),tr()]});
                     costumeBody.push(gradient(outline(pt(19,143),[[pt(34,143),pt(44,153)],[pt(36,174)],[pt(24,160)],[pt(19,143)]]),[[0,'#ffffff'],[1,'#c7cbd5']],pt(19,143),pt(44,174),5));
                     costumeBody.push(gradient(outline(pt(48,149),[[pt(65,154),pt(73,168)],[pt(67,174)],[pt(53,162)],[pt(48,149)]]),[[0,'#ffc858'],[1,'#ad521b']],pt(48,149),pt(73,174),5));
-                    costumeBody.push(gradient(outline(pt(22,119),[[pt(28,121),pt(35,130)],[pt(50,145)],[pt(43,157)],[pt(22,146)],[pt(22,119)]]),[[0,'#ff4942'],[1,'#a51320']],pt(22,119),pt(49,155),6));
+                    costumeBody.push(gradient(outline(pt(34,112),[[pt(45,118),pt(47,133)],[pt(58,150)],[pt(43,158)],[pt(24,142)],[pt(34,112)]]),[[0,'#ff4942'],[1,'#a51320']],pt(22,119),pt(49,155),6));
                 }
                 costumeBody.push(metallic(110,184,9,12));
             }
@@ -1672,9 +1672,9 @@ html.dpc-viewing body {
                 if(skin==='general'){
                     // Broad bicorne with a flattened crown and extended, almost
                     // horizontal brim; the legacy gold piping traces the outside.
-                    const hatOutline=outline([20,75],[[[20,64]],[[36,64]],[[51,48],[61,19],[84,15]],[[96,13],[124,13],[136,15]],[[159,19],[169,48],[184,64]],[[200,64]],[[200,75]],[[20,75]]]);
-                    const navyInset=outline([37,64],[[[56,51],[66,28],[86,26]],[[99,24],[121,24],[134,26]],[[154,28],[164,51],[183,64]],[[37,64]]]);
-                    hatShapes.push(metallic(139,38,23,23));
+                    const hatOutline=outline([14,65],[[[14,56]],[[30,56]],[[49,45],[56,17],[80,13]],[[140,13]],[[164,17],[171,45],[190,56]],[[206,56]],[[206,65]],[[14,65]]]);
+                    const navyInset=outline([35,55],[[[55,42],[64,24],[83,23]],[[137,23]],[[156,24],[165,42],[185,55]],[[35,55]]]);
+                    hatShapes.push(metallic(139,34,21,21));
                     hatShapes.push(gradient(navyInset,[[0,'#51517f'],[1,'#17182d']],[75,26],[155,66],4));
                     hatShapes.push(gradient(hatOutline,[[0,'#ffe577'],[1,'#b88019']],[72,15],[155,75],9));
                 }else{
@@ -1699,7 +1699,7 @@ html.dpc-viewing body {
                         const end=boundaries.find(x=>x>=t)??554,settle=Math.min(1,(end-t)/5),yaw=yawAt(t),pitch=pitchAt(t);
                         angles.push([t,a*settle*(skin==='chef'?1.15:.7)+yaw*5]);
                         scales.push([t,[(skin==='general'?104:125)-19*Math.abs(yaw)-b*.4*settle,(skin==='general'?100:135)+b*settle*(skin==='chef'?1.5:.4)-8*Math.abs(pitch)]]);
-                        positions.push([t,[110+18*yaw,65+10*pitch-b*.4*settle]]);
+                        positions.push([t,[110+18*yaw,(skin==='general'?59:65)+10*pitch-b*.4*settle]]);
                     }
                 }
                 costumeHead.push({ty:'gr',it:[...hatShapes,tr(k(positions),[110,65],k(scales),k(angles))]});
